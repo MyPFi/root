@@ -1,0 +1,39 @@
+Referência: Sheet Name
+Vencimento:A5
+(+)Total desta Fatura:B5
+Pagamento Mínimo:C5
+Cartão:A11
+Despesas:A13:D54
+	Data:A
+	Histórico das Despesas:B
+	R$:C
+	US$:D
+Saldo deste Cartão:
+	Reais:C55
+	Dólares:C56
+Multa por Atraso:C56	
+Juros de Mora:C57
+Brasil
+	Saldo Anterior:B62
+	(-)Total de Pagamentos:B63
+	(-)Total de Créditos:B64
+	(+)Encargos:B65
+	(+)Despesas/Débitos:B66
+Exterior
+	(+)Despesas/Débitos:E62
+	Total Convertido em R$:E63
+	Cotação do Dólar do dia 18/12:E64
+Saldo desta fatura:A67
+Total de Parcelas a Vencer:A73
+Limite Total do Cartão de Crédito:A79
+Limite para Saque a Vista:B79
+(+)Limite Disponível:C79
+
+Encargos Financeiros
+	No período desta fatura: 18,49% am (A83)
+	Máximo contratual para o próximo período e atraso: 21,49% am (A84)
+	Saques no período desta fatura: 21,49% am (B83)
+	Parcelado no período desta fatura: 2,49% am (B84)
+
+
+

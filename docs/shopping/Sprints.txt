@@ -1,0 +1,116 @@
+Sprints
+
+	'Shoppings'
+
+		Allow for the inclusion of my shoppings into the system so that it can analyze them, extract useful statistics, and provide valuable advices about my shopping habits
+			Offer a form containing three sections
+				The 'Header' section should contain two fields
+					'Date'
+						Default value: Today
+					'Store'
+						Allows for the insertion of new Stores
+							If I enter a value which still does not exist in the system, when I save the Shopping, the new Store gets created into the system
+				The 'New Item' section should contain
+					Fields for including a new purchased 'Item'
+						'Product'
+							'Barcode'
+							'Description'
+							'Brand'
+							'Size'
+						'Quantity'
+						'Price'
+						'Total'
+							Calculated
+								'Quantity' * 'Price'
+							Recalculated whenever any of its terms' value changes
+					A way for confirming the inclusion of the newly purchased Item into the 'Items List'
+				A 'Summary' containing tax related and total fields
+					'GST'
+					'PST'
+					'Total'
+						Calculated
+							Sum('Items'.'Total') + 'GST' + 'PST'
+						Recalculated whenever any of its terms' value changes
+				The 'Items List' section
+					List of previously included Items
+				A way of confirming the inclusion of the new Shopping
+				A way of cancelling/discarding the information entered
+
+		'Date' should
+			Visually indicate that its data came from the system
+			Allows for changing
+				In which case, it should visually indicate that a change was made
+				Future values are not allowed
+
+		Fetch product data using the Barcode
+			If data is found
+				The following fields
+					'Barcode'
+					'Description'
+					'Brand'
+					'Size'
+					'Price'
+
+					Should
+						Should be populated with the data found
+							'Price'
+								Last price purchased
+						Visually indicate that its data came from the system
+						Allow for change
+							In which case, it should visually indicate that a change was made
+							'Price'
+								Must show the percentual difference between the new and old price
+
+		Turn the 'Store' field into a search box with auto-complete functionality
+			Visually indicate that its data came from the system
+
+		Allow for navigating back and forth among all the zoomed-in 'Shopping'
+		
+	'Shoppings Browser'
+
+		Display an ordered 'Shoppings List' (recent Shoppings first)
+			For every Shopping, show
+				'Date'
+				'Store'
+				'Most Expensive Item'
+					Calculated
+						Max('Items'.'Total')
+				'Number of purchased Items'
+					Calculated
+						Count('Items')
+				'Purchase Total'
+					Calculated
+						Sum('Items'.'Total') + 'GST' + 'PST'
+
+		Allow for the exclusion of a specific 'Shopping'
+
+		Allow for zooming-in on a specific 'Shopping' for verification and update
+			From 'Shoppings Browser' to 'Shoppings'
+
+		Allow for the creation of a new 'Shopping' record
+		
+		Allow for changing the ordering of a 'Shoppings List'
+			By every field displayed in the 'Shoppings List'
+			Ascending and Descending
+		
+		Allow for filtering a 'Shoppings List' by
+			'Date'
+				Specific
+				Range
+			'Store'
+				Specific
+				A given list
+				Whose name contains a certain string
+			'The Purchase Total'
+				Range
+
+		Develop a Pagination mechanism for a list of purchases
+			Consider
+				Infinite Scroll
+				Traditional Pagination
+					Show the number of
+						The page we are in
+						The last page
+					Allow for navigating to
+						The previous, next, first and last page
+						An specific page number

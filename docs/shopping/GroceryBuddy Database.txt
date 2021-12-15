@@ -1,0 +1,82 @@
+Database
+	Cloud
+		AWS PostgreSQL
+		
+		Schema
+			Purchases
+				Id
+				Date
+				Establishment
+			PurchasePayments
+				PurchaseId
+				PaymentMethodId
+				Amount
+			PaymentMethods
+				Id
+				Name
+			PurchaseItems
+				PurchaseId
+				ItemSequence
+				ProductId
+				Barcode
+				Qty
+				Price
+			ItemCategories
+				PurchaseId
+				ItemSequence
+				CategoryId
+			Categories
+				Id
+				Name
+			Products
+				Id
+				Barcode
+				PLU
+				Name
+				BrandId
+				Packing
+			Brands
+				Id
+				Name
+				ManufacturerId
+			Manufacturers
+				Id
+				Name
+			ProductSizes
+				ProductId
+				SizeId
+			Sizes
+				Id
+				Magnitude
+				UnitId
+			Units
+				Id
+				Name
+				Symbol
+				MeasurementSystemId
+			MeasurementSystem
+				Id
+				Name
+			
+Código não é chave primária (mais de um produto com o mesmo código)
+Códigos alternativos (tipo de produto)
+	Coluna D em 'model' contém um código e em 'products' contém um código diferente;	
+Código da instância (item)
+	Coluna D em 'model' contém '-' e em 'products' contém um código;	
+Tamanhos alternativos
+	Coluna G em 'model' contém '/'
+Normalizar medidas/lingua
+Criar produtos compostos (embalagens)
+	
+ProductRepository v1
+	save(Product)
+	list(QueryProperties)
+	
+	Product SQLite Repo
+	Product MySQL
+	
+QueryProperties
+	OrderBy
+
+	Device
+		SQLite with Room

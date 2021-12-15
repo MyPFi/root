@@ -1,0 +1,116 @@
+Importação de Histórico de Cotações Bovespa
+
+	Layout dos arquivos
+	
+		Cabeçalho:
+		
+			Ano:
+				Linha 0
+				Colunas: 11 a 14
+				
+			Data da geração do arquivo:
+				Linha 0
+				Colunas: 23 a 30
+		
+		Registros:
+		
+			Cada registro do arquivo contém o resumo diário de negociações de um dado papel em uma data específica
+			
+			Classificação 
+				Tipo de registro 
+				Data do pregão 
+				Código de BDI
+				Nome da empresa
+				Código de Negociação
+			
+			Tamanho: 245 bytes
+		
+			Data do Pregão
+			
+				Colunas: 2 a 9
+				Formato: AAAAMMDD
+				
+			Código BDI
+			
+				Colunas: 10 a 11
+				
+				02 Lote Padrao
+				08 Recuperação Judicial
+				07 Recuperação Extrajudicial
+				
+			Código de Negociação do Papel:
+			
+				Colunas: 12 a 23
+			
+			Tipo de Mercado
+			
+				Colunas: 24 a 26
+				
+				010 Vista
+				020 Fracionário
+				
+			Nome Resumido da Empresa
+
+				Colunas: 27 a 38
+				
+			Especificação do Papel
+			
+				Colunas: 39 a 48
+				
+				ON 		Acões Ordinárias Nominativas
+				PN 		Acões Preferênciais Nominativas
+				PNA 	Acões Preferênciais Nominativas Classe A
+				PNA P 	Acões Preferênciais Nominativas Classe A
+				PNB 	Acões Preferênciais Nominativas Classe B
+				PNB P 	Acões Preferênciais Nominativas Classe B
+				
+			Preço de Abertura
+			
+				Colunas: 56 a 68
+				
+			Preço Máximo
+				
+				Colunas: 69 a 81
+				
+			Preço Mínimo
+				
+				Colunas: 82 a 94
+				
+			Preço Médio
+			
+				Colunas: 95 a 107
+				
+			Preço do Último Negócio
+				
+				Colunas: 108 a 120
+				
+			Melhor Oferta de Compra
+				
+				Colunas: 121 a 133
+				
+			Melhor Oferta de Venda
+				
+				Colunas: 134 a 146
+				
+			Número de Negócios
+				
+				Colunas: 147 a 151
+				
+			Quantidade Total de Títulos Negociados
+				
+				Colunas: 152 a 169
+				
+			Volume Total de Títulos Negociados
+				
+				Colunas: 170 a 187
+				
+			Fator de Cotação do Papel
+				
+				Colunas: 210 a 216
+				
+				'1' = Cotação Unitária
+				'1000' = Cotação por Lote de Mil Ações
+			
+			Código ISIN
+			
+				Colunas: 230 a 241

@@ -1,0 +1,1582 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+ <head> 
+  <!-- APS_HEADER_START --> 
+  <script type="text/javascript">
+var googletag = googletag || {};
+googletag.cmd = googletag.cmd || [];
+var pbjs = pbjs || {};
+pbjs.que = pbjs.que || [];
+</script> 
+  <script type="text/javascript" src="/common/javascript/postscribe.min.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+  <script type="text/javascript" src="/common/javascript/prebid.min.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+  <script type="text/javascript">
+var aps = aps || {"adUnits":[{"type":5,"pos":1,"id":"APS_TOP_BANNER_468_X_60","adSlot":"\/94693613\/ADVFN_br_apsglobalads_1","width":728,"height":90},{"type":5,"pos":30,"id":"APS_RIGHT_SKY_120_X_600","adSlot":"\/94693613\/ADVFN_br_apsglobalads_30","width":120,"height":600},{"type":5,"pos":32,"id":"APS_WRAP_RIGHT_160_X_600","adSlot":"\/94693613\/ADVFN_br_apsglobalads_32","width":160,"height":600},{"type":5,"pos":33,"id":"APS_WRAP_LEFT_160_X_600","adSlot":"\/94693613\/ADVFN_br_apsglobalads_33","width":160,"height":600},{"type":5,"pos":80,"id":"APS_300_X_250","adSlot":"\/94693613\/ADVFN_br_apsglobalads_80","width":300,"height":250},{"type":5,"pos":86,"id":"APS_300_X_600","adSlot":"\/94693613\/ADVFN_br_apsglobalads_86","width":300,"height":600},{"type":5,"pos":90,"id":"APS_SUPER_BANNER","adSlot":"\/94693613\/ADVFN_br_apsglobalads_90","width":728,"height":90},{"type":12,"pos":407,"id":"APS_BREAKING_NEWS","adSlot":"","width":3,"height":3},{"type":5,"pos":801,"id":"APS_300_X_250_2","adSlot":"\/94693613\/ADVFN_br_apsglobalads_801","width":300,"height":250},{"type":5,"pos":802,"id":"APS_300_X_250_3","adSlot":"\/94693613\/ADVFN_br_apsglobalads_802","width":300,"height":250},{"type":5,"pos":803,"id":"APS_300_X_250_4","adSlot":"\/94693613\/ADVFN_br_apsglobalads_803","width":300,"height":250},{"type":5,"pos":804,"id":"APS_300_X_250_5","adSlot":"\/94693613\/ADVFN_br_apsglobalads_804","width":300,"height":250},{"type":5,"pos":805,"id":"APS_300_X_250_6","adSlot":"\/94693613\/ADVFN_br_apsglobalads_805","width":300,"height":250},{"type":5,"pos":810,"id":"APS_MPU_FOOTER","adSlot":"\/94693613\/ADVFN_br_apsglobalads_810","width":300,"height":250},{"type":5,"pos":3000,"id":"APS_MOBILE_320x50","adSlot":"\/94693613\/ADVFN_br_apsglobalads_3000","width":320,"height":50}],"site":"advfn","view":"br","pid":"more-historical-data","targeting":{"COOKIE":0,"known_user":0,"UL":0,"MKTAK":"fENPT0tJRXxrbm93bl91c2VyPTB8VUw9MHxwYWdlX3BhdGg9L2JvbHNhLWRlLXZhbG9yZXMvYm92ZXNwYS9wZXRyb2JyYXMtUEVUUjQvaGlzdG9yaWNvL21haXMtZGFkb3MtaGlzdG9yaWNvc3xzeW1ib2w9UEVUUjR8bWFya2V0PUJPVnw%3D","MKTAS":858,"symbol":"BOV%3APETR4","symbol_type":"PR","market":"BOV","pid":"more-historical-data"},"enabled":true,"openx_enabled":false,"amazon_enabled":false,"prebid_enabled":true,"anvilJs_enabled":true,"anvil_params":{"aid":"A6A3JQ26FKZE","site":"advfn_br","pid":"more-historical-data","location":"https:\/\/br.advfn.com\/bolsa-de-valores\/bovespa\/petrobras-PETR4\/historico\/mais-dados-historicos","cookie":0,"known_user":0,"ul":0,"mktak":"fENPT0tJRXxrbm93bl91c2VyPTB8VUw9MHxwYWdlX3BhdGg9L2JvbHNhLWRlLXZhbG9yZXMvYm92ZXNwYS9wZXRyb2JyYXMtUEVUUjQvaGlzdG9yaWNvL21haXMtZGFkb3MtaGlzdG9yaWNvc3xzeW1ib2w9UEVUUjR8bWFya2V0PUJPVnw%3D","mktas":858,"symbol":"BOV%3APETR4","symbol_type":"PR","market":"BOV","units":{}}}
+</script> 
+  <script type="text/javascript" src="/common/javascript/aps.min.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+  <!-- APS_HEADER_END --> 
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+  <title>PETR4 - Dados Históricos Petrobras | Ações Bovespa | ADVFN Brasil</title> 
+  <meta name="format-detection" content="telephone=no"> 
+  <meta name="description" content="(PETR4) Dados históricos da empresa Petrobras com valores de abertura, fechamento, máxima, mínima e volume."> 
+  <link rel="search" href="/common/opensearch/index" type="application/opensearchdescription+xml" title="Pesquisa de Cotação de Ações ADVFN"> 
+  <style type="text/css">
+	@import url("/style-2012.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff");
+	@import url("//br.advfn.com/common/elements/css/symbol-title-element.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff");
+	@import url("//br.advfn.com/bolsa-de-valores/quote.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff");
+	@import url("//br.advfn.com/common/javascript/jquery-ui-1.11.4/jquery-ui.min.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff");
+	@import url("//br.advfn.com/common/javascript/datetimepicker/jquery-ui-timepicker-addon.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff");
+</style> 
+  <script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create','UA-25061202-1',{'cookieDomain':'advfn.com'});
+ga('require', 'linkid', 'linkid.js');
+ga('set', 'dimension4', '0');
+
+ga('send', 'pageview', '/' + 'exchanges' + '/' + 'more-historical' + '/' + 'BOV');
+</script> 
+  <script src="/common/generatedJS/4c518069977ae834ecb3c1a5b0ecd78d.js?classes=_Common" type="text/javascript"></script> 
+  <script type="text/javascript">
+	if(typeof Locale !== 'undefined')
+		var localeObj = new Locale('pt_BR');
+</script> 
+  <script src="/script.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff" type="text/javascript"></script> 
+  <script src="/common/javascript/jquery-ui.min.js" type="text/javascript"></script> 
+  <script src="/common/javascript/datetimepicker/jquery-ui-timepicker-addon.js" type="text/javascript"></script> 
+ </head> 
+ <body id="afnmainbodid" class="ADVFN3" leftmargin="5" rightmargin="5" topmargin="0" bottommargin="5" bgcolor="white" link="#2b3266" vlink="black"> 
+  <!--[if IE 7]>
+	<link rel="stylesheet" type="text/css" href="/common/styles/ie7.css">
+<![endif]--> 
+  <!--[if IE 8]>
+	<link rel="stylesheet" type="text/css" href="/common/styles/ie8.css">
+<![endif]--> 
+  <div id="header-container" class="normal"> 
+   <div id="header"> 
+    <div id="logo-area"> 
+     <a id="advfn-logo" title="Cotações de Ações da Bolsa de Valores Bovespa" href="/"> <img alt="ADVFN Brasil" src="/common/images/logos/br.advfn.com.gif" border="0"> </a> 
+     <span id="clock"> <span id="clock_dt" class="sb">21/07/2017</span>&nbsp;<span id="clock_tm" class="sb">02:22:56</span> </span> 
+     <span id="support-box"> <span id="support-email"><a href="/p.php?pid=prodmatrix&amp;xref=header_upgrade_text" id="prod-matrix-br">Produtos ADVFN</a></span> <span id="support-phone"><a href="/fale-conosco" id="prod-matrix-br">Fale Conosco</a></span> </span> 
+     <span id="account-buttons"> <a href="//br.advfn.com/common/account/register?xref=header_regBtn" class="header-btn">Cadastro Gratis</a> <a href="//br.advfn.com/common/account/login" class="header-btn" role="login">Login</a> 
+      <div id="pm-icon" class="Element PrivateMessageIconElement "></div> </span> 
+    </div> 
+    <div id="menu-area"> 
+     <div id="stocks-menu"> 
+      <ul>
+       <li class="odd first"><a href="/forum">Forum</a></li>
+       <li class="even"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPW1vbg==" role="login">Monitor</span></li>
+       <li class="odd"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPXF1b3Rl" role="login">Cotação</span></li>
+       <li class="even"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPWNoYXJ0cw==" role="login">Gráfico</span></li>
+       <li class="odd"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPWxldmVsMg==" role="login">Book</span></li>
+       <li class="even"><a href="/jornal">Notícias</a></li>
+       <li class="odd"><a href="/conversor-moedas">Moeda</a></li>
+       <li class="even"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPXBm" role="login">Portfólio</span></li>
+       <li class="odd"><span class="nav_span" vague="aHR0cHM6Ly9ici5hZHZmbi5jb20vcC5waHA/cGlkPWFkbnRs" role="login">Rankings</span></li>
+       <li class="even ff-header-btn"><a href="/follow-feed?xref=br_header" title="Ir ao Follow Feed!">Follow Feed</a></li>
+       <li class="odd last"><a href="/mundo">Bolsas</a></li>
+      </ul> 
+     </div> 
+     <div class="menu-middle-area"> 
+      <span id="top-advert"> 
+       <div id="APS_TOP_BANNER_468_X_60" class="dfpAd APS_TOP_BANNER_468_X_60" curpage="more-historical-data" page="apsglobalads" pos="1" view="br"></div> </span> 
+      <span id="user-links"> </span> 
+     </div> 
+     <div id="services-dropdown"> 
+      <ul>
+       <li class="nav-menu" id="dd1" nav_dropdown_url="/common/menu/1" nav_id="1" nav_align="left">Ferramentas<span class="arrow"></span></li>
+       <li class="nav-menu" id="dd2" nav_dropdown_url="/common/menu/2" nav_id="2" nav_align="left">Mercados<span class="arrow"></span></li>
+       <li class="nav-menu" id="dd3" nav_dropdown_url="/common/menu/3" nav_id="3" nav_align="left">Investimentos<span class="arrow"></span></li>
+       <li class="nav-menu" id="dd4" loaded="true" nav_id="4" nav_align="left"><a href="/simulador">Simulador</a></li>
+      </ul> 
+      <span id="search-box"> <script>AutoComplete.setPID('qkquote');</script> <input id="headerQuickQuoteSearch" class="ui-autocomplete-input rounded" type="text" autocomplete="off" name="epic" maxlength="10" onKeyPress="return disableEnterKey(event,this.value,'qkquote');" placeholder="Busca de Ativos"> <button id="quickQuoteSearchButton" onclick="return symbolSearch(document.getElementById('headerQuickQuoteSearch').value, 'qkquote');" type="button"> 
+        <div id="quickQuoteSearchMagnifylens"></div></button></span>
+     </div>  
+     <script type="text/javascript">
+					$(".nav-menu").each(function(){load_nav($(this))});
+				</script> 
+    </div> 
+   </div> 
+  </div>  
+  <div id="notification-zone" class="Element NotificationZoneElement "></div> 
+  <div id="ros_header_00"> 
+  </div> 
+  <div id="interstitial_00" pid="more-historical-data"> 
+  </div> 
+  <div id="empty-broker-btns"></div> 
+  <div style="width:994px; margin:0px auto">
+   <div id="breadcrumb" class="Element DRBreadcrumbElement ">
+    <div itemscope itemtype="http://data-vocabulary.org/Breadcrumb">
+     <a title="Bolsa de Valores" href="//br.advfn.com" itemprop="url"><span itemprop="title">ADVFN Brasil</span></a> › 
+     <a title="Bovespa" href="//br.advfn.com/bolsa-de-valores/bovespa" itemprop="url"><span itemprop="title">Bovespa</span></a> › 
+     <a title="Cotação Petrobras" href="//br.advfn.com/bolsa-de-valores/bovespa/petrobras-PETR4/cotacao" itemprop="url"><span itemprop="title">Cotação Petrobras</span></a> › 
+     <span itemprop="title">Petrobras PN</span>
+    </div>
+   </div>
+   <div id="quote-menu" class="Element LinkListElement TabMenuElement ">
+    <ul>
+     <li class="odd first"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/cotacao" title="Cotação das Ações da Petrobras">Cotação</a></li>
+     <li class="even"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/grafico" title="Gráfico da PETR4">Gráfico</a></li>
+     <li class="odd"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/book-de-ofertas" title="Book de Ofertas da PETR4">Book de Ofertas</a></li>
+     <li class="even"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/negocios" title="Negócios da PETR4">Negócios</a></li>
+     <li class="odd"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/noticias" title="Notícias sobre a Petrobras">Notícias</a></li>
+     <li class="even"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/dividendos" title="Dividendos da Petrobras">Dividendos</a></li>
+     <li class="odd"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/balanco" title="Balanços da Petrobras">Balanços</a></li>
+     <li class="even selected"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/historico" title="Histórico da PETR4">Histórico</a></li>
+     <li class="odd last"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/analise-tecnica" title="Análise Técnica sobre PETR4 (Petrobras)">Análise Técnica</a></li>
+    </ul>
+   </div>
+   <div id="toolbar">
+    <form method="post" action="/common/search/exchanges/historical">
+     <select name="symbol_alt" onchange="javascript:location.href=this.value;" style="width:250px"><option selected>Petrobras PN (BOV)</option></select>
+     <input type="text" name="symbol" id="symbol_entry" value="BOV:PETR4" style="width:150px" spellcheck="false">
+     <input type="submit" id="symbol_ok" value="OK" name="symbol_ok">
+    </form>
+   </div>
+   <div id="sub-menu" class="Element LinkListElement TabMenuElement ">
+    <ul>
+     <li class="odd first"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/historico">Resumo Histórico</a></li>
+     <li class="even"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/historico/download">Download de Dados Históricos</a></li>
+     <li class="odd selected last"><a href="/bolsa-de-valores/bovespa/petrobras-PETR4/historico/mais-dados-historicos">Mais Dados Históricos</a></li>
+    </ul>
+   </div>
+  </div> 
+  <span id="header-divider"></span> 
+  <div align="center"> 
+   <div id="quote" class="Element QuoteElement "></div> 
+   <div id="quote_dr" class="Element DataRecordElement "></div> 
+   <div id="sector" class="Element IndustrySectorElement "></div> 
+   <link rel="text/bootstrap" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> 
+   <style>
+
+#date-form{
+	display: table;
+    margin: 10px auto 0 auto;
+}
+
+
+#date-form label{
+	font-weight: 700;
+    margin: 0 5px;
+    vertical-align: baseline;
+}
+
+#date-form input{
+	height: 20px;
+    text-align: center;
+    font-size: 16px;
+    width: 120px;
+}
+
+.date-control{
+	text-decoration: none;
+}
+
+.control-container{
+	display: flex;
+	height: 40px;
+}
+
+.date-control span {
+	color: #000;
+	vertical-align: -5px;
+    margin: 0 2px;
+}
+
+.date-control:hover span{
+	text-decoration: underline;
+	color: #0500ff;
+}
+
+a.date-control:hover{
+	text-decoration: none;
+}
+
+.date-control-right{
+	float:right;
+}
+
+a.date-control-disabled {
+	text-decoration: none;
+	color: #000;
+}
+
+a.date-control-disabled:hover {
+	text-decoration: none;
+	color: #000;
+}
+
+#current-interval{
+	display: block;
+}
+
+#current-interval-label{
+	font-weight: 700;
+	display: block;
+}
+
+.edge-control{
+	width: 25%;
+	margin-top: 15px;
+}
+
+.middle-control{
+	width: 50%;
+	text-align: center;
+	margin-top: 5px;
+}
+
+.btn {
+	font-size: 14px;
+    white-space: nowrap;
+    padding: .1em 0.5em;
+    font-family: Open Sans, Helvetica,Arial,sans-serif;
+    /* line-height: 18px; */
+    display: inline-block;
+    zoom: 1;
+    vertical-align: top;
+    color: #fff;
+    text-align: center;
+    /* position: relative; */
+    -webkit-transition: border .25s linear, color .25s linear, background-color .25s linear;
+    transition: border .25s linear, color .25s linear, background-color .25s linear;
+    margin-left: 5px;
+}
+.btn.btn-dark-blue{background-color: #237fbc; border-color: #237fbc; -webkit-box-shadow: 0 3px 0 #1a5c87; box-shadow: 0 3px 0 #1a5c87;}
+.btn.btn-dark-blue:hover{background-color:#166ea8;}
+.btn.btn-dark-blue:active{ top: 3px; outline: none; -webkit-box-shadow: none; box-shadow: none;}
+</style> 
+   <div id="container"> 
+    <div class="symbol-title-container"> 
+     <div id="symbol_title" class="Element SymbolTitleElement " ajax_url="/common/element" ajax_params="eyJpZCI6InN5bWJvbF90aXRsZSIsImNsYXNzIjoiU3ltYm9sVGl0bGUiLCJidXR0b25zY3NzIjoibWFyZ2luLXRvcDo1cHg7IiwiZGlzcGxheV9sb2dvIjoidHJ1ZSIsInN5bWJvbCI6IkJPVl5QRVRSNCIsInNwZWNpYWxfdGl0bGUiOiJQRVRSNCAtIEhpc3RcdTAwZjNyaWNvIFBldHJvYnJhcyBQTiIsImNsYXNzX25hbWUiOiJTeW1ib2xUaXRsZUVsZW1lbnQifQ%3D%3D" ajax_disabled="1">
+      <script type="text/javascript" src="/common/follow-feed/js/FollowFeedRequest.js?v=c4ed0e3d7d50"></script>
+      <style>
+	@import url('/common/follow/follow-modal.css');
+</style> 
+      <div id="first-follow" style="display:none"> 
+       <p class="new-msg">Novidade! Você acabou de adicionar seu primeiro ativo para Seguir!</p> 
+       <p>Esta é uma função nova que será parte central de novas ferramentas que estamos construindo para você.</p> 
+       <p class="small-msg"> <a href="/p.php?pid=mon&amp;mid=-1"> Você pode ver a lista de ativos que está Seguindo como um Monitor aqui. </a> </p> 
+       <p class="close-icon"><span class="fa fa-times"></span></p> 
+       <div class="dialog-triangle">
+        <span class="fa fa-caret-up"></span>
+       </div> 
+      </div>
+      <div id="SymbolTitle">
+       <div class="inline heading" style="width:45%;">
+        <img style="max-width:52px;max-height:52pxmargin-top: 5px;" src="/common/images/companies/BOV_PETR4.png" alt="PETR4 - Histórico Petrobras PN" class="company-logo" title="PETR4 - Histórico Petrobras PN">
+        <h1 title="PETR4 - Histórico Petrobras PN"><strong>PETR4 - Histórico Petrobras PN</strong></h1>
+       </div>
+       <div class="inline buttons" style="margin-top:5px;">
+        <div class="ff-btn-container" style=""> 
+         <button type="button" title="Ir ao Follow Feed!" class="ff-btn" data-symbol="BOV%5EPETR4" onclick="window.location='/follow-feed?xref=ste_ffbtn';return false;"> <span class="btn-img">&nbsp;</span> </button> 
+         <p title="" class="counter"></p> 
+        </div>
+        <script type="text/javascript">
+	if (typeof FOLLOW_BUTTON === 'undefined')
+	{
+		var FOLLOW_BUTTON = {};
+	}
+	var currentId = '3b822617366404b72528ae1ceed38072';
+	FOLLOW_BUTTON[currentId] = {};
+	FOLLOW_BUTTON[currentId].FOLLOW_TEXT = 'Seguir PETR4';
+	FOLLOW_BUTTON[currentId].UNFOLLOW_TEXT = 'Deixar de Seguir';
+	FOLLOW_BUTTON[currentId].FOLLOWING_TEXT = 'Seguindo PETR4';
+	FOLLOW_BUTTON[currentId].FOLLOW_TITLE = 'Seguir Petr&oacute;leo Brasileiro S/A - Petrobras';
+	FOLLOW_BUTTON[currentId].UNFOLLOW_TITLE = 'Deixar de Seguir Petr&oacute;leo Brasileiro S/A - Petrobras';
+	FOLLOW_BUTTON[currentId].FOLLOWING_TITLE = 'Seguindo Petr&oacute;leo Brasileiro S/A - Petrobras';
+	FOLLOW_BUTTON[currentId].FOLLOWFEED_TITLE = 'Confire Petr&oacute;leo Brasileiro S/A - Petrobras no seu Follow Feed!';
+	FOLLOW_BUTTON[currentId].CURRENT_STATE = 'state_follow';
+	FOLLOW_BUTTON[currentId].XREF = 'no_xref';
+	FOLLOW_BUTTON[currentId].LOGGED_IN =  false;
+</script> 
+        <script type="text/javascript" src="/common/elements/js/follow-button-element.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <div id="3b822617366404b72528ae1ceed38072" role="login" class="follow-button follow" style="" data-symbol="BOV^PETR4"> 
+         <button class="action-button" type="button"> <span class="action-icon"> <span class="fa fa-spinner fa-spin"></span> </span> </button> 
+         <button class="state-button" type="button"> <span class="state-text">Seguir PETR4</span> </button> 
+         <style>
+	@import url('/common/follow/follow-modal.css');
+</style> 
+         <div id="first-follow" style="display:none"> 
+          <p class="new-msg">Novidade! Você acabou de adicionar seu primeiro ativo para Seguir!</p> 
+          <p>Esta é uma função nova que será parte central de novas ferramentas que estamos construindo para você.</p> 
+          <p class="small-msg"> <a href="/p.php?pid=mon&amp;mid=-1"> Você pode ver a lista de ativos que está Seguindo como um Monitor aqui. </a> </p> 
+          <p class="close-icon"><span class="fa fa-times"></span></p> 
+          <div class="dialog-triangle">
+           <span class="fa fa-caret-up"></span>
+          </div> 
+         </div> 
+        </div>
+        <div style="display: inline-block; margin: 0 5px;"></div>
+       </div>
+      </div> 
+      <script>
+			var el = $('#SymbolTitle').parent();
+			el.onSymbolChange = function(symbolObj)
+			{
+				elementUpdateParam(this, 'symbol', symbolObj.feed_symbol);
+				elementTriggerLoad(this);
+			};
+			ADVFNSymbolInfo.addListener(el);
+		</script>
+     </div> 
+    </div> 
+    <div class="row"> 
+     <div id="content"> 
+      <a href="" class="h2" style="text-decoration: none;"><h2>PETR4 Cotações Históricas</h2></a> 
+      <div id="date-container"> 
+       <form id="date-form" method="POST" action="/bolsa-de-valores/bovespa/petrobras-PETR4/historico/mais-dados-historicos"> 
+        <label for="Date1">De</label> 
+        <input id="Date1" name="Date1" type="text" value="22/04/17"> 
+        <label for="Date2">Até</label> 
+        <input id="Date2" name="Date2" type="text" value="21/07/17"> 
+        <button type="submit" class="btn btn-dark-blue" id="submit-btn">OK</button> 
+       </form> 
+       <div class="control-container"> 
+        <div class="edge-control"> 
+        </div> 
+        <div class="middle-control"> 
+        </div> 
+        <div class="edge-control"> 
+        </div> 
+       </div> 
+      </div> 
+      <div class="TableElement"> 
+       <table> 
+        <tbody>
+         <tr> 
+          <th>Data</th> 
+          <th>Abertura</th> 
+          <th>Fechamento</th> 
+          <th>Variação</th> 
+          <th>Variação (%)</th> 
+          <th>Mínima</th> 
+          <th>Máxima</th> 
+          <th>Volume</th> 
+         </tr> 
+         <tr class="odd">
+          <td>20 Jul 2017</td>
+          <td class="Numeric">13,289999</td>
+          <td class="Numeric">13,079999</td>
+          <td class="Numeric PriceTextDown">-0,15</td>
+          <td class="Numeric PriceTextDown">-1,13%</td>
+          <td class="Numeric ">13,03</td>
+          <td class="Numeric">13,35</td>
+          <td class="Numeric">29.696.100</td>
+         </tr>
+         <tr class="odd">
+          <td>19 Jul 2017</td>
+          <td class="Numeric">13</td>
+          <td class="Numeric">13,23</td>
+          <td class="Numeric PriceTextUp">0,29</td>
+          <td class="Numeric PriceTextUp">+2,24%</td>
+          <td class="Numeric ">12,969999</td>
+          <td class="Numeric">13,27</td>
+          <td class="Numeric">36.349.900</td>
+         </tr>
+         <tr class="odd">
+          <td>18 Jul 2017</td>
+          <td class="Numeric">13</td>
+          <td class="Numeric">12,939999</td>
+          <td class="Numeric PriceTextUp">0,05</td>
+          <td class="Numeric PriceTextUp">+0,39%</td>
+          <td class="Numeric ">12,83</td>
+          <td class="Numeric">13,02</td>
+          <td class="Numeric">19.079.600</td>
+         </tr>
+         <tr class="odd">
+          <td>17 Jul 2017</td>
+          <td class="Numeric">13,03</td>
+          <td class="Numeric">12,889999</td>
+          <td class="Numeric PriceTextDown">-0,13</td>
+          <td class="Numeric PriceTextDown">-1%</td>
+          <td class="Numeric ">12,87</td>
+          <td class="Numeric">13,049999</td>
+          <td class="Numeric">27.959.300</td>
+         </tr>
+         <tr class="odd">
+          <td>14 Jul 2017</td>
+          <td class="Numeric">12,96</td>
+          <td class="Numeric">13,02</td>
+          <td class="Numeric PriceTextUp">0,13</td>
+          <td class="Numeric PriceTextUp">+1,01%</td>
+          <td class="Numeric ">12,91</td>
+          <td class="Numeric">13,06</td>
+          <td class="Numeric">35.828.900</td>
+         </tr>
+         <tr class="odd">
+          <td>13 Jul 2017</td>
+          <td class="Numeric">12,96</td>
+          <td class="Numeric">12,889999</td>
+          <td class="Numeric PriceTextDown">-0,05</td>
+          <td class="Numeric PriceTextDown">-0,39%</td>
+          <td class="Numeric ">12,8</td>
+          <td class="Numeric">13,039999</td>
+          <td class="Numeric">32.817.500</td>
+         </tr>
+         <tr class="odd">
+          <td>12 Jul 2017</td>
+          <td class="Numeric">12,64</td>
+          <td class="Numeric">12,939999</td>
+          <td class="Numeric PriceTextUp">0,61</td>
+          <td class="Numeric PriceTextUp">+4,95%</td>
+          <td class="Numeric ">12,51</td>
+          <td class="Numeric">12,99</td>
+          <td class="Numeric">66.068.800</td>
+         </tr>
+         <tr class="odd">
+          <td>11 Jul 2017</td>
+          <td class="Numeric">11,95</td>
+          <td class="Numeric">12,329998</td>
+          <td class="Numeric PriceTextUp">0,32</td>
+          <td class="Numeric PriceTextUp">+2,66%</td>
+          <td class="Numeric ">11,899999</td>
+          <td class="Numeric">12,449999</td>
+          <td class="Numeric">45.212.500</td>
+         </tr>
+         <tr class="odd">
+          <td>10 Jul 2017</td>
+          <td class="Numeric">11,83</td>
+          <td class="Numeric">12,009999</td>
+          <td class="Numeric PriceTextUp">0,09</td>
+          <td class="Numeric PriceTextUp">+0,76%</td>
+          <td class="Numeric ">11,739999</td>
+          <td class="Numeric">12,009999</td>
+          <td class="Numeric">21.552.300</td>
+         </tr>
+         <tr class="odd">
+          <td>07 Jul 2017</td>
+          <td class="Numeric">12,129999</td>
+          <td class="Numeric">11,92</td>
+          <td class="Numeric PriceTextDown">-0,24</td>
+          <td class="Numeric PriceTextDown">-1,97%</td>
+          <td class="Numeric ">11,849999</td>
+          <td class="Numeric">12,169999</td>
+          <td class="Numeric">42.445.400</td>
+         </tr>
+         <tr class="odd">
+          <td>06 Jul 2017</td>
+          <td class="Numeric">12,279999</td>
+          <td class="Numeric">12,159999</td>
+          <td class="Numeric PriceTextDown">-0,05</td>
+          <td class="Numeric PriceTextDown">-0,41%</td>
+          <td class="Numeric ">12,079999</td>
+          <td class="Numeric">12,359999</td>
+          <td class="Numeric">51.745.700</td>
+         </tr>
+         <tr class="odd">
+          <td>05 Jul 2017</td>
+          <td class="Numeric">12,38</td>
+          <td class="Numeric">12,209999</td>
+          <td class="Numeric PriceTextDown">-0,21</td>
+          <td class="Numeric PriceTextDown">-1,69%</td>
+          <td class="Numeric ">12,119999</td>
+          <td class="Numeric">12,52</td>
+          <td class="Numeric">41.690.400</td>
+         </tr>
+         <tr class="odd">
+          <td>04 Jul 2017</td>
+          <td class="Numeric">12,34</td>
+          <td class="Numeric">12,42</td>
+          <td class="Numeric PriceTextUp">0,05</td>
+          <td class="Numeric PriceTextUp">+0,40%</td>
+          <td class="Numeric ">12,319999</td>
+          <td class="Numeric">12,43</td>
+          <td class="Numeric">12.425.100</td>
+         </tr>
+         <tr class="odd">
+          <td>03 Jul 2017</td>
+          <td class="Numeric">12,279999</td>
+          <td class="Numeric">12,369998</td>
+          <td class="Numeric PriceTextUp">0,07</td>
+          <td class="Numeric PriceTextUp">+0,57%</td>
+          <td class="Numeric ">12,22</td>
+          <td class="Numeric">12,409998</td>
+          <td class="Numeric">31.312.500</td>
+         </tr>
+         <tr class="odd">
+          <td>30 Jun 2017</td>
+          <td class="Numeric">12,249999</td>
+          <td class="Numeric">12,3</td>
+          <td class="Numeric PriceTextUp">0,10</td>
+          <td class="Numeric PriceTextUp">+0,82%</td>
+          <td class="Numeric ">12,19</td>
+          <td class="Numeric">12,479999</td>
+          <td class="Numeric">29.565.000</td>
+         </tr>
+         <tr class="odd">
+          <td>29 Jun 2017</td>
+          <td class="Numeric">12,26</td>
+          <td class="Numeric">12,199999</td>
+          <td class="Numeric PriceTextUp">0,11</td>
+          <td class="Numeric PriceTextUp">+0,91%</td>
+          <td class="Numeric ">12,089999</td>
+          <td class="Numeric">12,3</td>
+          <td class="Numeric">24.233.100</td>
+         </tr>
+         <tr class="odd">
+          <td>28 Jun 2017</td>
+          <td class="Numeric">12,27</td>
+          <td class="Numeric">12,089999</td>
+          <td class="Numeric PriceTextDown">-0,11</td>
+          <td class="Numeric PriceTextDown">-0,9%</td>
+          <td class="Numeric ">12,009999</td>
+          <td class="Numeric">12,319999</td>
+          <td class="Numeric">31.441.400</td>
+         </tr>
+         <tr class="odd">
+          <td>27 Jun 2017</td>
+          <td class="Numeric">12,34</td>
+          <td class="Numeric">12,199999</td>
+          <td class="Numeric PriceTextDown">-0,07</td>
+          <td class="Numeric PriceTextDown">-0,57%</td>
+          <td class="Numeric ">12,129999</td>
+          <td class="Numeric">12,479999</td>
+          <td class="Numeric">44.894.300</td>
+         </tr>
+         <tr class="odd">
+          <td>26 Jun 2017</td>
+          <td class="Numeric">12,1</td>
+          <td class="Numeric">12,27</td>
+          <td class="Numeric PriceTextUp">0,33</td>
+          <td class="Numeric PriceTextUp">+2,76%</td>
+          <td class="Numeric ">12,039999</td>
+          <td class="Numeric">12,3</td>
+          <td class="Numeric">42.410.000</td>
+         </tr>
+         <tr class="odd">
+          <td>23 Jun 2017</td>
+          <td class="Numeric">12,11</td>
+          <td class="Numeric">11,939999</td>
+          <td class="Numeric PriceTextDown">-0,09</td>
+          <td class="Numeric PriceTextDown">-0,75%</td>
+          <td class="Numeric ">11,87</td>
+          <td class="Numeric">12,15</td>
+          <td class="Numeric">33.228.700</td>
+         </tr>
+         <tr class="odd">
+          <td>22 Jun 2017</td>
+          <td class="Numeric">11,76</td>
+          <td class="Numeric">12,03</td>
+          <td class="Numeric PriceTextUp">0,39</td>
+          <td class="Numeric PriceTextUp">+3,35%</td>
+          <td class="Numeric ">11,72</td>
+          <td class="Numeric">12,039999</td>
+          <td class="Numeric">41.906.300</td>
+         </tr>
+         <tr class="odd">
+          <td>21 Jun 2017</td>
+          <td class="Numeric">11,95</td>
+          <td class="Numeric">11,64</td>
+          <td class="Numeric PriceTextDown">-0,22</td>
+          <td class="Numeric PriceTextDown">-1,85%</td>
+          <td class="Numeric ">11,590001</td>
+          <td class="Numeric">12,119999</td>
+          <td class="Numeric">58.505.100</td>
+         </tr>
+         <tr class="odd">
+          <td>20 Jun 2017</td>
+          <td class="Numeric">12,119999</td>
+          <td class="Numeric">11,859999</td>
+          <td class="Numeric PriceTextDown">-0,4</td>
+          <td class="Numeric PriceTextDown">-3,26%</td>
+          <td class="Numeric ">11,76</td>
+          <td class="Numeric">12,129999</td>
+          <td class="Numeric">53.742.200</td>
+         </tr>
+         <tr class="odd">
+          <td>19 Jun 2017</td>
+          <td class="Numeric">12,31</td>
+          <td class="Numeric">12,26</td>
+          <td class="Numeric PriceTextDown">-0,04</td>
+          <td class="Numeric PriceTextDown">-0,33%</td>
+          <td class="Numeric ">12,22</td>
+          <td class="Numeric">12,47</td>
+          <td class="Numeric">45.778.100</td>
+         </tr>
+         <tr class="odd">
+          <td>16 Jun 2017</td>
+          <td class="Numeric">12,579999</td>
+          <td class="Numeric">12,3</td>
+          <td class="Numeric PriceTextDown">-0,35</td>
+          <td class="Numeric PriceTextDown">-2,77%</td>
+          <td class="Numeric ">12,209999</td>
+          <td class="Numeric">12,590001</td>
+          <td class="Numeric">73.195.800</td>
+         </tr>
+         <tr class="odd">
+          <td>15 Jun 2017</td>
+          <td class="Numeric">12,939999</td>
+          <td class="Numeric">12,649999</td>
+          <td class="Numeric ">0,00</td>
+          <td class="Numeric ">+0,00%</td>
+          <td class="Numeric ">12,609999</td>
+          <td class="Numeric">13,039999</td>
+          <td class="Numeric">0</td>
+         </tr>
+         <tr class="odd">
+          <td>14 Jun 2017</td>
+          <td class="Numeric">12,939999</td>
+          <td class="Numeric">12,649999</td>
+          <td class="Numeric PriceTextDown">-0,29</td>
+          <td class="Numeric PriceTextDown">-2,24%</td>
+          <td class="Numeric ">12,609999</td>
+          <td class="Numeric">13,039999</td>
+          <td class="Numeric">67.078.600</td>
+         </tr>
+         <tr class="odd">
+          <td>13 Jun 2017</td>
+          <td class="Numeric">12,95</td>
+          <td class="Numeric">12,939999</td>
+          <td class="Numeric PriceTextUp">0,04</td>
+          <td class="Numeric PriceTextUp">+0,31%</td>
+          <td class="Numeric ">12,769999</td>
+          <td class="Numeric">13,02</td>
+          <td class="Numeric">22.731.700</td>
+         </tr>
+         <tr class="odd">
+          <td>12 Jun 2017</td>
+          <td class="Numeric">12,969999</td>
+          <td class="Numeric">12,899999</td>
+          <td class="Numeric PriceTextUp">0,05</td>
+          <td class="Numeric PriceTextUp">+0,39%</td>
+          <td class="Numeric ">12,769999</td>
+          <td class="Numeric">13,03</td>
+          <td class="Numeric">30.512.400</td>
+         </tr>
+         <tr class="odd">
+          <td>09 Jun 2017</td>
+          <td class="Numeric">12,96</td>
+          <td class="Numeric">12,849999</td>
+          <td class="Numeric ">0,00</td>
+          <td class="Numeric ">+0,00%</td>
+          <td class="Numeric ">12,83</td>
+          <td class="Numeric">13,1</td>
+          <td class="Numeric">30.217.200</td>
+         </tr>
+         <tr class="odd">
+          <td>08 Jun 2017</td>
+          <td class="Numeric">12,779999</td>
+          <td class="Numeric">12,849999</td>
+          <td class="Numeric PriceTextDown">-0,02</td>
+          <td class="Numeric PriceTextDown">-0,16%</td>
+          <td class="Numeric ">12,71</td>
+          <td class="Numeric">12,96</td>
+          <td class="Numeric">27.582.900</td>
+         </tr>
+         <tr class="odd">
+          <td>07 Jun 2017</td>
+          <td class="Numeric">13,279999</td>
+          <td class="Numeric">12,87</td>
+          <td class="Numeric PriceTextDown">-0,31</td>
+          <td class="Numeric PriceTextDown">-2,35%</td>
+          <td class="Numeric ">12,809999</td>
+          <td class="Numeric">13,34</td>
+          <td class="Numeric">44.037.900</td>
+         </tr>
+         <tr class="odd">
+          <td>06 Jun 2017</td>
+          <td class="Numeric">13,23</td>
+          <td class="Numeric">13,18</td>
+          <td class="Numeric PriceTextUp">0,01</td>
+          <td class="Numeric PriceTextUp">+0,08%</td>
+          <td class="Numeric ">13,03</td>
+          <td class="Numeric">13,329998</td>
+          <td class="Numeric">35.368.400</td>
+         </tr>
+         <tr class="odd">
+          <td>05 Jun 2017</td>
+          <td class="Numeric">12,96</td>
+          <td class="Numeric">13,169999</td>
+          <td class="Numeric PriceTextUp">0,09</td>
+          <td class="Numeric PriceTextUp">+0,69%</td>
+          <td class="Numeric ">12,92</td>
+          <td class="Numeric">13,239999</td>
+          <td class="Numeric">31.258.800</td>
+         </tr>
+         <tr class="odd">
+          <td>02 Jun 2017</td>
+          <td class="Numeric">12,79</td>
+          <td class="Numeric">13,079999</td>
+          <td class="Numeric PriceTextUp">0,22</td>
+          <td class="Numeric PriceTextUp">+1,71%</td>
+          <td class="Numeric ">12,68</td>
+          <td class="Numeric">13,089999</td>
+          <td class="Numeric">42.910.700</td>
+         </tr>
+         <tr class="odd">
+          <td>01 Jun 2017</td>
+          <td class="Numeric">13,159999</td>
+          <td class="Numeric">12,859999</td>
+          <td class="Numeric PriceTextDown">-0,12</td>
+          <td class="Numeric PriceTextDown">-0,92%</td>
+          <td class="Numeric ">12,8</td>
+          <td class="Numeric">13,289999</td>
+          <td class="Numeric">42.668.100</td>
+         </tr>
+         <tr class="odd">
+          <td>31 Mai 2017</td>
+          <td class="Numeric">13,209999</td>
+          <td class="Numeric">12,979999</td>
+          <td class="Numeric PriceTextDown">-0,4</td>
+          <td class="Numeric PriceTextDown">-2,99%</td>
+          <td class="Numeric ">12,95</td>
+          <td class="Numeric">13,31</td>
+          <td class="Numeric">44.682.800</td>
+         </tr>
+         <tr class="odd">
+          <td>30 Mai 2017</td>
+          <td class="Numeric">13,55</td>
+          <td class="Numeric">13,38</td>
+          <td class="Numeric PriceTextDown">-0,19</td>
+          <td class="Numeric PriceTextDown">-1,4%</td>
+          <td class="Numeric ">13,359999</td>
+          <td class="Numeric">13,64</td>
+          <td class="Numeric">34.463.800</td>
+         </tr>
+         <tr class="odd">
+          <td>29 Mai 2017</td>
+          <td class="Numeric">13,590001</td>
+          <td class="Numeric">13,569999</td>
+          <td class="Numeric PriceTextDown">-0,09</td>
+          <td class="Numeric PriceTextDown">-0,66%</td>
+          <td class="Numeric ">13,55</td>
+          <td class="Numeric">13,769999</td>
+          <td class="Numeric">15.934.400</td>
+         </tr>
+         <tr class="odd">
+          <td>26 Mai 2017</td>
+          <td class="Numeric">13,47</td>
+          <td class="Numeric">13,659999</td>
+          <td class="Numeric PriceTextDown">-0,09</td>
+          <td class="Numeric PriceTextDown">-0,65%</td>
+          <td class="Numeric ">13,399999</td>
+          <td class="Numeric">13,79</td>
+          <td class="Numeric">63.164.300</td>
+         </tr>
+         <tr class="odd">
+          <td>25 Mai 2017</td>
+          <td class="Numeric">13,969999</td>
+          <td class="Numeric">13,75</td>
+          <td class="Numeric PriceTextDown">-0,22</td>
+          <td class="Numeric PriceTextDown">-1,57%</td>
+          <td class="Numeric ">13,630001</td>
+          <td class="Numeric">14,19</td>
+          <td class="Numeric">44.854.000</td>
+         </tr>
+         <tr class="odd">
+          <td>24 Mai 2017</td>
+          <td class="Numeric">13,75</td>
+          <td class="Numeric">13,969999</td>
+          <td class="Numeric PriceTextUp">0,47</td>
+          <td class="Numeric PriceTextUp">+3,48%</td>
+          <td class="Numeric ">13,689999</td>
+          <td class="Numeric">14,089999</td>
+          <td class="Numeric">54.001.400</td>
+         </tr>
+         <tr class="odd">
+          <td>23 Mai 2017</td>
+          <td class="Numeric">13,449999</td>
+          <td class="Numeric">13,5</td>
+          <td class="Numeric PriceTextUp">0,09</td>
+          <td class="Numeric PriceTextUp">+0,67%</td>
+          <td class="Numeric ">13,38</td>
+          <td class="Numeric">13,6</td>
+          <td class="Numeric">48.385.300</td>
+         </tr>
+         <tr class="odd">
+          <td>22 Mai 2017</td>
+          <td class="Numeric">13,35</td>
+          <td class="Numeric">13,409998</td>
+          <td class="Numeric PriceTextDown">-0,24</td>
+          <td class="Numeric PriceTextDown">-1,76%</td>
+          <td class="Numeric ">13</td>
+          <td class="Numeric">13,51</td>
+          <td class="Numeric">54.813.300</td>
+         </tr>
+         <tr class="odd">
+          <td>19 Mai 2017</td>
+          <td class="Numeric">13,75</td>
+          <td class="Numeric">13,649999</td>
+          <td class="Numeric PriceTextUp">0,55</td>
+          <td class="Numeric PriceTextUp">+4,20%</td>
+          <td class="Numeric ">13,46</td>
+          <td class="Numeric">13,899999</td>
+          <td class="Numeric">70.521.500</td>
+         </tr>
+         <tr class="odd">
+          <td>18 Mai 2017</td>
+          <td class="Numeric">12,449999</td>
+          <td class="Numeric">13,1</td>
+          <td class="Numeric PriceTextDown">-2,5</td>
+          <td class="Numeric PriceTextDown">-16,03%</td>
+          <td class="Numeric ">12,449999</td>
+          <td class="Numeric">14</td>
+          <td class="Numeric">142.497.800</td>
+         </tr>
+         <tr class="odd">
+          <td>17 Mai 2017</td>
+          <td class="Numeric">15,56</td>
+          <td class="Numeric">15,6</td>
+          <td class="Numeric PriceTextDown">-0,1</td>
+          <td class="Numeric PriceTextDown">-0,64%</td>
+          <td class="Numeric ">15,51</td>
+          <td class="Numeric">15,72</td>
+          <td class="Numeric">29.819.400</td>
+         </tr>
+         <tr class="odd">
+          <td>16 Mai 2017</td>
+          <td class="Numeric">15,769999</td>
+          <td class="Numeric">15,699999</td>
+          <td class="Numeric PriceTextUp">0,03</td>
+          <td class="Numeric PriceTextUp">+0,19%</td>
+          <td class="Numeric ">15,52</td>
+          <td class="Numeric">15,779999</td>
+          <td class="Numeric">33.895.100</td>
+         </tr>
+         <tr class="odd">
+          <td>15 Mai 2017</td>
+          <td class="Numeric">15,769999</td>
+          <td class="Numeric">15,670001</td>
+          <td class="Numeric PriceTextUp">0,22</td>
+          <td class="Numeric PriceTextUp">+1,42%</td>
+          <td class="Numeric ">15,649999</td>
+          <td class="Numeric">15,87</td>
+          <td class="Numeric">46.719.600</td>
+         </tr>
+         <tr class="odd">
+          <td>12 Mai 2017</td>
+          <td class="Numeric">15,5</td>
+          <td class="Numeric">15,449999</td>
+          <td class="Numeric PriceTextUp">0,61</td>
+          <td class="Numeric PriceTextUp">+4,11%</td>
+          <td class="Numeric ">15,35</td>
+          <td class="Numeric">15,579999</td>
+          <td class="Numeric">83.054.300</td>
+         </tr>
+         <tr class="odd">
+          <td>11 Mai 2017</td>
+          <td class="Numeric">14,88</td>
+          <td class="Numeric">14,84</td>
+          <td class="Numeric PriceTextUp">0,11</td>
+          <td class="Numeric PriceTextUp">+0,75%</td>
+          <td class="Numeric ">14,64</td>
+          <td class="Numeric">14,92</td>
+          <td class="Numeric">28.852.300</td>
+         </tr>
+         <tr class="odd">
+          <td>10 Mai 2017</td>
+          <td class="Numeric">14,34</td>
+          <td class="Numeric">14,729999</td>
+          <td class="Numeric PriceTextUp">0,59</td>
+          <td class="Numeric PriceTextUp">+4,17%</td>
+          <td class="Numeric ">14,31</td>
+          <td class="Numeric">14,75</td>
+          <td class="Numeric">46.078.700</td>
+         </tr>
+         <tr class="odd">
+          <td>09 Mai 2017</td>
+          <td class="Numeric">14,15</td>
+          <td class="Numeric">14,14</td>
+          <td class="Numeric PriceTextUp">0,08</td>
+          <td class="Numeric PriceTextUp">+0,57%</td>
+          <td class="Numeric ">14,039999</td>
+          <td class="Numeric">14,239999</td>
+          <td class="Numeric">27.810.800</td>
+         </tr>
+         <tr class="odd">
+          <td>08 Mai 2017</td>
+          <td class="Numeric">14,129999</td>
+          <td class="Numeric">14,06</td>
+          <td class="Numeric PriceTextDown">-0,13</td>
+          <td class="Numeric PriceTextDown">-0,92%</td>
+          <td class="Numeric ">13,979999</td>
+          <td class="Numeric">14,35</td>
+          <td class="Numeric">36.354.000</td>
+         </tr>
+         <tr class="odd">
+          <td>05 Mai 2017</td>
+          <td class="Numeric">13,689999</td>
+          <td class="Numeric">14,19</td>
+          <td class="Numeric PriceTextUp">0,58</td>
+          <td class="Numeric PriceTextUp">+4,26%</td>
+          <td class="Numeric ">13,659999</td>
+          <td class="Numeric">14,209999</td>
+          <td class="Numeric">32.638.500</td>
+         </tr>
+         <tr class="odd">
+          <td>04 Mai 2017</td>
+          <td class="Numeric">14</td>
+          <td class="Numeric">13,609999</td>
+          <td class="Numeric PriceTextDown">-0,55</td>
+          <td class="Numeric PriceTextDown">-3,88%</td>
+          <td class="Numeric ">13,579999</td>
+          <td class="Numeric">14</td>
+          <td class="Numeric">37.432.900</td>
+         </tr>
+         <tr class="odd">
+          <td>03 Mai 2017</td>
+          <td class="Numeric">14,039999</td>
+          <td class="Numeric">14,159999</td>
+          <td class="Numeric PriceTextUp">0,17</td>
+          <td class="Numeric PriceTextUp">+1,22%</td>
+          <td class="Numeric ">13,95</td>
+          <td class="Numeric">14,249999</td>
+          <td class="Numeric">37.677.200</td>
+         </tr>
+         <tr class="odd">
+          <td>02 Mai 2017</td>
+          <td class="Numeric">14,06</td>
+          <td class="Numeric">13,99</td>
+          <td class="Numeric PriceTextUp">0,02</td>
+          <td class="Numeric PriceTextUp">+0,14%</td>
+          <td class="Numeric ">13,849999</td>
+          <td class="Numeric">14,34</td>
+          <td class="Numeric">37.616.100</td>
+         </tr>
+         <tr class="odd">
+          <td>01 Mai 2017</td>
+          <td class="Numeric">13,849999</td>
+          <td class="Numeric">13,969999</td>
+          <td class="Numeric ">0,00</td>
+          <td class="Numeric ">+0,00%</td>
+          <td class="Numeric ">13,689999</td>
+          <td class="Numeric">14,1</td>
+          <td class="Numeric">0</td>
+         </tr>
+         <tr class="odd">
+          <td>28 Abr 2017</td>
+          <td class="Numeric">13,849999</td>
+          <td class="Numeric">13,969999</td>
+          <td class="Numeric PriceTextUp">0,27</td>
+          <td class="Numeric PriceTextUp">+1,97%</td>
+          <td class="Numeric ">13,689999</td>
+          <td class="Numeric">14,1</td>
+          <td class="Numeric">30.876.300</td>
+         </tr>
+         <tr class="odd">
+          <td>27 Abr 2017</td>
+          <td class="Numeric">13,99</td>
+          <td class="Numeric">13,699999</td>
+          <td class="Numeric PriceTextDown">-0,31</td>
+          <td class="Numeric PriceTextDown">-2,21%</td>
+          <td class="Numeric ">13,56</td>
+          <td class="Numeric">14,03</td>
+          <td class="Numeric">28.983.100</td>
+         </tr>
+         <tr class="odd">
+          <td>26 Abr 2017</td>
+          <td class="Numeric">14,159999</td>
+          <td class="Numeric">14,009999</td>
+          <td class="Numeric PriceTextDown">-0,33</td>
+          <td class="Numeric PriceTextDown">-2,3%</td>
+          <td class="Numeric ">14</td>
+          <td class="Numeric">14,489999</td>
+          <td class="Numeric">36.708.700</td>
+         </tr>
+         <tr class="odd">
+          <td>25 Abr 2017</td>
+          <td class="Numeric">13,899999</td>
+          <td class="Numeric">14,34</td>
+          <td class="Numeric PriceTextUp">0,31</td>
+          <td class="Numeric PriceTextUp">+2,21%</td>
+          <td class="Numeric ">13,8</td>
+          <td class="Numeric">14,34</td>
+          <td class="Numeric">31.910.200</td>
+         </tr> 
+        </tbody>
+       </table> 
+      </div> 
+      <div class="control-container"> 
+       <div class="edge-control"> 
+       </div> 
+       <div class="middle-control"> 
+       </div> 
+       <div class="edge-control"> 
+       </div> 
+      </div> 
+     </div> 
+     <div id="sidebar"> 
+      <div id="sticky"> 
+       <div id="APS_300_X_250" class="dfpAd APS_300_X_250" curpage="more-historical-data" page="apsglobalads" pos="80" view="br" style="background:#fff;margin-bottom:20px"></div> 
+       <h3>PETR4 Histórico - 1 Dia</h3> 
+       <div id="chart1" class="Element ChartElement ">
+        <a href="//br.advfn.com/bolsa-de-valores/bovespa/petrobras-PETR4/grafico/tempo-real" title="Petrobras PN"><img src="/p.php?pid=staticchart&amp;s=BOV%5EPETR4&amp;t=37&amp;p=0&amp;dm=0&amp;vol=0&amp;width=280&amp;height=200&amp;min_pre=0&amp;min_after=60" width="280" height="200" alt="PETR4"></a>
+       </div> 
+       <h3>PETR4 Histórico - 1 Ano</h3> 
+       <div id="chart2" class="Element ChartElement ">
+        <a href="//br.advfn.com/bolsa-de-valores/bovespa/petrobras-PETR4/grafico/tempo-real" title="Petrobras PN"><img src="/p.php?pid=staticchart&amp;s=BOV%5EPETR4&amp;t=37&amp;p=5&amp;dm=0&amp;vol=0&amp;width=280&amp;height=200&amp;min_pre=0&amp;min_after=0" width="280" height="200" alt="PETR4"></a>
+       </div> 
+       <div id="ff-sidebar-quote" class="Element FollowFeedSidebarElement ">
+        <style type="text/css">
+	@import url('/common/styles/font-awesome.min.css');
+	@import url('/common/follow-feed/css/sidebar.css?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff');
+</style> 
+        <script type="text/javascript">
+	var FF_SIDEBAR_AJAX_URL = '/common/follow-feed/api?method=fetchQuote&symbol=BOV%5EPETR4';
+	var AUTO_HEIGHT = true;
+	var XREF_VALUE = 'ff_sidebar_quote';
+	var USER_LOGGED_IN = false;
+	var INTL_QUOTE = true;
+	var SIDEBAR_QUOTE = true;
+</script> 
+        <script type="text/javascript" src="/common/follow-feed/js/FollowFeed.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <script type="text/javascript" src="/common/follow-feed/js/FollowFeedCard.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <script type="text/javascript" src="/common/follow-feed/js/FollowFeedLang.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <script type="text/javascript" src="/common/follow-feed/js/FollowFeedUtils.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <script type="text/javascript" src="/common/vendor/handlebars/handlebars-v4.0.6.min.js"></script> 
+        <script type="text/javascript" src="/common/follow-feed/js/sidebar.js?v=20170720150209_a4c344bda3db87acfaf5ffb05ef73aff"></script> 
+        <script type="text/javascript">
+	FF_LANG.setLocale('pt_BR');
+</script> 
+        <div class="ff-sidebar sidebar-quote quote-intl"> 
+         <div class="cards-zone"> 
+          <div id="loading-msg"> 
+           <span class="fa fa-spinner fa-spin"></span>
+           <br> Carregando Follow Feed... 
+          </div> 
+         </div> 
+         <a href="/follow-feed?xref=ff_sidebar_quote" title="Veja mais no Follow Feed" class="toff-link"> Veja mais no Follow Feed </a> 
+        </div> 
+        <div id="sidebar-fflists-container"> 
+         <div id="follow-list-symbol" class="Element FollowListSymbolElement ">
+          <style>
+	div.follow-list-symbol-element {
+		border-top: 1px solid #AAA;
+		box-sizing: border-box;
+		background: #E9EAED;
+		min-height: 180px;
+		padding: 10px 0;
+	}
+	div.follow-list-symbol-element * {
+		box-sizing: border-box;
+	}
+	div.follow-list-symbol-element a.discover-btn {
+		margin: 0 10px 10px 10px;
+		display: block;
+		font-size: 15px;
+		text-align: center;
+		padding: 5px 10px;
+		text-decoration: none;
+		font-weight: bold;
+		border-radius: 2px;
+		border: 1px solid black;
+		box-shadow: 0 1px 1px #1C326C;
+		cursor: pointer;
+		background: #516AA0;
+		background: linear-gradient(to bottom,  #516AA0 0%, #3F5A96 100%);
+		background: -webkit-linear-gradient(top,  #516AA0 0%, #3F5A96 100%);
+		background: -moz-linear-gradient(top,  #516AA0 0%, #3F5A96 100%);
+		color: #FFFFFF;
+	}
+	div.follow-list-symbol-element a.discover-btn:hover {
+		text-shadow: 0 0 1px #FFFFFF;
+	}
+	div.follow-list-symbol-element a.discover-btn:active {
+		background: #3F5A96;
+		background: linear-gradient(to bottom,  #3F5A96 0%, #516AA0 100%);
+		background: -webkit-linear-gradient(top,  #3F5A96 0%, #516AA0 100%);
+		background: -moz-linear-gradient(top,  #3F5A96 0%, #516AA0 100%);
+		position: relative;
+		top: 1px;
+	}
+	div.follow-list-symbol-element p {
+		margin: 5px 10px 10px 10px;
+		font-size: 13px;
+	}
+	div.follow-list-box {
+		padding: 0;
+		height: 42px;
+		margin: 0;
+	}
+
+	div.follow-list-box:active {
+		position: relative;
+		top: 1px;
+	}
+	div.follow-list-box a {
+		transition: background 0.5s;
+		border-top: 1px solid rgb(210, 210, 210);
+		background: rgba(210, 210, 210, 0.2);
+		position: relative;
+		height: inherit;
+		display: block;
+		color: black;
+	}
+	div.follow-list-box a:hover {
+		background: rgba(210, 210, 210, 1);
+	}
+	div.follow-list-box a div {
+		vertical-align: middle;
+		position: absolute;
+		height: inherit;
+		height: 32px;
+		top: 5px;
+	}
+	div.follow-list-box a div.icon {
+		background-position: center center;
+		background-color: white;
+		background-size: contain;
+		background-repeat: no-repeat;
+		height: 32px;
+		width: 32px;
+		left: 5px;
+	}
+	div.follow-list-box a div.list-name {
+		text-overflow: ellipsis;
+		padding: 0 0 0 8px;
+		white-space: nowrap;
+		line-height: 32px;
+		font-weight: bold;
+		overflow: hidden;
+		font-size: 13px;
+		width: 178px;
+		left: 37px;
+	}
+	div.follow-list-symbol-element.sidebar-int div.follow-list-box a div.list-name {
+		text-align: left;
+		width: 245px;
+	}
+</style> 
+          <div class="follow-list-symbol-element sidebar-int"> 
+           <a class="discover-btn" href="https://br.advfn.com/follow-feed/listas" target="_blank" title="Descubra as listas Follow Feed mais seguidas em nossa comunidade.">Descubra Mais Listas</a> 
+           <p>PETR4 pode ser encontrado em:</p> 
+           <div class="follow-list-box">
+            <a href="https://br.advfn.com/follow-feed/listas/teste-53" title="Teste (007specter)">
+             <div class="icon" style="background-image:url('https://br.advfn.com/follow-feed/listas/icons/53.jpg');"></div>
+             <div class="list-name">
+              Teste
+             </div></a>
+           </div>
+           <div class="follow-list-box">
+            <a href="https://br.advfn.com/follow-feed/listas/ibovespa" title="Ibovespa (btorres)">
+             <div class="icon" style="background-image:url('https://br.advfn.com/follow-feed/listas/icons/34.jpg');"></div>
+             <div class="list-name">
+              Ibovespa
+             </div></a>
+           </div> 
+          </div>
+         </div> 
+        </div> 
+        <!-- Handlebars Templates for Mini Cards --> 
+        <script id="ff-template-mini-breakout" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-breakout ff-hovercard-trigger" id="{{cardID}}" data-encoded="{{dataEncoded}}" data-ffhover-cardid="{{cardID}}">
+		<div class="ff-logo">
+			<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">
+				<img src="{{companyLogo}}" title="{{companyName}}" alt="{{companyName}}" />
+			</a>
+		</div>
+		<div class="ff-info">
+			<div class="event">
+				<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">{{companyName}} ({{ticker}})</a> {{{eventMessage}}}
+			</div>
+			<div class="time">
+				<a href="{{cardLink}}" target="_blank">
+					<span class="time-ago" data-timestamp="{{timestamp}}"></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</script> 
+        <script id="ff-template-mini-orderbook" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-ob ff-hovercard-trigger" id="{{cardID}}" data-encoded="{{dataEncoded}}" data-ffhover-cardid="{{cardID}}">
+		<div class="ff-logo">
+			<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">
+				<img src="{{companyLogo}}" title="{{companyName}}" alt="{{companyName}}" />
+			</a>
+		</div>
+		<div class="ff-info">
+			<div class="event">
+				<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">{{companyName}} ({{ticker}})</a> {{{eventMessage}}}
+			</div>
+			<div class="time">
+				<a href="{{cardLink}}" target="_blank">
+					<span class="time-ago" data-timestamp="{{timestamp}}"></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</script> 
+        <script id="ff-template-mini-tradevolume" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-tradevol ff-hovercard-trigger" id="{{cardID}}" data-encoded="{{dataEncoded}}" data-ffhover-cardid="{{cardID}}">
+		<div class="ff-logo">
+			<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">
+				<img src="{{companyLogo}}" title="{{companyName}}" alt="{{companyName}}" />
+			</a>
+		</div>
+		<div class="ff-info">
+			<div class="event">
+				<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">{{companyName}} ({{ticker}})</a> {{{eventMessage}}}
+			</div>
+			<div class="time">
+				<a href="{{cardLink}}" target="_blank">
+					<span class="time-ago" data-timestamp="{{timestamp}}"></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</script> 
+        <script id="ff-template-mini-newsarticle" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-news" id="{{cardID}}" data-encoded="{{dataEncoded}}" title="{{articleTitle}}">
+		<div class="ff-logo">
+			<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">
+				<img src="{{companyLogo}}" title="{{companyName}}" alt="{{companyName}}" />
+			</a>
+		</div>
+		<div class="ff-info">
+			<div class="event">
+				<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">{{companyName}} ({{ticker}})</a> {{{eventMessage}}}
+			</div>
+			<div class="time">
+				<a href="{{cardLink}}" target="_blank">
+					<span class="time-ago" data-timestamp="{{timestamp}}"></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</script> 
+        <script id="ff-template-mini-buzz" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-buzz" id="{{cardID}}" data-encoded="{{dataEncoded}}">
+		<div class="ff-logo">
+			<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">
+				<img src="{{companyLogo}}" title="{{companyName}}" alt="{{companyName}}" />
+			</a>
+		</div>
+		<div class="ff-info">
+			<div class="event">
+				<a class="quote-link" href="{{quoteLink}}" title="{{companyName}}">{{companyName}} ({{ticker}})</a> {{{eventMessage}}}
+			</div>
+			<div class="time">
+				<a href="{{cardLink}}" target="_blank">
+					<span class="time-ago" data-timestamp="{{timestamp}}"></span>
+				</a>
+			</div>
+		</div>
+	</div>
+</script> 
+        <script id="ff-template-mini-native" type="text/x-handlebars-template">
+	<div class="ff-mini-card type-native" id="{{cardID}}" data-encoded="{{dataEncoded}}" >
+
+		<div class="ff-logo">
+			<a href="{{advertHeader.icon.url}}" title="{{advertHeader.icon.title}}">
+				<img src="{{advertHeader.icon.src}}" />
+			</a>
+		</div>
+
+		<div class="ff-info">
+
+			<div class="event">
+				<a href="{{advertHeader.event.url}}" title="{{advertHeader.event.title}}">
+					{{advertHeader.event.identity}}
+				</a>
+				{{{advertHeader.event.message}}}
+			</div>
+
+			<div class="time">
+				<span title="{{advertData.sponsored.title}}">{{{advertData.sponsored.text}}}</span>
+			</div>
+
+		</div>
+
+	</div>
+</script> 
+       </div> 
+       <div id="sectorlist" class="Element IndustrySectorListElement IndustrySectorListRenderer_Sidebar IndustrySectorListRenderer_UL IndustrySectorListRenderer ElementRenderer"></div> 
+       <div id="APS_300_X_250_3" class="dfpAd APS_300_X_250_3" curpage="more-historical-data" page="apsglobalads" pos="802" view="br" style="margin-top:20px;"></div> 
+       <div id="rp" class="Element RelatedPagesElement "></div> 
+      </div> 
+     </div> 
+    </div> 
+    <div style="clear:both"></div> 
+    <div id="APS_SUPER_BANNER" class="dfpAd APS_SUPER_BANNER" curpage="more-historical-data" page="apsglobalads" pos="90" view="br" style="margin-top:20px"></div> 
+   </div> 
+   <div id="admin" class="Element DataRecordAdminElement " style="width:800px;margin-top:20px"></div> 
+   <script>
+
+$(function(){
+
+		$('#Date1').datepicker({
+			maxDate: new Date(),
+			minDate: new Date(1990, 0, 1),
+			monthNamesShort: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+			dateFormat: "dd/mm/y",
+			changeYear: true,
+			changeMonth: true
+		});
+		$('#Date2').datepicker({
+			maxDate: new Date(),
+			minDate: new Date(1990, 0, 1),
+			monthNamesShort: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+			dateFormat: "dd/mm/y",
+			changeYear: true,
+			changeMonth: true
+		});
+	});
+
+var hightlightField = function(element){
+
+	$(element).css("border", "0.5px solid red");
+
+	$(element).focus(function(){
+	$(this).css({	
+				"border-width" : "2px", 
+				"border-style": "inset", 
+				"border-color": "initial", 
+				"border-image": "initial"
+				}
+	)});
+}
+
+</script> 
+  </div> 
+  <div style="height: 15px"></div>
+  <div style="width: 728px; margin: 0px auto; padding: 20px 0 47px 0; display: table; clear:both"> 
+   <div id="APS_SUPER_BANNER" class="dfpAd APS_SUPER_BANNER" curpage="more-historical-data" page="apsglobalads" pos="90" view="br"></div> 
+  </div>
+  <div class="clear"></div>
+  <div id="RecentStocksViewedElement" style="text-align:center;width:970px; position:relative; margin:auto;"> 
+   <div style="width:970px; text-align:left; margin:auto; display:inline-block">
+    <table id="RecentHistoryTbl" cellpadding="0" cellspacing="0" style=" float:left;border:1px solid #989898;-moz-border-radius: 5px;-webkit-border-radius: 5px;border-radius: 5px;width:658px; -moz-box-shadow: 0px 0px 2px #888;-webkit-box-shadow: 0px 0px 2px #888;box-shadow: 0px 0px 3px #888;clear:both;background-color:white;"> 
+     <tbody>
+      <tr> 
+       <td style="width:57px;"> </td> 
+       <td style="font-size:medium;font-family:arial, helvetica,sans-serif;font-weight:bold;text-align:left;height:30px;color:#3F3F3F;white-space: nowrap;">Seu Histórico Recente </td> 
+       <td id="history_pagination" style="font-size:small;color:grey;font-family:arial, helvetica,sans-serif;text-align:right;white-space: nowrap;"> </td> 
+       <td style="width:57px;"> </td> 
+      </tr> 
+      <tr> 
+       <td style="vertical-align:top;padding-top:20px;"> </td> 
+       <td colspan="2">
+        <div id="slider" style="position: relative; width: 544px; overflow: hidden; height: 219px;"> 
+         <div id="slider-container" style="position: absolute; top: 0px; left: 0px; width: 1088px; height: 80px;"> 
+          <div id="d1" style="position: absolute; top: 0px; left: 0px;width: 544px;height: 80px;">
+           <table cellpadding="0" cellspacing="3" style="background-color:#ffffff; opacity:0.4;">
+            <tbody>
+             <tr>
+              <td style="text-align:center; width:102px; height:80px; background-image:url('/common/instrumentsHistory/images/hist-box-grey.jpg'); background-repeat:no-repeat;" valign="top"> 
+               <table cellpadding="0" cellspacing="0" border="0" style="width:102px;"> 
+                <tbody>
+                 <tr style="height:15px;"> 
+                  <td style="text-align:center;"> 
+                   <div style="margin-left:auto;margin-right:auto;background-color:black;width:36px;height:15px;-moz-border-bottom-left-radius: 5px;-webkit-border-bottom-left-radius: 5px;border-bottom-left-radius: 5px;-moz-border-bottom-right-radius: 5px;-webkit-border-bottom-right-radius: 5px;border-bottom-right-radius: 5px;position:relative;"> 
+                    <span style="font-size:12px;font-family:arial, helvetica,sans-serif;color:white;font-weight:bold;height:15px;position:absolute;top:1px;left:0px;width:36px;">BOV</span> 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:40px;"> 
+                  <td> 
+                   <div style="font-size:14px;font-family:arial, helvetica,sans-serif;font-weight:bold;color:#002c73;text-align:center;margin-top:6px;">
+                     VALE5 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:23px;"> 
+                  <td style="font-size:14px;font-family:arial, helvetica,sans-serif;text-align:center;vertical-align:top;"> Vale PNA </td> 
+                 </tr> 
+                </tbody>
+               </table> </td> 
+              <td style="text-align:center; width:102px; height:80px; background-image:url('/common/instrumentsHistory/images/hist-box-grey.jpg'); background-repeat:no-repeat;" valign="top"> 
+               <table cellpadding="0" cellspacing="0" border="0" style="width:102px;"> 
+                <tbody>
+                 <tr style="height:15px;"> 
+                  <td style="text-align:center;"> 
+                   <div style="margin-left:auto;margin-right:auto;background-color:black;width:36px;height:15px;-moz-border-bottom-left-radius: 5px;-webkit-border-bottom-left-radius: 5px;border-bottom-left-radius: 5px;-moz-border-bottom-right-radius: 5px;-webkit-border-bottom-right-radius: 5px;border-bottom-right-radius: 5px;position:relative;"> 
+                    <span style="font-size:12px;font-family:arial, helvetica,sans-serif;color:white;font-weight:bold;height:15px;position:absolute;top:1px;left:0px;width:36px;">BOV</span> 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:40px;"> 
+                  <td> 
+                   <div style="font-size:26px;font-family:arial, helvetica,sans-serif;font-weight:bold;color:#002c73;text-align:center;margin-top:6px;">
+                     IBOV 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:23px;"> 
+                  <td style="font-size:14px;font-family:arial, helvetica,sans-serif;text-align:center;vertical-align:top;"> iBovespa </td> 
+                 </tr> 
+                </tbody>
+               </table> </td> 
+              <td style="text-align:center; width:102px; height:80px; background-image:url('/common/instrumentsHistory/images/hist-box-grey.jpg'); background-repeat:no-repeat;" valign="top"> 
+               <table cellpadding="0" cellspacing="0" border="0" style="width:102px;"> 
+                <tbody>
+                 <tr style="height:15px;"> 
+                  <td style="text-align:center;"> 
+                   <div style="margin-left:auto;margin-right:auto;background-color:black;width:36px;height:15px;-moz-border-bottom-left-radius: 5px;-webkit-border-bottom-left-radius: 5px;border-bottom-left-radius: 5px;-moz-border-bottom-right-radius: 5px;-webkit-border-bottom-right-radius: 5px;border-bottom-right-radius: 5px;position:relative;"> 
+                    <span style="font-size:12px;font-family:arial, helvetica,sans-serif;color:white;font-weight:bold;height:15px;position:absolute;top:1px;left:0px;width:36px;">BOV</span> 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:40px;"> 
+                  <td> 
+                   <div style="font-size:14px;font-family:arial, helvetica,sans-serif;font-weight:bold;color:#002c73;text-align:center;margin-top:6px;">
+                     PETR4 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:23px;"> 
+                  <td style="font-size:14px;font-family:arial, helvetica,sans-serif;text-align:center;vertical-align:top;"> Petrobras </td> 
+                 </tr> 
+                </tbody>
+               </table> </td> 
+              <td style="text-align:center; width:102px; height:80px; background-image:url('/common/instrumentsHistory/images/hist-box-grey.jpg'); background-repeat:no-repeat;" valign="top"> 
+               <table cellpadding="0" cellspacing="0" border="0" style="width:102px;"> 
+                <tbody>
+                 <tr style="height:15px;"> 
+                  <td style="text-align:center;"> 
+                   <div style="margin-left:auto;margin-right:auto;background-color:black;width:36px;height:15px;-moz-border-bottom-left-radius: 5px;-webkit-border-bottom-left-radius: 5px;border-bottom-left-radius: 5px;-moz-border-bottom-right-radius: 5px;-webkit-border-bottom-right-radius: 5px;border-bottom-right-radius: 5px;position:relative;"> 
+                    <span style="font-size:12px;font-family:arial, helvetica,sans-serif;color:white;font-weight:bold;height:15px;position:absolute;top:1px;left:0px;width:36px;">BOV</span> 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:40px;"> 
+                  <td> 
+                   <div style="font-size:14px;font-family:arial, helvetica,sans-serif;font-weight:bold;color:#002c73;text-align:center;margin-top:6px;">
+                     IGBR3 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:23px;"> 
+                  <td style="font-size:14px;font-family:arial, helvetica,sans-serif;text-align:center;vertical-align:top;"> IGB SA </td> 
+                 </tr> 
+                </tbody>
+               </table> </td> 
+              <td style="text-align:center; width:102px; height:80px; background-image:url('/common/instrumentsHistory/images/hist-box-grey.jpg'); background-repeat:no-repeat;" valign="top"> 
+               <table cellpadding="0" cellspacing="0" border="0" style="width:102px;"> 
+                <tbody>
+                 <tr style="height:15px;"> 
+                  <td style="text-align:center;"> 
+                   <div style="margin-left:auto;margin-right:auto;background-color:black;width:24px;height:15px;-moz-border-bottom-left-radius: 5px;-webkit-border-bottom-left-radius: 5px;border-bottom-left-radius: 5px;-moz-border-bottom-right-radius: 5px;-webkit-border-bottom-right-radius: 5px;border-bottom-right-radius: 5px;position:relative;"> 
+                    <span style="font-size:12px;font-family:arial, helvetica,sans-serif;color:white;font-weight:bold;height:15px;position:absolute;top:1px;left:0px;width:24px;">FX</span> 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:40px;"> 
+                  <td> 
+                   <div style="font-size:14px;font-family:arial, helvetica,sans-serif;font-weight:bold;color:#002c73;text-align:center;margin-top:6px;">
+                     USDBRL 
+                   </div> </td> 
+                 </tr> 
+                 <tr style="height:23px;"> 
+                  <td style="font-size:14px;font-family:arial, helvetica,sans-serif;text-align:center;vertical-align:top;"> Dólar EUA .. </td> 
+                 </tr> 
+                </tbody>
+               </table> </td> 
+             </tr>
+            </tbody>
+           </table> 
+          </div> 
+         </div> 
+         <div style="position:relative; top:90px; width:100%; height:100%; line-height:100%; font-size:14px; text-align:left; font-family:arial, helvetica,sans-serif;">
+          Ações já vistas aparecerão nesta caixa, facilitando a volta para cotações pesquisadas anteriormente.
+          <br>
+          <br>
+          <b>Registre-se agora</b> para criar sua própria lista de ações customizada.
+          <br>
+          <br>
+          <iframe allowtransparency="true" style="background-color:transparent;" id="mkta_716_88672" name="mkta_716_88672" src="//mkta.advfn.com/i-i.php?s=716&amp;w=526&amp;h=48&amp;iid=1500603777&amp;k=fENPT0tJRXxrbm93bl91c2VyPTB8VUw9MHxwYWdlX3BhdGg9L2JvbHNhLWRlLXZhbG9yZXMvYm92ZXNwYS9wZXRyb2JyYXMtUEVUUjQvaGlzdG9yaWNvL21haXMtZGFkb3MtaGlzdG9yaWNvc3xzeW1ib2w9UEVUUjR8bWFya2V0PUJPVnw%3D" width="526" height="48" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+         </div> 
+        </div></td>
+       <td style="width:57px;vertical-align:top;padding-top:20px;"></td>
+      </tr>
+     </tbody>
+    </table> 
+    <div style="width:300px; height:250px; display:inline; background-color:#efefef; float:left;  margin-left:10px;"> 
+     <div id="APS_MPU_FOOTER" class="dfpAd APS_MPU_FOOTER" curpage="more-historical-data" page="apsglobalads" pos="810" view="br"></div> 
+    </div> 
+   </div>
+  </div> 
+  <div class="wr-br-footer"> 
+   <div class="ct-br-footer"> 
+    <div class="col"> 
+     <span class="logo">ADVFN</span> 
+     <ul class="links"> 
+      <li><a href="/">Home</a></li> 
+      <li><a href="/p.php?pid=quote">Cotações</a></li> 
+      <li><a href="/p.php?pid=mon">Monitor</a></li> 
+      <li><a href="/plataforma-grafica">Desktop</a></li> 
+      <li><a href="/common/portfolio">Portfólio</a></li> 
+      <li><a href="/forum">Fórum</a></li> 
+      <li><a href="/noticias">Notícias</a></li> 
+      <li><a href="/ferramentas/ranking">Rankings</a></li> 
+      <li><a href="/cambio">Câmbio</a></li> 
+      <li><a href="/institucional/mapa-do-site">Mapa do Site</a></li> 
+      <li><a href="/ajuda">Ajuda</a></li> 
+     </ul> 
+    </div> 
+    <div class="col"> 
+     <div class="mobile"> 
+      <ul> 
+       <li class="app-store"><a href="https://itunes.apple.com/br/app/advfn-bolsa/id553516718"><img src="/imagens/app-store.png"></a></li> 
+       <li class="blackberry"><a href="https://appworld.blackberry.com/webstore/content/59948937/?countrycode=BR&amp;lang=pt_br"><img src="/imagens/blackberry.png"></a></li> 
+       <li class="google-play"><a href="https://play.google.com/store/apps/details?id=com.advfn.android.mobile&amp;hl=pt_BR"><img src="/imagens/google-play.png"></a></li> 
+      </ul> 
+     </div> 
+    </div> 
+    <div class="col"> 
+     <div class="social"> 
+      <p>Siga-nos nas redes sociais</p> 
+      <a href="https://www.twitter.com/ADVFNBRASIL" class="twitter">Twitter</a>
+      <a href="https://www.facebook.com/advfnbrasil" class="facebook">Facebook</a> 
+     </div> 
+    </div> 
+   </div> 
+  </div>
+  <div id="chatonline"> 
+   <a class="click clicked" href="javascript: void(0)" onclick="window.open('http://br.advfn.com/ct.php?ct=NzM5OTM=', 'atendimento', 'width=540, height=709'); return false;"></a>
+   <span class="close clicked"></span> 
+  </div>
+  <table id="footerTextTbl" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #a0a0a0;margin-top:50px;padding-top:10px;"> 
+   <tbody>
+    <tr>
+     <td><img src="//images.advfn.com/imagesnew/2/gb/space.gif" height="5" border="0" alt=""></td>
+    </tr> 
+    <style>
+.wr-br-footer ul,
+.wr-br-footer p {
+	margin: 0;
+	padding: 0;
+}
+.wr-br-footer {
+    background: #f7f7f7;
+    width: 100%;
+    display: inline-block;
+    border-top: 1px solid #e3e3e3;
+    border-bottom: 1px solid #e3e3e3;
+    margin: 100px 0 0 !important;
+    height: 158px;
+}
+.wr-br-footer .ct-br-footer {
+    width: 964px;
+    margin: 0px auto;
+    padding: 20px 0 0;
+}
+.wr-br-footer .ct-br-footer .col{
+    width: 33%;
+    float: left;
+}
+.wr-br-footer .ct-br-footer span.logo {
+    background: url("/imagens/logo-footer.png") no-repeat;
+    width: 50%;
+    height: 26px;
+    display: inline-block;
+    text-indent: -9999px;
+	float: left;
+}
+.wr-br-footer .ct-br-footer ul.links {
+    vertical-align: top;
+    display: inline-block;
+    list-style-type: none;
+	margin-top: 15px;
+}
+.wr-br-footer .ct-br-footer ul.links li {
+    width: 33%;float: left;
+    font-size: 12px;
+    line-height: 20px;
+	text-align: left;
+}
+.wr-br-footer .ct-br-footer ul.links li:first-child {
+    margin-top: 0;
+}
+.wr-br-footer .ct-br-footer ul.links li a {
+    color: #1256A0;
+    text-decoration: none;
+    font-size: 12px;
+}
+.wr-br-footer .ct-br-footer ul.links li a:hover {
+    text-decoration: underline;
+}
+.wr-br-footer

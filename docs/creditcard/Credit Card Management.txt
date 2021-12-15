@@ -1,0 +1,159 @@
+How to work with class arguments alone (no class fields)
+
+Regular expense
+	straight to the expense log
+Temporary service 
+	Total record goes to schedule
+	expense records are generated and from this record
+		they have the total number of installments and the current installment
+	value of the first record is subtracted from the total record
+	number of parcel of the total record is incremented
+	data of transaction of the total record is updated
+
+	A continuous service is one that is hired for indeterminate time.
+	
+	Unless it gets canceled, month after month it is going to show up in the credit card invoice.
+	
+	Its price is fixed in advance and hardly changes but, from time, as anything else, it has to suffer some correction in order to protect the service provider from, at least, the inflation.	Some other common reasons for change are 
+		Promotions (e.g. promotional periods);
+		Exchange rates variation, for services hired in a foreign currency;
+		Renegotiation for financial rebalancing;
+		Service package update.
+	
+	Some services may be canceled anytime, case in which there may be pro rata chargings in future invoice(s).
+	
+	Other services may only be canceled after full periods. In that case, the standard price is charged for the last month and the service disappears from the invoice.
+	
+	Some service providers work with pre-defined due dates. In those cases, there may be a pro rata charging in the first month from the hiring date to the agreed due date.
+	
+	When a new continuous service is hired, we create a new record in the Expense Log containing its:
+		Transaction date
+		Due date (if different)
+		Establishment
+		Currency
+		Price
+		Receipt
+		
+	At the same time, we also schedule the next installment for the next due date.
+	
+	Every month, when the invoice gets closed and we create a new Expense Log, we re  
+	
+	Spotify
+		Inicio do periodo
+			Imediato
+			Inicio de mês
+			Outro
+		Referencia
+		Data de vencimento
+		
+		Data de vencimento fixa
+		
+			Permite pro rata na contratação
+		
+			Fatura de Junho
+				Fechamento dia 16
+				
+			Contratação dia 1 de Junho
+				Lançamento no Expense Log dia 7 de Junho de mensalidade de Junho
+				Agendamento para o dia 7 de Julho de mensalidade de Julho
+			
+			Contratação entre o dia 2 e o dia 15 de Junho
+				Lançamento no Expense Log no dia da contratação (pro rata entre o dia da contratação e o dia 30 de Junho)
+				Agendamento para o dia 7 de Julho de mensalidade de Julho
+				
+			Contratação a partir do fechamento da fatura
+				Lançamento no dia da contratação (pro rata entre o dia da contratação e o dia 30 de Junho) no Expense Log de Julho 
+				Lançamento no dia 7 de Julho no Expense Log de Julho de mensalidade de Julho
+				Agendamento para o dia 7 de Agosto de mensalidade de Agosto
+					
+		Cancelamento após período cheio
+		
+			Cancelamento efetivado apenas no último dia de junho
+			Cobrança finalizada na fatura de Junho
+			Fatura de Julho já não consta mais Spotify
+
+		7 de junho é paga a mensalidade de Junho
+		
+		Se cancelar no dia 06 de junho
+			Período cheio
+			Cancelamento imediato
+				Cobrança dos 6 dias de Junho lançadas no dia 7 de junho
+				Fatura de Julho já não consta mais Spotify
+				
+		
+	11/07/2017	Netflix	34,00
+
+
+Credit Card Management
+
+	Receipt management
+		
+		There should be a receipt management service that is responsible for keeping receipts and extracting information from them in the same way the invoice processing service does with invoices
+		
+	* (((
+	===== Categorizing the invoice records (not part of reconciliation but useful for future analysis) =====
+
+	Proceed the pre-categorization of the invoice records based on the name of establishments and previous invoices records;
+
+	* Signal the ones that cannot be categorised.
+	)))
+
+	Valor desta fatura, valor total devido no ato da contratação * 2, Total desta Fatura, Valor do Documento, Total desta Fatura, (=) Saldo Desta Fatura
+
+	Actions
+		pending approval
+		pending review - next invoice
+		pending complaint
+		
+		Match is broken
+		
+	Access to the 
+		invoices, 
+		credit card receipts 
+		payment receipts
+			Santander
+				"Valor a Pagar"
+			Itaú
+				"Valor do pagamento"
+
+	IOF
+	0,0041% ao dia
+		A cada novo valor que você usa do cheque especial, você paga 0,38%. Se você retirar R$ 1000 dia 25, pagará 0,38% sobre ele. Se retirar mais R$ 1000 no dia 27, por exemplo, nova taxação de 0,38%. Entretanto, somado a essa cobrança, há outra, pelo tempo que ficou devendo. No dia 30, serão somados e cobrados de sua conta corrente:
+			R$ 1000 x 0,38% = R$ 3,80 – para a retirada do dia 25;
+			R$ 1000 x 6 x 0,0082% = R$ 0,492 – relativos ao período do dia 25 a 30, em que ficou devendo a primeira retirada;
+			R$ 1000 x 0,38% = R$ 3,80 – para a retirada do dia 27;
+			R$ 1000 x 4 x 0,0082% = R$ 0,328 – relativos ao período do dia 27 a 30, em que ficou devendo a segunda retirada.
+
+	Juros
+
+		Junho 2017
+			Parcelamento automático 9,99%
+				a partir do dia 3 de abril, o crédito rotativo do cartão poderá ser usado por, no máximo, 30 dias
+				parcela automaticamente o valor do crédito rotativo da sua última fatura
+			Crédito Rotativo 10,19%
+				Pagamento entre mínimo e total
+				IOF e IOF adicional
+			Saques 18,89%
+				Indefinido
+			Compras Parceladas com juros 2,49%
+				Juros já inclusos na parcela
+			Parcelamento de Fatura 9,99%
+				Juros e IOF já inclusos na parcela
+			Total Parcelado 9,99%
+			
+		Março 2017
+			Pagamento Parcial 18,47%
+				Pagamento entre mínimo e total
+				IOF e IOF adicional
+			Saques 21,47%
+			Compras Parceladas com juros 2,49%
+			Parcelamento de Fatura 11,03%
+			Total Parcelado 7,99%
+			
+		Fevereiro 2016
+			Encargos
+				Pagamento Parcial a.m. 18,53% (Crédito Rotativo)
+				Saques a.m. 21,53%
+				Compras Parceladas c/juros a.m. 2,49%
+				Parcelamento de Fatura a.m. 11,03%
+				Total Parcelado a.m. 11,03%

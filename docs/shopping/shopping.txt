@@ -1,0 +1,39 @@
+Products
+
+Inventory???
+
+ShoppingList
+	Date
+	List of ShoppingItem
+		Product
+			Category
+		Quantity
+	List of Purchase
+	
+	Create (Initially empty)
+	Add ShoppingItem
+	Remove ShoppingItem
+	
+Purchase
+	Date
+	Store
+		Merchant
+	ShoppingList
+	List of Item
+	Total
+	List of Payment
+		Amount
+		Account
+			Type
+			Number
+	Create
+		With Date, Store and ShoppingList
+	List Product's Categories
+	Display Products of a given Category
+	Buy a Product
+		Create a Product if it does not exist
+		Inform the Product, Price and Quantity
+	Request PurchaseSummary
+	Pay
+	
+Analysis and Reports

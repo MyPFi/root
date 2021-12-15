@@ -1,0 +1,187 @@
+Compra
+	Em cada compra, solicitar o recibo de pagamento do cartão
+	
+Conferência de Fatura (Processo pode tomar um dia inteiro para uma única fatura. Se passa de um mês para o outro, a complexidade cresce exponencialmente)
+
+	Download da fatura	
+	Organizar todos os recibos do mês por data/hora	
+	Separar por cartão (Bandeira - inclusive não identificada - e Titular/Adicional)	
+	Fotografar cada um dos recibos separadamente	
+	Copiar para o computador	
+	Rotacionar fotos para facilitar análise	
+	Reordenar (renomear) de acordo com o disposto na fatura	
+	Filtrar recibos que não pertencem à fatura atual
+	
+	Esclarecer as ocorrências com recibos e registrar o resultado em documento separado
+	
+		recibo não encontrado (pesquisar entre os recibos de bandeira não identificada)
+			compra e valor reconhecidos
+			não me lembro da compra
+			compra reconhecida, não tenho certeza do valor
+			compra reconhecida, valor suspeito
+			compra suspeita
+			assinatura mensal
+			compra pela internet
+			recibo enviado para o celular ou email
+			combinação de vários
+			
+		parcelamento, após primeira parcela (certificar-se de que o número da parcela cobrada está correto)
+			valor e número de parcelas reconhecidos
+			não tenho certeza do valor das parcelas
+			não tenho certeza do número de parcelas		
+			não tenho certeza do valor e do número de parcelas
+			valor suspeito
+			número de parcelas suspeito
+			valor e número de parcelas suspeito
+	
+	Conferir cálculos (Toma tempo, é desconfortável e extremamente frágil (sujeito a erros): Um simples erro de digitação ou o "pulo" de um único lançamento pode me fazer perder uma conta enorme)
+	
+		Soma de todas as "Transações Nacionais" (apenas valores positivos) e IOF das "Transações Internacionais" igual a "(+) Despesas/Débitos no Brasil" para cada cartão
+		
+		Soma de todas as "Transações Internacionais" (apenas valores positivos e excluindo IOF) igual a "(+) Despesas/Débitos no Exterior" para cada cartão
+		
+		Soma das "Transações Nacionais" e "Transações Internacionais" igual a "(=) Saldo deste cartão" para cada cartão
+		
+		Assegurar-se de que "Saldo Anterior" e "(-) Total de pagamentos" são iguais e investigar causas caso não sejam
+		
+		Conferir cálculo de multa e juros, caso haja
+		
+		Soma das "Transações Nacionais" de todos os cartões igual a "(+) Total Despesas/Débitos no Brasil"
+		
+		Soma das "Transações Internacionais" de todos os cartões igual a "(+) Total Despesas/Débitos no Exterior"
+		
+		Soma de todos os lançamento negativos (exceto Pagamento de Fatura) em todos os cartões igula a "(-) Total de créditos"
+		
+		Soma de "Saldo Anterior", Multa e Juros (caso haja), "(+) Total Despesas/Débitos no Brasil", "(+) Total Despesas/Débitos no Exterior", "(-) Total de pagamentos" e "(-) Total de créditos" igual a "(=) Saldo Desta Fatura
+		
+		Conferir a diferença entre a cotação do dolar informada na fatura e o fechamento da moeda na data de conversão informada
+		
+		Conferir se a diferença de cotação do dólar entre a data de fechamento e a data de pagamento da fatura anterior aparece como Crédito/Débito na fatura atual (Checar com Santander onde posso consultar a tabela de cotações que ele utiliza)
+		
+		Conferir cobrança de IOF nas compras no exterior e pagamento de títulos com cartão
+	
+	Esclarecer as ocorrências de cobrança e registrar o resultado em documento separado
+	
+Pagamento e registro em planilha de controle financeiro
+		
+Análise da Fatura (não sobra tempo para fazer)
+
+	Categorizar rubricas
+	Elaborar ranking de gastos por categoria
+	Elencar gastos
+		fixos
+		excepcionais
+		desnecessários
+	Registrar ações para a próxima fatura
+	
+	
+___________________________________________________________________________________________________________________________________________________	
+	
+Conferência automática de cálculos da fatura
+
+	"Transações Internacionais"
+		Para cada lançamento (exceto IOF), "R$" igual a "US$" * "Dólar"?
+
+	"(+) Despesas/Débitos no Brasil" de cada cartão
+		Igual à soma das "Transações Nacionais" + IOF das "Transações Internacionais" do respectivo cartão?
+			Pagamento de Fatura e Demais Créditos não entram nessa conta
+		
+	"(+) Despesas/Débitos no Exterior" de cada cartão
+		Igual à soma das "Transações Internacionais" (exceto IOF) do respectivo cartão?
+			Créditos não entram nessa conta
+		
+	"(=) Saldo deste cartão" de cada cartão
+		Igual à soma das "Transações Nacionais" e "Transações Internacionais" do respectivo cartão?
+	
+	"Saldo Anterior"		
+		Igual ao "Total desta Fatura" da fatura anterior?
+	
+	Pagamento em Atraso?
+		
+		"Vencimento" da fatura anterior é dia útil e é menor que a "Data do pagamento" do recibo de pagamento da fatura anterior
+		
+		"Vencimento" da fatura anterior não é dia útil e a "Data do pagamento" do recibo de pagamento da fatura anterior é maior que o próximo dia útil após o "Vencimento"
+		
+	Pagamento Total?
+		Pagamento em dia e "Saldo Anterior" e "(-) Total de pagamentos" ambos corretos e iguais ou,
+		
+		Pagamento em dia e "Saldo Anterior" incorreto e "Total desta Fatura" da fatura anterior igual a "(-) Total de pagamentos" ou,
+		
+		Pagamento em dia e "(-) Total de pagamentos" incorreto e "Saldo Anterior" igual ao "Valor a Pagar" do recibo de pagamento da fatura anterior
+			
+	Parcelamento de Fatura?
+	
+		Pagamento em dia e "(-) Total de pagamentos" correto e igual a "Parcele esta fatura em" ou qualquer das opções em "Parcele o total desta fatura em" da fatura anterior
+		
+		Pagamento em dia e "(-) Total de pagamentos" incorreto e "Valor a Pagar" do recibo de pagamento da fatura anterior igual a "Parcele esta fatura em" ou qualquer das opções em "Parcele o total desta fatura em" da fatura anterior				
+	
+	Pagamento Parcial (Entre o Mínimo e o Total)?
+	
+		Pagamento em dia e não parcelado e "Saldo Anterior" e "(-) Total de pagamentos" ambos corretos e "Saldo Anterior" maior que "(-) Total de pagamentos" e "(-) Total de pagamentos" maior ou igual que "Pagamento Mínimo" da fatura anterior
+		
+		Pagamento em dia e não parcelado e "Saldo Anterior" incorreto e "(-) Total de pagamentos" correto e "Total desta Fatura" da fatura anterior maior que "(-) Total de pagamentos" e "(-) Total de pagamentos" maior ou igual que "Pagamento Mínimo" da fatura anterior
+		
+		Pagamento em dia e não parcelado e "Saldo Anterior" correto e "(-) Total de pagamentos" incorreto e "Saldo Anterior" maior que "Valor a Pagar" do recibo de pagamento da fatura anterior e "Valor a Pagar" do recibo de pagamento da fatura anterior maior ou igual que "Pagamento Mínimo" da fatura anterior
+			
+	"(+) Juros Remuneratórios"
+	
+		Pagamento em Atraso?
+		
+		juros remuneratórios à taxa praticada para “Saques”
+		IOF
+		multa de 2%
+		juros moratórios de 1% ao mês, calculados sobre o valor da obrigação vencida acrescido da multa
+
+		
+		Parcelamento de Fatura?
+		
+		Pagamento Parcial (Entre o Mínimo e o Total)?
+		
+	"(+) Juros de Mora"
+	
+	
+	"(+) Multa por Atraso"
+	
+	
+	"(+) Total Despesas/Débitos no Brasil"
+		Igual à soma das "(+) Despesas/Débitos no Brasil" de todos os cartões?
+		
+	"(+) Total Despesas/Débitos no Exterior"	
+		Igual à soma das "(+) Despesas/Débitos no Exterior" de todos os cartões?
+		
+	"(-) Total de pagamentos"
+		Igual à soma do "Valor a Pagar" de todos os recibos de pagamento da fatura anterior?
+	
+	"(-) Total de créditos"
+		Igual à soma de todos os lançamentos negativos (com exceção do Pagamento de Fatura) em "Transações Nacionais" e "Transações Internacionais"?
+
+	"(=) Saldo Desta Fatura"
+		Igual à soma de "Saldo Anterior", "(+) Juros Remuneratórios, "(+) Juros de Mora", "(+) Multa por Atraso", "(+) Total Despesas/Débitos no Brasil", "(+) Total Despesas/Débitos no Exterior", "(-) Total de pagamentos" e "(-) Total de créditos" igual a 
+	
+Comparar "Dólar" com serviços online de cotação da moeda em "Data de fechamento desta fatura"
+	Caso a taxa de câmbio utilizada na data de fechamento da fatura seja diferente da taxa vigente no dia do pagamento ou do vencimento da fatura, o que ocorrer primeiro, a diferença será creditada ou debitada na próxima fatura, conforme o caso
+
+	Conferir a diferença entre a cotação do dolar informada na fatura e o fechamento da moeda na data de conversão informada
+	
+	Conferir se a diferença de cotação do dólar entre a data de fechamento e a data de pagamento da fatura anterior aparece como Crédito/Débito na fatura atual (Checar com Santander onde posso consultar a tabela de cotações que ele utiliza)
+	
+	Conferir cobrança de IOF nas compras no exterior e pagamento de títulos com cartão
+
+Esclarecer as ocorrências de cobrança e registrar o resultado em documento separado
+	
+* Avançado
+	Total Parcelado
+		parcela o saldo total do seu cartão, ou seja, a soma da sua fatura atual com todas as parcelas a vencer entre 7 e 24 parcelas fixas
+		Escolha um dos planos disponíveis na sua fatura e pague o valor da primeira parcela até a data de vencimento, assim as demais já serão automaticamente lançadas nas suas próximas faturas
+		Não há opções de Total Parcelado nas faturas
+	Saques
+	Compras Parceladas com juros
+	Controle de Anuidade (gasto mínimo para garantir gratuidade)
+	Limite disponível		
+	Parcelas a vencer 
+		Próxima Fatura 
+		Total a Vencer
+	Acúmulo de Bônus
+		Saldo de Bônus Anterior
+		(+) Bônus Acumulados por Transações
+		(=) Bônus Disponíveis

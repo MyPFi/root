@@ -1,0 +1,319 @@
+security: a certificate attesting credit, the ownership of stocks or bonds, or the right to ownership connected with tradable derivatives
+
+broker or brokerage firm
+ 
+Order Types {
+	Immediate Or Cancel Order - IOC
+	Limit Order
+	Open Order
+	At The Highest Possible Price
+	Day Order
+	Bracketed Buy Order
+	Market-With-Protection Order
+	Buy Minus
+	Firm Order
+}
+
+Monitor de Emails
+	Componentes se inscrevem para receber cópias de mensagens que atendam a determinados requisitos informados no ato da inscrição
+		Endereço a monitorar;
+		Remetente;
+		Assunto;
+		Mensagem;
+		Anexo:
+			Nome;
+			Tipo;
+			Tamanho;
+	
+	Monitora os endereços de email solicitados e encaminha as mensagens que atendam aos requisitos de cada componente ao respectivo interessado
+	
+Monitor de Operações via email - Modal Mais
+	Se inscreve junto ao monitor de emails para receber as notificações de operações do Modal Mais
+		Endereço: andreidiegocardoso@gmail.com
+		Remetente: atendimento@modalmais.com.br
+		Assunto: Atualização de Ordens!
+		
+	Cria a operação correspondente com base nas informações de cada mensagem e inclui a operação no Histórico de Operações 
+		
+Ação
+	Empresa
+	Código de Negociação
+	Lote Padrão
+	Preço
+		Devolve um callback que é atualizado com um novo preço tão logo disponível
+
+Histórico de Operações
+	Mantem uma fila de todas as operações realizadas
+		Inclusão
+		Cancelamento
+		Execuções
+			Parciais
+			Totais
+			
+	Antes de incluir a operação na fila, 
+	
+	Outcome from "" to ""
+	
+	(Trades of Month.JULY).outcome
+	
+	Trades of Month.JULY
+		Returns a new filtered Trades containing only July's trades
+	
+	Outcome of Month.JULY
+	
+		Sellings of Month.JULY
+			Filtered view of 'Trades of Month.JULY' containing only the Sellings of July
+			
+		Buyings forThe (Sellings of Month.JULY)
+			The counterparts for each of the Sellings
+				If more than one exists, choose the cheaper
+				If the Selling quantity is greater than the chosen Buying, bring the second cheaper
+				So on...
+		
+		Trades.outcome
+			Iterates through the filtered trades accumulating its values
+			If the total volume is greater than 20,000, calculate IR for every trade
+				Will in turn trigger dependent calculations
+					Dizimo, Lucro Liquido, Total IR, Total Dizimo e Total Lucro Liquido
+			Returns an Outcome instance
+	
+	
+	Outcome of TimeSpan.July
+	
+	import TimeSpan._
+	
+	Outcome of July
+	Outcome of 2017
+	Outcome of 3rd Quarter of 2017
+	Outcome of last 10 weeks
+	Outcome of `this Semester
+	Outcome of Period between 27/03/2017 and 25/05/2017
+	Outcome of
+		Returns the Period.toString
+	
+	Outcome mostLucrativeStock
+	Outcome mostLucrativeStockPerTimeSpan
+	Outcome mostLucrativeCompanyPerTimeSpan
+	Outcome mostLucrativeTrade
+	Outcome tradedStocks
+	Outcome tradedCompanies
+	Outcome mediumBuyingFrequency
+	Outcome mediumSellingFrequency
+	Outcome mediumTradeFrequency
+	Outcome amountOfShares
+	Outcome mediumStockPrice
+	Outcome totalVolume
+	Outcome totalBuyingVolume
+	Outcome totalSellingVolume
+	Outcome totalTradeExpenses
+	Outcome totalLiquidationFee
+	Outcome totalBuyingLiquidationFee
+	Outcome totalSellingLiquidationFee
+	Outcome totalEmoluments
+	Outcome totalBuyingEmoluments
+	Outcome totalSellingEmoluments
+	Outcome totalBrokerageFee
+	Outcome totalBuyingBrokerageFee
+	Outcome totalSellingBrokerageFee
+	
+	Outcome totalIncomeTaxInTheSource
+	Outcome totalCustodyFee
+	Outcome totalBrokerageServicePackage
+	Outcome totalGrossProfit
+	Outcome totalIncomeTax
+	Outcome totalTithe
+	Outcome totalNetProfit
+	
+	Outcome brokerageSlipsCodes
+	Outcome brokerageSlipsTotal
+	Outcome buyingBrokerageSlipsTotal
+	Outcome sellingBrokerageSlipsTotal
+	
+	TimeSpan
+		
+		Pre-defined instances (improve the DSL)
+		
+			January		/ Jan
+			February	/ Feb
+			March		/ Mar
+			April		/ Apr
+			May
+			June		/ Jun
+			July		/ Jul
+			August		/ Aug
+			September	/ Sep
+			October		/ Oct
+			November	/ Nov
+			December	/ Dec
+		
+		Unit (TimeUnit)
+			Minute(s), 
+			Hour(s), 
+			Day(s), 
+			Week(s), 
+			Month(s), 
+			Bimester(s), 
+			Trimester(s) / Quarter(s), 
+			Semester(s), 
+			Year(s), 
+			Decade(s)
+			
+		Span (Integer)
+
+		How to construct a TimeSpan
+			
+			Private constructor
+			
+			Only through factories
+			
+				this[T <: TimeSpan](unit: T): T
+					`this` Minute
+					`this` Hour
+					`this` Day / today
+					`this` Week
+					`this` Month
+					`this` Quarter
+					`this` Semester
+					`this` Year
+					`this` Decade
+				last[T <: TimeSpan](unit: T): T
+					last Minute
+					last X.Minutes
+					last Hour
+					last X.Hours
+					last Day / yesterday
+					last X.Days
+					last Week
+					last X.Weeks
+					last Month
+					last X.Months
+					last Quarter
+					last X.Quarters
+					last Semester
+					last X.Semesters
+					last Year
+					last X.Years
+					last Decade
+					last X.Decades
+				specific
+					Minute(minute: Int) 
+					Hour(hour: Int)
+					Day(day: Int)
+					Week(week: Int) 
+					Month(month: Int)
+					Bimester(bimester: Int)
+					Trimester(trimester: Int) / Quarter(quarter: Int)
+					Semester(semester: Int)
+					Year(year: Int)
+					Decade(decade: Int)
+		
+	
+		Methods above all return instances of Period
+		
+		How to make them interned?
+	
+	Subclasses
+	
+		Minutes(howMany: Int) 
+		Hour(howMany: Int)
+		Day(howMany: Int)
+		Week(howMany: Int) 
+		Month(howMany: Int)
+		Bimester(howMany: Int)
+		Trimester(howMany: Int) / Quarter(howMany: Int)
+		Semester(howMany: Int)
+		Year(howMany: Int)
+		Decade(howMany: Int)
+	
+Ordem
+	Status e transições
+				→ Cancelado	
+			  /	       ↑
+		Aberto	→ Parcialmente Executada
+			  \        ↓
+				→ Executada
+	Operações
+		Deve ser mantido um histórico de todas as operações realizadas em cada ordem
+		
+		Inclusão
+			Informado
+				Tipo: COMPRA 
+				Qtde: 2300
+				Papel: Ação -> Código de Negociação 
+				Preço: 3.33
+				Validade: 
+					DIA - Válida para hoje
+					DES - Válida até a data
+					VAC - Válida até cancelar
+					EOC - Executa ou cancela
+			Calculado
+				Status: Ordem em Aberto
+				Qtde Total Executada: 0 
+				Preço Médio: Preço
+				Saldo: Qtde
+				Data e Hora do envio:  Data/Hora Atual (Aug 2 2017 4:14PM)
+		Cancelamento
+			Calculado
+				Status: Cancelada
+				Data e Hora do envio:  Data/Hora Atual (Aug 2 2017 4:14PM)
+		Execução
+			Informado
+				Qtde: 2300
+					Se igual ao Saldo, a execução será Total
+				Preço: 3.33
+			
+			Calculado
+				Qtde Total Executada += Qtde
+				Preço Médio: ??? - Elaborar fórmula do preço médio - ???
+				Saldo -= Qtde
+				Data e Hora do envio:  Data/Hora Atual (Aug 2 2017 4:14PM)
+				
+			Compra
+				A primeira execução deverá incluir um novo registro para o papel na custódia
+				
+			Parcial
+				Calculado
+					Status: Ordem Parcialmente Executada
+				Número Máximo
+					(Qtde / Ação->Lote Padrão) - 1
+				Venda
+				
+			Total
+				Venda 
+					Retiram o registro do papel da Custódia
+					Informado
+					
+					Calculado
+					
+				Compra
+					Qtde Total Executada: Qtde
+					Informado
+					
+					Calculado
+						Status: Executada
+
+Ordens
+	Todas as ordens em seus últimos status
+	
+Custódia
+
+	Todas as 
+
+	Data/Hora
+		Cada nova negociação gera uma nova custódia
+		
+	Analítica
+		Mostra todas as compras de um dado papel
+		
+		Papel
+		Qtde
+		Preço de Compra
+		
+	Sintética
+		Agrupa todas as compras de um dado papel em um só registro, utilizando o preço médio entre todos os registros
+		
+		Preço Médio de Compra 
+
+Nota de Corretagem
+	Importada de um arquivo
+	Terá seus campos conferidos com os das ordens executadas

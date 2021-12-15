@@ -1,0 +1,39 @@
+Backend
+	Service
+		Purchase
+			Listing
+				Returns a JSON containing a list of all Purchase objects
+			Insertion
+		Product Search
+			Given a barcode, return a JSON containing product data
+				Barcode
+				Description
+				Brand
+				Size
+				Last price
+		Establishment
+			Search
+				Given a string, returns a JSON containing a list of establishments whose names contains that string
+	Database
+		Users
+			Purchases_App
+		Tables
+			Products
+				Barcode
+				Description
+				Brand
+				Size
+			Brands
+			
+			Establishments
+				Name
+			Items
+				Product
+				Quantity
+				Price
+			Purchases
+				Date
+				Establishiment
+				List[Items]
+				GST
+				PST
