@@ -4,3 +4,4 @@
 **/.bsp/
 *.iml
 /code/stocks/src/main/resources/com/andreidiego/mpfi/stocks/history/*
+**/~$*.*
