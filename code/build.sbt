@@ -1,4 +1,5 @@
 import Dependencies._
+import sbt.Keys.libraryDependencies
 
 ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := "3.1.0"
@@ -39,7 +40,6 @@ lazy val mpfiStocks = project
     libraryDependencies += pdfBox,
     libraryDependencies += apachePOI,
     libraryDependencies += apachePOIOOXML,
-    libraryDependencies += apachePOIOOXMLSchemas,
     libraryDependencies += htmlCleaner,
     libraryDependencies += scalaTest % Test,
     libraryDependencies += concordion % Test
