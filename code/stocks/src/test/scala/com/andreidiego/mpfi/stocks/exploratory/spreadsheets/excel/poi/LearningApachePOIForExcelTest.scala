@@ -69,48 +69,48 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
     sheet.getRow(1).getCell(index, CREATE_NULL_AS_BLANK).asInstanceOf[XSSFCell]
 
   "cell.getRawValue" should {
-    "return the numeric encoded value for cells formatted as dates" in { (sheet: Sheet) =>
+    "return the numeric encoded value for cells formatted as dates" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
       assume(tradingDateCell.getCellType == NUMERIC)
       assume(DateUtil.isCellDateFormatted(tradingDateCell))
 
       tradingDateCell.getRawValue should be(TRADING_DATE_ENCODED)
     }
-    "return the number as displayed in Excel for numeric cells" in { (sheet: Sheet) =>
+    "return the number as displayed in Excel for numeric cells" in { sheet =>
       val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
       assume(brokerageNoteCell.getCellType == NUMERIC)
       assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
 
       brokerageNoteCell.getRawValue should be(BROKERAGE_NOTE)
     }
-    "return 0 for string cells" in { (sheet: Sheet) =>
+    "return 0 for string cells" in { sheet =>
       val stockSymbolCell = cellAt(STOCK_SYMBOL_COLUMN_INDEX)(sheet)
       assume(stockSymbolCell.getCellType == STRING)
 
       stockSymbolCell.getRawValue should be("0")
     }
-    "return 'null' for empty cells" in { (sheet: Sheet) =>
+    "return 'null' for empty cells" in { sheet =>
       val emptyCell = cellAt(EMPTY_COLUMN_INDEX)(sheet)
       assume(emptyCell.getCellType == BLANK)
       assume(emptyCell.getStringCellValue.isEmpty)
 
       emptyCell.getRawValue should be(null)
     }
-    "return the numeric value for numeric cells formatted as currency" in { (sheet: Sheet) =>
+    "return the numeric value for numeric cells formatted as currency" in { sheet =>
       val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
       assume(priceCell.getCellType == NUMERIC)
       assume(priceCell.getCellStyle.getDataFormat == 8)
 
       priceCell.getRawValue should be(PRICE)
     }
-    "return the numeric value for formula cells formatted as currency" in { (sheet: Sheet) =>
+    "return the numeric value for formula cells formatted as currency" in { sheet =>
       val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
       assume(volumeCell.getCellType == FORMULA)
       assume(volumeCell.getCellStyle.getDataFormat == 8)
 
       volumeCell.getRawValue should be(VOLUME)
     }
-    "return the resulting string for formula cells that operate on strings" in { (sheet: Sheet) =>
+    "return the resulting string for formula cells that operate on strings" in { sheet =>
       val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
       assume(stringConcatFormulaCell.getCellType == FORMULA)
       assume(stringConcatFormulaCell.getCachedFormulaResultType == STRING)
@@ -121,19 +121,19 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
   "cell.getStringCellValue" should {
     "return the cell contents" when {
-      "the cell contains some non-empty string" in { (sheet: Sheet) =>
+      "the cell contains some non-empty string" in { sheet =>
         val stockSymbolCell = cellAt(STOCK_SYMBOL_COLUMN_INDEX)(sheet)
         assume(stockSymbolCell.getCellType == STRING)
 
         stockSymbolCell.getStringCellValue should be(STOCK_SYMBOL)
       }
-      "the cell contains an empty string" in { (sheet: Sheet) =>
+      "the cell contains an empty string" in { sheet =>
         val emptyCell = cellAt(EMPTY_COLUMN_INDEX)(sheet)
         assume(emptyCell.getCellType == CellType.BLANK)
 
         emptyCell.getStringCellValue should be("")
       }
-      "the cell contains a formula that evaluates to a string result" in { (sheet: Sheet) =>
+      "the cell contains a formula that evaluates to a string result" in { sheet =>
         val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
         assume(stringConcatFormulaCell.getCellType == FORMULA)
         assume(stringConcatFormulaCell.getCachedFormulaResultType == STRING)
@@ -142,28 +142,28 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       }
     }
     "throw an exception" when {
-      "the cell represents a date" in { (sheet: Sheet) =>
+      "the cell represents a date" in { sheet =>
         val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
         assume(tradingDateCell.getCellType == NUMERIC)
         assume(DateUtil.isCellDateFormatted(tradingDateCell))
 
         an[IllegalStateException] should be thrownBy tradingDateCell.getStringCellValue
       }
-      "the cell represents a number" in { (sheet: Sheet) =>
+      "the cell represents a number" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
         assume(brokerageNoteCell.getCellType == NUMERIC)
         assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
 
         an[IllegalStateException] should be thrownBy brokerageNoteCell.getStringCellValue
       }
-      "the cell represents a currency" in { (sheet: Sheet) =>
+      "the cell represents a currency" in { sheet =>
         val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
         assume(priceCell.getCellType == NUMERIC)
         assume(priceCell.getCellStyle.getDataFormatString.contains("$"))
 
         an[IllegalStateException] should be thrownBy priceCell.getStringCellValue
       }
-      "the cell contains a numeric formula" in { (sheet: Sheet) =>
+      "the cell contains a numeric formula" in { sheet =>
         val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
         assume(volumeCell.getCellType == FORMULA)
         assume(volumeCell.getCachedFormulaResultType == NUMERIC)
@@ -174,13 +174,13 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "formatter.formatCellValue" should {
-    "return short dates in en_US format if a specific format is not set" in { (sheet: Sheet) =>
+    "return short dates in en_US format if a specific format is not set" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
       assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE)
 
       formatter.formatCellValue(tradingDateCell) should be(TRADING_DATE_US_FORMAT)
     }
-    "return short dates in pt_BR format if that format is set" in { (sheet: Sheet) =>
+    "return short dates in pt_BR format if that format is set" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
       assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE)
 
@@ -188,7 +188,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
       formatter.formatCellValue(tradingDateCell) should be(TRADING_DATE_BR_FORMAT)
     }
-    "return the formula for formula cells" in { (sheet: Sheet) =>
+    "return the formula for formula cells" in { sheet =>
       val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
       assume(volumeCell.getCellType == FORMULA)
 
@@ -197,12 +197,12 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "cell.getCellComment" should {
-    "return the attached note when the cell has one" in { (sheet: Sheet) =>
+    "return the attached note when the cell has one" in { sheet =>
       val cellWithNote = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
 
       cellWithNote.getCellComment.getString.toString should be(TRADING_DATE_NOTE)
     }
-    "return 'null' when the cell has no notes attached to it" in { (sheet: Sheet) =>
+    "return 'null' when the cell has no notes attached to it" in { sheet =>
       val cellWithNoNote = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
 
       cellWithNoNote.getCellComment should be(null)
@@ -210,12 +210,12 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "cell.getCellStyle.getFillForegroundColorColor.getRGBWithTint" should {
-    "return the foreground color when the cell has one" in { (sheet: Sheet) =>
+    "return the foreground color when the cell has one" in { sheet =>
       val cellWithForegroundColor = cellAt(SETTLEMENT_FEE_COLUMN_INDEX)(sheet)
 
       cellWithForegroundColor.getCellStyle.getFillForegroundColorColor.getRGBWithTint should be(CELL_FILL_FOREGROUND_COLOR)
     }
-    "return 'null' when the cell has no foreground color" in { (sheet: Sheet) =>
+    "return 'null' when the cell has no foreground color" in { sheet =>
       val cellWithNoForegroundColor = cellAt(VOLUME_COLUMN_INDEX)(sheet)
 
       cellWithNoForegroundColor.getCellStyle.getFillForegroundColorColor should be(null)
@@ -223,7 +223,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "cell.getCellStyle.getFont.getXSSFColor.getRGBWithTint" should {
-    "return the cell's font color" in { (sheet: Sheet) =>
+    "return the cell's font color" in { sheet =>
       val anyCell = cellAt(SETTLEMENT_FEE_COLUMN_INDEX)(sheet)
 
       anyCell.getCellStyle.getFont.getXSSFColor.getRGBWithTint should be(FONT_COLOR)
@@ -232,37 +232,37 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
   "cell.getCellType" should {
     "return 'NUMERIC'" when {
-      "cell content is a date" in { (sheet: Sheet) =>
+      "cell content is a date" in { sheet =>
         val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
 
         tradingDateCell.getCellType should be(NUMERIC)
       }
-      "cell content is an integer" in { (sheet: Sheet) =>
+      "cell content is an integer" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
 
         brokerageNoteCell.getCellType should be(NUMERIC)
       }
-      "cell content is a currency" in { (sheet: Sheet) =>
+      "cell content is a currency" in { sheet =>
         val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
 
         priceCell.getCellType should be(NUMERIC)
       }
     }
-    "return 'STRING' when cell content is alphanumeric" in { (sheet: Sheet) =>
+    "return 'STRING' when cell content is alphanumeric" in { sheet =>
       val stockSymbolCell = cellAt(STOCK_SYMBOL_COLUMN_INDEX)(sheet)
       assume(stockSymbolCell.getCellType == STRING)
       assume(stockSymbolCell.getRawValue == "0")
 
       stockSymbolCell.getCellType should be(STRING)
     }
-    "return 'BLANK' when cell is empty" in { (sheet: Sheet) =>
+    "return 'BLANK' when cell is empty" in { sheet =>
       val emptyCell = cellAt(EMPTY_COLUMN_INDEX)(sheet)
       assume(emptyCell.getRawValue == null)
 
       emptyCell.getCellType should be(BLANK)
     }
     "return 'FORMULA'" when {
-      "cell content is a formula resulting in a number" in { (sheet: Sheet) =>
+      "cell content is a formula resulting in a number" in { sheet =>
         val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
         assume(volumeCell.getCellFormula.nonEmpty)
         val rawValue = volumeCell.getRawValue
@@ -271,7 +271,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
         volumeCell.getCellType should be(FORMULA)
       }
-      "cell content is a formula resulting in a string" in { (sheet: Sheet) =>
+      "cell content is a formula resulting in a string" in { sheet =>
         val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
         val rawValue = stringConcatFormulaCell.getRawValue
         assume(rawValue.toIntOption.isEmpty && rawValue.toDoubleOption.isEmpty)
@@ -283,7 +283,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
   "DateUtil.isCellDateFormatted(cell)" should {
     "be 'true'" when {
-      "cell content is a short date" in { (sheet: Sheet) =>
+      "cell content is a short date" in { sheet =>
         val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
         assume(tradingDateCell.getCellType == NUMERIC)
         assume(tradingDateCell.getCellStyle.getDataFormat == 14)
@@ -292,28 +292,28 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       }
     }
     "be 'false'" when {
-      "cell content is a regular number" in { (sheet: Sheet) =>
+      "cell content is a regular number" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
         assume(brokerageNoteCell.getCellType == NUMERIC)
         assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
 
         DateUtil.isCellDateFormatted(brokerageNoteCell) should be(false)
       }
-      "cell content is empty" in { (sheet: Sheet) =>
+      "cell content is empty" in { sheet =>
         val emptyCell = cellAt(EMPTY_COLUMN_INDEX)(sheet)
         assume(emptyCell.getCellType == BLANK)
         assume(emptyCell.getRawValue == null)
 
         DateUtil.isCellDateFormatted(emptyCell) should be(false)
       }
-      "cell content is a currency" in { (sheet: Sheet) =>
+      "cell content is a currency" in { sheet =>
         val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
         assume(priceCell.getCellType == NUMERIC)
         assume(priceCell.getCellStyle.getDataFormat == 8)
 
         DateUtil.isCellDateFormatted(priceCell) should be(false)
       }
-      "cell content is a formula that results in a number" in { (sheet: Sheet) =>
+      "cell content is a formula that results in a number" in { sheet =>
         val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
         assume(volumeCell.getCellType == FORMULA)
         assume(volumeCell.getCachedFormulaResultType == NUMERIC)
@@ -322,14 +322,14 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       }
     }
     "throw an exception" when {
-      "cell content is alphanumeric" in { (sheet: Sheet) =>
+      "cell content is alphanumeric" in { sheet =>
         val stockSymbolCell = cellAt(STOCK_SYMBOL_COLUMN_INDEX)(sheet)
         assume(stockSymbolCell.getCellType == STRING)
         assume(stockSymbolCell.getRawValue == "0")
 
         an[IllegalStateException] should be thrownBy DateUtil.isCellDateFormatted(stockSymbolCell)
       }
-      "cell content is a formula that results in a string" in { (sheet: Sheet) =>
+      "cell content is a formula that results in a string" in { sheet =>
         val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
         assume(stringConcatFormulaCell.getCellType == FORMULA)
         assume(stringConcatFormulaCell.getCachedFormulaResultType == STRING)
@@ -340,14 +340,14 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "cell.getCellStyle.getDataFormat" should {
-    "be '14' for short dates" in { (sheet: Sheet) =>
+    "be '14' for short dates" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
       assume(tradingDateCell.getCellType == NUMERIC)
       assume(tradingDateCell.getCellStyle.getDataFormatString == "m/d/yy")
 
       tradingDateCell.getCellStyle.getDataFormat should be(14)
     }
-    "be '8' for currencies" in { (sheet: Sheet) =>
+    "be '8' for currencies" in { sheet =>
       val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
       assume(priceCell.getCellType == NUMERIC)
       assume(priceCell.getCellStyle.getDataFormatString.contains("$"))
@@ -355,27 +355,27 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       priceCell.getCellStyle.getDataFormat should be(8)
     }
     "be '0'" when {
-      "cell content is a regular number" in { (sheet: Sheet) =>
+      "cell content is a regular number" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
         assume(brokerageNoteCell.getCellType == NUMERIC)
         assume(brokerageNoteCell.getCellStyle.getDataFormatString == "General")
 
         brokerageNoteCell.getCellStyle.getDataFormat should be(0)
       }
-      "cell content is alphanumeric" in { (sheet: Sheet) =>
+      "cell content is alphanumeric" in { sheet =>
         val stockSymbolCell = cellAt(STOCK_SYMBOL_COLUMN_INDEX)(sheet)
         assume(stockSymbolCell.getCellType == STRING)
         assume(stockSymbolCell.getRawValue == "0")
 
         stockSymbolCell.getCellStyle.getDataFormat should be(0)
       }
-      "cell is empty" in { (sheet: Sheet) =>
+      "cell is empty" in { sheet =>
         val emptyCell = cellAt(EMPTY_COLUMN_INDEX)(sheet)
         assume(emptyCell.getRawValue == null)
 
         emptyCell.getCellStyle.getDataFormat should be(0)
       }
-      "cell is a formula that results in a string" in { (sheet: Sheet) =>
+      "cell is a formula that results in a string" in { sheet =>
         val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
         assume(stringConcatFormulaCell.getCellType == FORMULA)
         assume(stringConcatFormulaCell.getCachedFormulaResultType == STRING)
@@ -386,7 +386,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "cell.getCachedFormulaResultType" should {
-    "be 'NUMERIC' for formula cells resulting in a number" in { (sheet: Sheet) =>
+    "be 'NUMERIC' for formula cells resulting in a number" in { sheet =>
       val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
       assume(volumeCell.getCellType == FORMULA)
       val rawValue = volumeCell.getRawValue
@@ -394,7 +394,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
       volumeCell.getCachedFormulaResultType should be(NUMERIC)
     }
-    "be 'String' for formula cells resulting in a string" in { (sheet: Sheet) =>
+    "be 'String' for formula cells resulting in a string" in { sheet =>
       val stringConcatFormulaCell = cellAt(STRING_CONCAT_FORMULA_COLUMN_INDEX)(sheet)
       assume(stringConcatFormulaCell.getCellType == FORMULA)
       val rawValue = stringConcatFormulaCell.getRawValue
@@ -402,7 +402,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
 
       stringConcatFormulaCell.getCachedFormulaResultType should be(STRING)
     }
-    "throw an exception for non-formula cells" in { (sheet: Sheet) =>
+    "throw an exception for non-formula cells" in { sheet =>
       val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
       assume(priceCell.getCellType != FORMULA)
 
@@ -411,7 +411,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   }
 
   "Calling several methods in Cell for different cells in the spreadsheet" should {
-    "display the results of calling each one for each cell" in { (sheet: Sheet) =>
+    "display the results of calling each one for each cell" in { sheet =>
       val cellFunctions = List[(String, XSSFCell => Any)](
         ("cell.getCellType", _.getCellType),
         ("cell.get_CellValue", cell => cell.getCellType match {
