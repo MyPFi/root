@@ -17,7 +17,7 @@ import scala.util.Try
 class LearningApachePOIForExcelTest extends FixtureAnyWordSpec :
   type FixtureParam = Sheet
 
-  val TEST_SPREADSHEET = "/com/andreidiego/mpfi/stocks/exploratory/spreasheets/excel/poi/spreadsheet.xlsx"
+  val TEST_SPREADSHEET = "LearningApachePOI.xlsx"
   val TEST_SHEET = "Learning Apache POI"
   val TRADING_DATE_COLUMN_INDEX = 0
   val TRADING_DATE_ENCODED = "40177"
