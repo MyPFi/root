@@ -6,7 +6,7 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy.CREATE_NULL_AS_BLANK
 import org.apache.poi.util.LocaleUtil
 import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFCellStyle, XSSFColor}
 import org.scalatest.Outcome
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.FixtureAnyWordSpec
 
 import java.io.File
@@ -14,24 +14,27 @@ import java.util.Locale
 import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
-class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
+class LearningApachePOIForExcelTest extends FixtureAnyWordSpec :
   type FixtureParam = Sheet
 
   val TEST_SPREADSHEET = "/com/andreidiego/mpfi/stocks/exploratory/spreasheets/excel/poi/spreadsheet.xlsx"
+  val TEST_SHEET = "Learning Apache POI"
   val TRADING_DATE_COLUMN_INDEX = 0
   val TRADING_DATE_ENCODED = "40177"
   val TRADING_DATE_US_FORMAT = "12/30/09"
   val TRADING_DATE_BR_FORMAT = "30/12/2009"
   val TRADING_DATE_NOTE = "Nota de Corretagem não encontrada em meus arquivos. Informação retirada de histórico de ordens e confirmada com extrato de conta-corrente."
-  val SHORT_DATE = 14
+  val SHORT_DATE_FORMAT_ID = 14
   val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
   val BROKERAGE_NOTE_COLUMN_INDEX = 1
   val BROKERAGE_NOTE = "812"
+  val GENERAL_FORMAT_ID = 0
   val STOCK_SYMBOL_COLUMN_INDEX = 2
   val STOCK_SYMBOL = "MMXM3"
   val QTY_COLUMN_INDEX = 3
   val PRICE_COLUMN_INDEX = 4
   val PRICE = "12.35"
+  val CURRENCY_FORMAT_ID = 8
   val VOLUME_COLUMN_INDEX = 5
   val VOLUME = "4940"
   val VOLUME_FORMULA = "D2*E2"
@@ -59,7 +62,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
     val testWorkbook = WorkbookFactory.create(
       new File(getClass.getResource(TEST_SPREADSHEET).getPath)
     )
-    val sheet = testWorkbook.getSheetAt(0)
+    val sheet = testWorkbook.getSheet(TEST_SHEET)
 
     try withFixture(test.toNoArgTest(sheet))
     finally testWorkbook.close()
@@ -79,7 +82,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
     "return the number as displayed in Excel for numeric cells" in { sheet =>
       val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
       assume(brokerageNoteCell.getCellType == NUMERIC)
-      assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
+      assume(brokerageNoteCell.getCellStyle.getDataFormat == GENERAL_FORMAT_ID)
 
       brokerageNoteCell.getRawValue should be(BROKERAGE_NOTE)
     }
@@ -99,14 +102,14 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
     "return the numeric value for numeric cells formatted as currency" in { sheet =>
       val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
       assume(priceCell.getCellType == NUMERIC)
-      assume(priceCell.getCellStyle.getDataFormat == 8)
+      assume(priceCell.getCellStyle.getDataFormat == CURRENCY_FORMAT_ID)
 
       priceCell.getRawValue should be(PRICE)
     }
     "return the numeric value for formula cells formatted as currency" in { sheet =>
       val volumeCell = cellAt(VOLUME_COLUMN_INDEX)(sheet)
       assume(volumeCell.getCellType == FORMULA)
-      assume(volumeCell.getCellStyle.getDataFormat == 8)
+      assume(volumeCell.getCellStyle.getDataFormat == CURRENCY_FORMAT_ID)
 
       volumeCell.getRawValue should be(VOLUME)
     }
@@ -152,7 +155,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       "the cell represents a number" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
         assume(brokerageNoteCell.getCellType == NUMERIC)
-        assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
+        assume(brokerageNoteCell.getCellStyle.getDataFormat == GENERAL_FORMAT_ID)
 
         an[IllegalStateException] should be thrownBy brokerageNoteCell.getStringCellValue
       }
@@ -176,13 +179,13 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
   "formatter.formatCellValue" should {
     "return short dates in en_US format if a specific format is not set" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
-      assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE)
+      assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE_FORMAT_ID)
 
       formatter.formatCellValue(tradingDateCell) should be(TRADING_DATE_US_FORMAT)
     }
     "return short dates in pt_BR format if that format is set" in { sheet =>
       val tradingDateCell = cellAt(TRADING_DATE_COLUMN_INDEX)(sheet)
-      assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE)
+      assume(tradingDateCell.getCellStyle.getDataFormat == SHORT_DATE_FORMAT_ID)
 
       formatter.addFormat("m/d/yy", new java.text.SimpleDateFormat(PT_BR_DATE_FORMAT))
 
@@ -295,7 +298,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       "cell content is a regular number" in { sheet =>
         val brokerageNoteCell = cellAt(BROKERAGE_NOTE_COLUMN_INDEX)(sheet)
         assume(brokerageNoteCell.getCellType == NUMERIC)
-        assume(brokerageNoteCell.getCellStyle.getDataFormat == 0)
+        assume(brokerageNoteCell.getCellStyle.getDataFormat == GENERAL_FORMAT_ID)
 
         DateUtil.isCellDateFormatted(brokerageNoteCell) should be(false)
       }
@@ -309,7 +312,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
       "cell content is a currency" in { sheet =>
         val priceCell = cellAt(PRICE_COLUMN_INDEX)(sheet)
         assume(priceCell.getCellType == NUMERIC)
-        assume(priceCell.getCellStyle.getDataFormat == 8)
+        assume(priceCell.getCellStyle.getDataFormat == CURRENCY_FORMAT_ID)
 
         DateUtil.isCellDateFormatted(priceCell) should be(false)
       }
@@ -446,8 +449,7 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec with Matchers :
           .getOrElse("No note")
         ),
         ("cell.getCellStyle.getFillBackgroundColor", _.getCellStyle.getFillBackgroundColor),
-        ("IndexedColors.fromInt(cell.getCellStyle.getFillBackgroundColor)", cell => IndexedColors.fromInt(cell.getCellStyle.getFillBackgroundColor)
-        ),
+        ("IndexedColors.fromInt(cell.getCellStyle.getFillBackgroundColor)", cell => IndexedColors.fromInt(cell.getCellStyle.getFillBackgroundColor)),
         ("cell.getCellStyle.getFillBackgroundXSSFColor.getARGBHex", cell => Option(cell.getCellStyle.getFillBackgroundXSSFColor)
           .map(_.getARGBHex)
           .getOrElse("No FillBackgroundXSSFColor")
