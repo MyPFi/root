@@ -1,8 +1,7 @@
 package com.andreidiego.mpfi.stocks.deprecated
 
 import SingleTimeUnit.MINUTE
-import TimeSpan._
-import com.andreidiego.mpfi.stocks.deprecated.Minute
+import TimeSpan.*
 import org.scalatest.freespec.AnyFreeSpec
 
 import java.time.{Clock, LocalDateTime, ZoneId}

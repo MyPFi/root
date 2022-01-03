@@ -1,9 +1,9 @@
 package com.andreidiego.mpfi.stocks.exploratory.spreadsheets.design
 
+import org.apache.poi.ss.usermodel.{DataFormatter, DateUtil, Row, Workbook}
 import org.apache.poi.ss.usermodel.CellType.*
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy.{CREATE_NULL_AS_BLANK, RETURN_NULL_AND_BLANK}
-import org.apache.poi.ss.usermodel.{DataFormatter, DateUtil, Row, Workbook}
 import org.apache.poi.util.LocaleUtil
 import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow}
 

@@ -1,7 +1,7 @@
 package com.andreidiego.mpfi.stocks.deprecated
 
-import java.time.temporal._
 import java.time.{Clock, LocalDate, LocalDateTime, ZoneId}
+import java.time.temporal.*
 import java.util.Locale
 
 object TimeSpan {

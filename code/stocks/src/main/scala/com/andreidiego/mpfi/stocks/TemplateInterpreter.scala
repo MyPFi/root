@@ -1,7 +1,5 @@
 package com.andreidiego.mpfi.stocks
 
-import com.andreidiego.mpfi.stocks.DataType
-
 import scala.util.matching.Regex
 
 sealed trait TemplateInterpreter:

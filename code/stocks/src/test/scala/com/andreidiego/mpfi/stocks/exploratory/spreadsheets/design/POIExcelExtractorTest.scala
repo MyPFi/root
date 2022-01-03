@@ -1,10 +1,10 @@
 package com.andreidiego.mpfi.stocks.exploratory.spreadsheets.design
 
-import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
 import org.apache.poi.ss.usermodel.{CellType, Sheet, WorkbookFactory}
+import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
 import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFSheet}
+import org.scalatest.{tagobjects, Outcome}
 import org.scalatest.Inspectors.forAll
-import org.scalatest.{Outcome, tagobjects}
 import org.scalatest.TryValues.*
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.tagobjects.Slow

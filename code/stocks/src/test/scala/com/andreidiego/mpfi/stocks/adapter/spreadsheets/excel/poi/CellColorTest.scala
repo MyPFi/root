@@ -1,6 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi.Color.{Black, Blue, Crimson, White}
+import Color.{Black, Blue, Crimson, White}
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 

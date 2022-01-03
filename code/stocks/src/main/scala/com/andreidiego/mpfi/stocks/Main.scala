@@ -1,18 +1,17 @@
 package com.andreidiego.mpfi.stocks
 
-import com.andreidiego.mpfi.stocks.{LoopInterpreter, SequentialInterpreter}
 import org.apache.pdfbox.Loader.loadPDF
 import org.apache.pdfbox.text.PDFTextStripper
 import org.rogach.scallop.*
-import os.{Path, up}
+import os.{up, Path}
 
 import java.io.File
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.postfixOps
-import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
+import scala.util.matching.Regex
 
 @main def mpfi(args: String*): Unit =
   val conf = Conf(args)

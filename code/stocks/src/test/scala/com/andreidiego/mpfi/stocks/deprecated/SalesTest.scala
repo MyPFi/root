@@ -1,7 +1,6 @@
 package com.andreidiego.mpfi.stocks.deprecated
 
-import com.andreidiego.mpfi.stocks.deprecated.July
-import com.andreidiego.mpfi.stocks.deprecated.TimeSpan.*
+import TimeSpan.`this`
 import org.scalatest.freespec.AnyFreeSpec
 
 import java.time.{Clock, LocalDateTime, ZoneId}

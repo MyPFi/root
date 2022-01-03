@@ -166,8 +166,7 @@ enum Color private(val hex: String, val dec: Array[Byte]) {
   case Black extends Color("#000000", Array(0, 0, 0).map(_.toByte))
 }
 
-object Color {
+object Color:
   def apply(hex: String): Option[Color] = values.find(color ⇒ color.hex == hex)
 
   def apply(red: Byte, green: Byte, blue: Byte): Option[Color] = values.find(color ⇒ color.dec.sameElements(Array(red, green, blue)))
-}
