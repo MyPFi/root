@@ -1,8 +1,10 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
+import com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi.Color.{Black, Blue, Crimson, White}
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.Console.{BLUE, GREEN, RED}
 import scala.language.deprecated.symbolLiterals
 
 class ColorTest extends AnyWordSpec :
@@ -47,5 +49,17 @@ class ColorTest extends AnyWordSpec :
     }
     "have no duplicate dec value (other than the two pair of aliases Aqua/Cyan and Fuchsia/Magenta) among its named colors" in {
       Color.values.map(_.dec.toSeq).distinct.size should equal(Color.values.size - 2)
+    }
+    "equal another Color with the same configuration" in {
+      val RED = Crimson.dec(0)
+      val GREEN = Crimson.dec(1)
+      val BLUE = Crimson.dec(2)
+      Color(RED, GREEN, BLUE) should equal (Color(RED, GREEN, BLUE))
+    }
+    "not equal another Color with a different configuration" in {
+      val RED = Crimson.dec(0)
+      val GREEN = Crimson.dec(1)
+      val BLUE = Crimson.dec(2)
+      Color(RED, GREEN, BLUE) should not equal Color(GREEN, RED, BLUE)
     }
   }
