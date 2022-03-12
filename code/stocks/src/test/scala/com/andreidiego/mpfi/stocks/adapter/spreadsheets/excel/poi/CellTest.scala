@@ -188,16 +188,44 @@ class CellTest extends FixtureAnyFreeSpec :
 
       Cell.from(poiCell1) should not equal Cell.from(poiCell2)
     }
-    "forbid manipulation of its internal attributes." in { poiRow ⇒
+    "forbid manipulation of its internal address." in { poiRow ⇒
       val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
       """Cell.from(poiCell).success.value.address = "address"""" shouldNot compile
+    }
+    "forbid manipulation of its internal value." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.value = "value"""" shouldNot compile
+    }
+    "forbid manipulation of its internal type." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.`type` = "type"""" shouldNot compile
+    }
+    "forbid manipulation of its internal mask." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.mask = "mask"""" shouldNot compile
+    }
+    "forbid manipulation of its internal formula." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.formula = "formula"""" shouldNot compile
+    }
+    "forbid manipulation of its internal note." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.note = "note"""" shouldNot compile
+    }
+    "forbid manipulation of its internal fontColor." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.fontColor = "fontColor"""" shouldNot compile
+    }
+    "forbid manipulation of its internal backgroundColor." in { poiRow ⇒
+      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
       """Cell.from(poiCell).success.value.backgroundColor = "backgroundColor"""" shouldNot compile
     }
     //    TODO Currency with no decimals, 1 decimal and 2 decimals
