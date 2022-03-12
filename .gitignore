@@ -1,7 +1,11 @@
+# IntelliJ
 **/.idea/*
-**/target/*
-**/project/target/*
 **/.bsp/
 *.iml
-/code/stocks/src/main/resources/com/andreidiego/mpfi/stocks/history/*
+# sbt
+**/target/*
+**/project/target/*
+# Project files
 **/~$*.*
+code/productsToNormalize.xlsx
+/code/stocks/src/main/resources/com/andreidiego/mpfi/stocks/history/*
