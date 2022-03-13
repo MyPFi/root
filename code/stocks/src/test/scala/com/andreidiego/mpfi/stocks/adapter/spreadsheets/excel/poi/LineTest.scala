@@ -6,12 +6,11 @@ import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook, XSSFWorkbookFacto
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.Outcome
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.Inspectors.forAll
 import org.scalatest.TryValues.*
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 // TODO Replace Try + exceptions with Either
 class LineTest extends FixtureAnyFreeSpec :
@@ -85,6 +84,12 @@ class LineTest extends FixtureAnyFreeSpec :
 
         valueOfFirstCellOf(Line.from(poiRegularRow)) should be(FLOATING_POINT_FORMULA_VALUE)
       }
+      "a POI Cell that is null." in { poiWorksheet =>
+        val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_NULL)
+        assume(poiRegularRow.getCell(0) == null)
+
+        valueOfFirstCellOf(Line.from(poiRegularRow)) should be(BLANK_VALUE)
+      }
       "multiple cells" - {
         "all blanks." in { poiWorksheet =>
           val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_BLANKS)
@@ -137,22 +142,11 @@ class LineTest extends FixtureAnyFreeSpec :
         }
       }
     }
-    "equal another Line with the same configuration." in { poiWorksheet ⇒
-      val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
-
-      Line.from(poiRegularRow) should equal(Line.from(poiRegularRow))
-    }
-    "not equal another Line with a different configuration." in { poiWorksheet ⇒
-      val poiStringRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
-      val poiIntegerRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_INTEGER)
-
-      Line.from(poiStringRow) should not equal Line.from(poiIntegerRow)
-    }
     "always have cells which" - {
       "should always have" - {
         "an address" in { poiWorksheet ⇒
           val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_CELLS)
-          val expectedAddresses = Seq("A12", "B12", "C12", "D12")
+          val expectedAddresses = Seq("A14", "B14", "C14", "D14")
 
           addressesOf(cellsOf(Line.from(poiRegularRow))) should contain theSameElementsInOrderAs expectedAddresses
         }
@@ -231,6 +225,23 @@ class LineTest extends FixtureAnyFreeSpec :
         }
       }
     }
+    "not try to exclude eventual empty cells created by excel after its last non-empty cell." in { poiWorksheet ⇒
+      val poiRegularRowWithTrailingEmptyCell = poiWorksheet.getRow(INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL)
+      assume(poiRegularRowWithTrailingEmptyCell.getCell(2) != null)
+
+      Line.from(poiRegularRowWithTrailingEmptyCell).get.cells should have size 3
+    }
+    "equal another Line with the same configuration." in { poiWorksheet ⇒
+      val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
+
+      Line.from(poiRegularRow) should equal(Line.from(poiRegularRow))
+    }
+    "not equal another Line with a different configuration." in { poiWorksheet ⇒
+      val poiStringRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
+      val poiIntegerRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_INTEGER)
+
+      Line.from(poiStringRow) should not equal Line.from(poiIntegerRow)
+    }
     "forbid manipulation of its internal cells." in { poiWorksheet ⇒
       val poiRegularRow = poiWorksheet.getRow(0)
 
@@ -239,8 +250,6 @@ class LineTest extends FixtureAnyFreeSpec :
   }
 
 object LineTest:
-  private type Cell = (String, String, String, String, String, String, String, String)
-
   private val TEST_SPREADSHEET = "Line.xlsx"
   private val VALID_TINY_WORKSHEET = "ValidTinyWorksheet"
 
@@ -256,7 +265,7 @@ object LineTest:
   private val DATE_VALUE = "05/11/2008"
   private val MASK = "m/d/yy"
   private val INDEX_OF_LINE_WITH_CURRENCY = 4
-  private val CURRENCY_VALUE = "25.19"
+  private val CURRENCY_VALUE = "25,19"
   private val INDEX_OF_LINE_WITH_BLANK = 5
   private val BLANK_VALUE = ""
   private val INDEX_OF_LINE_WITH_SEPARATOR = 6
@@ -269,34 +278,36 @@ object LineTest:
   private val INTEGER_FORMULA_VALUE = "156348"
   private val INDEX_OF_LINE_WITH_FLOATING_POINT_FORMULA = 9
   private val FLOATING_POINT_FORMULA_VALUE = "5.2"
-  private val INDEX_OF_LINE_WITH_NOTE = 10
-  private val NOTE = "Uma nota de exemplo"
-  private val INDEX_OF_LINE_WITH_MULTIPLE_CELLS = 11
+  private val INDEX_OF_LINE_WITH_NULL = 10
+  private val INDEX_OF_LINE_WITH_MULTIPLE_BLANKS = 11
+  private val LINE_WITH_ONLY_BLANK_CELLS = Seq("", "", "", "")
+  private val INDEX_OF_LINE_WITH_MULTIPLE_SEPARATORS = 12
+  private val LINE_WITH_ONLY_SEPARATOR_CELLS = Seq("", "", "", "")
+  private val INDEX_OF_LINE_WITH_MULTIPLE_CELLS = 13
   private val POI_STRING = STRING.toString
   private val POI_BLANK = BLANK.toString
   private val POI_NUMERIC = NUMERIC.toString
   private val POI_FORMULA = FORMULA.toString
-  private val INDEX_OF_LINE_WITH_MULTIPLE_BLANKS = 12
-  private val INDEX_OF_LINE_WITH_MULTIPLE_SEPARATORS = 13
-  private val LINE_WITH_ONLY_BLANK_CELLS = Seq("", "", "", "")
-  private val LINE_WITH_ONLY_SEPARATOR_CELLS = Seq("", "", "", "")
+  private val INDEX_OF_LINE_WITH_NOTE = 14
+  private val NOTE = "Uma nota de exemplo"
+  private val INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL = 15
 
   private def cellsOf(line: Try[Line]): Seq[Cell] = line.success.value.cells
 
-  private def valuesOf(cells: Seq[Cell]): Seq[String] = cells.map(_._2)
+  private def valuesOf(cells: Seq[Cell]): Seq[String] = cells.map(_.value)
 
-  private def addressesOf(cells: Seq[Cell]): Seq[String] = cells.map(_._1)
+  private def addressesOf(cells: Seq[Cell]): Seq[String] = cells.map(_.address)
 
-  private def typesOf(cells: Seq[Cell]): Seq[String] = cells.map(_._3)
+  private def typesOf(cells: Seq[Cell]): Seq[String] = cells.map(_.`type`)
 
-  private def valueOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._2
+  private def valueOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.value
 
-  private def maskOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._4
+  private def maskOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.mask
 
-  private def formulaOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._5
+  private def formulaOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.formula
 
-  private def noteOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._6
+  private def noteOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.note
 
-  private def fontColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._7
+  private def fontColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.fontColor
 
-  private def backgroundColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head._8
+  private def backgroundColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.backgroundColor

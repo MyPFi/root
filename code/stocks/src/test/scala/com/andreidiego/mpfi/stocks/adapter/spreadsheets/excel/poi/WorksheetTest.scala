@@ -366,17 +366,6 @@ class WorksheetTest extends FixtureAnyFreeSpec :
         }
       }
     }
-    "equal another Worksheet with the same configuration." in { poiWorkbook ⇒
-      val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
-
-      Worksheet.from(TEST_SHEET) should equal(Worksheet.from(TEST_SHEET))
-    }
-    "not equal another Worksheet with a different configuration." in { poiWorkbook ⇒
-      val TEST_SHEET_1 = poiWorkbook.getSheet("ValidTinyWorksheet")
-      val TEST_SHEET_2 = poiWorkbook.getSheet("HeaderNonEmptyCellsAndSeparator")
-
-      Worksheet.from(TEST_SHEET_1) should not equal Worksheet.from(TEST_SHEET_2)
-    }
     "always have" - {
       "a header" in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
@@ -390,6 +379,17 @@ class WorksheetTest extends FixtureAnyFreeSpec :
       }
       "groups" ignore { poiWorkbook =>
       }
+    }
+    "equal another Worksheet with the same configuration." in { poiWorkbook ⇒
+      val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+
+      Worksheet.from(TEST_SHEET) should equal(Worksheet.from(TEST_SHEET))
+    }
+    "not equal another Worksheet with a different configuration." in { poiWorkbook ⇒
+      val TEST_SHEET_1 = poiWorkbook.getSheet("ValidTinyWorksheet")
+      val TEST_SHEET_2 = poiWorkbook.getSheet("HeaderNonEmptyCellsAndSeparator")
+
+      Worksheet.from(TEST_SHEET_1) should not equal Worksheet.from(TEST_SHEET_2)
     }
     "forbid manipulation of its internal header." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
@@ -423,7 +423,9 @@ object WorksheetTest:
 
   private val VALID_TINY_WORKSHEET_CONTENTS = Seq(HEADER, blankLine("2"), stringLine("3"), stringLine("4"))
 
-  private def linesOf(worksheet: Try[Worksheet]): Seq[Seq[Cell]] = worksheet.success.value.lines.map(_.cells)
+  private def linesOf(worksheet: Try[Worksheet]): Seq[Seq[Cell]] = worksheet.success.value.lines
+    .map(_.cells)
+    .map(cells ⇒ cells.map(cell ⇒ (cell.address, cell.value, cell.`type`, cell.mask, cell.formula, cell.note, cell.fontColor, cell.backgroundColor)))
 
   private def headerOf(worksheet: Try[Worksheet]): Seq[String] = worksheet.success.value.header.columnNames
 
@@ -435,7 +437,7 @@ object WorksheetTest:
 
   private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
 
-  private def currencyCell(address: String): Cell = (address, "15.34", "NUMERIC", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
+  private def currencyCell(address: String): Cell = (address, "15,34", "NUMERIC", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
 
   private def stringLine(lineNumber: String): Seq[Cell] =
     Seq(stringCell(s"A$lineNumber"), stringCell(s"B$lineNumber"), stringCell(s"C$lineNumber"), stringCell(s"D$lineNumber"))
