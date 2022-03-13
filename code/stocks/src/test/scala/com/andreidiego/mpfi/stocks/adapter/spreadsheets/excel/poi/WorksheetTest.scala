@@ -2,16 +2,15 @@ package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
-import org.scalatest.{Inspectors, Outcome}
+import org.scalatest.Outcome
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.TryValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.dsl.MatcherWords.not.be
-import org.scalatest.Inspectors.forAll
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import scala.Seq
 
 // TODO Replace Try + exceptions with Either
