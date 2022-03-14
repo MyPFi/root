@@ -1,10 +1,11 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFSheet}
+import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow, XSSFSheet}
 
 import scala.util.Try
 
-case class Worksheet private(header: Header, lines: Seq[Line])
+// TODO Header and Groups does not seem to fit at this level in the architecture. They are higher level concepts and seem to be closer the domain in the sense that they reflect a specific/constrained way of organizing spreadsheets
+case class Worksheet private(header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
 
 // TODO Replace Try + exceptions with Either
 object Worksheet:
@@ -17,7 +18,7 @@ object Worksheet:
     numberOfColumns = header.columnNames.size
     lines ← linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))
     validatedLines ← validated(lines)(numberOfColumns, poiWorksheet.getSheetName)
-  } yield Worksheet(header, validatedLines)
+  } yield Worksheet(header, validatedLines, grouped(validatedLines))
 
   private def rowZeroFrom(poiWorksheet: XSSFSheet) = Try {
     if poiWorksheet.isEmpty then
@@ -79,6 +80,16 @@ object Worksheet:
   }
 
   private def linesFrom(rows: Seq[XSSFRow]): Try[Seq[Line]] = Try(rows.map(row ⇒ Line.from(row).get))
+
+  private def grouped(lines: Seq[Line]): Seq[Seq[Line]] = lines
+    .drop(1)
+    .dropWhile(_.isEmpty)
+    .foldLeft(Seq(Seq[Line]())) { (acc, line) ⇒
+      if line.isNotEmpty then (line +: acc.head) +: acc.tail
+      else Seq() +: acc
+    }
+    .map(_.reverse)
+    .reverse
 
   extension (poiWorksheet: XSSFSheet)
 

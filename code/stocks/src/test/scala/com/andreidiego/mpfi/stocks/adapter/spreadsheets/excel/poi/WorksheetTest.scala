@@ -30,7 +30,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
   "A Worksheet should" - {
     "be built from a POI Worksheet" in { poiWorkbook ⇒
-      val poiWorksheet = poiWorkbook.getSheet("ValidTinyWorksheet")
+      val poiWorksheet = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
       "Worksheet.from(poiWorksheet)" should compile
     }
@@ -38,74 +38,74 @@ class WorksheetTest extends FixtureAnyFreeSpec :
       "given a POI Worksheet" - {
         "whose header contains only" - {
           "non-empty cells." in { poiWorkbook =>
-            val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+            val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-            headerOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
+            headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
           }
           "non-blank (non-empty and separators) cells. (although some exceptions - described below - apply for separators)" in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("HeaderNonEmptyCellsAndSeparator")
 
-            headerOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "")
+            headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "")
           }
           "non-empty and string-formula cells." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("StringFormulaInHeader")
 
-            headerOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
+            headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
           }
         }
         "that contains" - {
           "one empty line between the header and its first non-empty regular line." in { poiWorkbook =>
-            val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+            val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
           }
           "no empty line between the header and its first non-empty regular line." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("NoEmptyLineAfterHeader")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"))
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"))
           }
           "only the header and two non-empty regular lines." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("HeaderPlusTwoRegulars")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), stringLine("3"))
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), stringLine("3"))
           }
           "only the header and a non-empty regular line." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("HeaderPlusOneRegular")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"))
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"))
           }
           // TODO Two empty lines are only valid between the last group summary and the worksheet summary
           "two empty lines between its non-empty regular lines." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("TwoEmptiesBetweenRegulars")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), blankLine("3"), blankLine("4"), stringLine("5"))
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), blankLine("3"), blankLine("4"), stringLine("5"))
           }
           "two empty lines are only valid between the last group summary and the worksheet summary" ignore { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("TwoEmptiesBetweenRegulars")
 
-            headerOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
+            headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
           }
           "one empty line between its non-empty regular lines." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("OneEmptyBetweenRegulars")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), blankLine("3"), stringLine("4"), stringLine("5"))
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, stringLine("2"), blankLine("3"), stringLine("4"), stringLine("5"))
           }
           "no empty line between its non-empty regular lines." in { poiWorkbook =>
-            val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+            val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
           }
         }
         "whose lines contain" - {
           "strings." in { poiWorkbook =>
-            val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+            val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
           }
           "numbers." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithNumbers")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER,
               Seq(stringCell("A2"), numericCell("B2", "78174"), stringCell("C2"), numericCell("D2", "200"))
             )
@@ -113,17 +113,17 @@ class WorksheetTest extends FixtureAnyFreeSpec :
           "dates." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithDates")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, STANDARD_LINE)
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER, STANDARD_LINE)
           }
           "currencies." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithCurrencies")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER_WITH_PRICE, STANDARD_LINE_WITH_PRICE)
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(HEADER_WITH_PRICE, STANDARD_LINE_WITH_PRICE)
           }
           "blanks." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithBlanks")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
               Seq(dateCell("A2"), blankCell("B2"), stringCell("C2"), numericCell("D2", "200"), currencyCell("E2"))
             )
@@ -131,7 +131,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
           "string formulas." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithStringFormulas")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
               Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "FORMULA", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), numericCell("D2", "200"), currencyCell("E2"))
             )
@@ -139,7 +139,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
           "numeric formulas." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithNumericFormulas")
 
-            linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
+            linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE :+ ("F1", "Total", "STRING", "", "", "", "0,0,0", ""),
               STANDARD_LINE_WITH_PRICE :+ ("F2", "3068", "FORMULA", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "D2*E2", "", "255,0,0", "")
             )
@@ -149,7 +149,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
     }
     "fail to be built when" - {
       "given a Header and a set of Lines directly instead of a POI Worksheet." in { poiWorkbook =>
-        val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
+        val poiHeaderRow = poiWorkbook.getSheet(VALID_TINY_WORKSHEET).getRow(0)
 
         """Worksheet(Header.from(poiHeaderRow).success.value, Seq())""" shouldNot compile
       }
@@ -365,40 +365,64 @@ class WorksheetTest extends FixtureAnyFreeSpec :
         }
       }
     }
-    "always have" - {
-      "a header" in { poiWorkbook =>
-        val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+    "create group of lines containing those regular lines constrained between empty lines when there is" - {
+      "no empty line right after the header." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet("GroupsNoEmptyLineAfterHeader")
 
-        headerOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
+        groupsFrom(Worksheet.from(TEST_SHEET)) should have size 3
       }
-      "lines" in { poiWorkbook =>
-        val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+      "an empty line right after the header." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet("GroupsEmptyLineAfterHeader")
 
-        linesOf(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+        groupsFrom(Worksheet.from(TEST_SHEET)) should have size 3
       }
-      "groups" ignore { poiWorkbook =>
+    }
+    "have at last one group." in { poiWorkbook =>
+      val TEST_SHEET = poiWorkbook.getSheet("NoEmptyLineAfterHeader")
+
+      groupsFrom(Worksheet.from(TEST_SHEET)) should have size 1
+    }
+    "expose" - {
+      "a header with cells sorted by their position in the worksheet." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+
+        headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
+      }
+      "a set of lines sorted by their position in the worksheet with cells within lines sorted in the same way." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+
+        linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+      }
+      "a set of groups sorted by their position in the worksheet with lines within groups and cells within lines sorted in the same way." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet("GroupsNoEmptyLineAfterHeader")
+
+        groupsFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
+          Seq(standardLine( "2"), standardLine( "3"), standardLine( "4")),
+          Seq(standardLine( "6"), standardLine( "7"), standardLine( "8")),
+          Seq(standardLine( "10"))
+        )
       }
     }
     "equal another Worksheet with the same configuration." in { poiWorkbook ⇒
-      val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+      val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
       Worksheet.from(TEST_SHEET) should equal(Worksheet.from(TEST_SHEET))
     }
     "not equal another Worksheet with a different configuration." in { poiWorkbook ⇒
-      val TEST_SHEET_1 = poiWorkbook.getSheet("ValidTinyWorksheet")
+      val TEST_SHEET_1 = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
       val TEST_SHEET_2 = poiWorkbook.getSheet("HeaderNonEmptyCellsAndSeparator")
 
       Worksheet.from(TEST_SHEET_1) should not equal Worksheet.from(TEST_SHEET_2)
     }
     "forbid manipulation of its internal header." in { poiWorkbook ⇒
-      val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
-      val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
+      val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+      val poiHeaderRow = poiWorkbook.getSheet(VALID_TINY_WORKSHEET).getRow(0)
 
       "val header: Header = Worksheet.from(TEST_SHEET).success.value.header" should compile
       "Worksheet.from(TEST_SHEET).success.value.header = Header.from(poiHeaderRow).success.value" shouldNot compile
     }
     "forbid manipulation of its internal lines." in { poiWorkbook ⇒
-      val TEST_SHEET = poiWorkbook.getSheet("ValidTinyWorksheet")
+      val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
       "val lines: Seq[Line] = Worksheet.from(TEST_SHEET).success.value.lines" should compile
       "Worksheet.from(TEST_SHEET).success.value.lines = VALID_TINY_WORKSHEET_CONTENTS" shouldNot compile
@@ -417,29 +441,39 @@ object WorksheetTest:
   private val HEADER = Seq(TRADING_DATE_HEADER, BROKERAGE_NOTE_HEADER, TICKER_HEADER, QTY_HEADER)
   private val HEADER_WITH_PRICE = HEADER :+ PRICE_HEADER
 
-  private val STANDARD_LINE = Seq(dateCell("A2"), numericCell("B2", "78174"), stringCell("C2"), numericCell("D2", "200"))
+  private val STANDARD_LINE = standardLine("2")
   private val STANDARD_LINE_WITH_PRICE = STANDARD_LINE :+ currencyCell("E2")
 
+  private val VALID_TINY_WORKSHEET = "ValidTinyWorksheet"
   private val VALID_TINY_WORKSHEET_CONTENTS = Seq(HEADER, blankLine("2"), stringLine("3"), stringLine("4"))
 
-  private def linesOf(worksheet: Try[Worksheet]): Seq[Seq[Cell]] = worksheet.success.value.lines
+  private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), numericCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), numericCell(s"D$lineNumber", "200"))
+
+  private def headerFrom(worksheet: Try[Worksheet]): Seq[String] = worksheet.success.value.header.columnNames
+
+  private def linesFrom(worksheet: Try[Worksheet]): Seq[Seq[Cell]] = worksheet.success.value.lines
     .map(_.cells)
     .map(cells ⇒ cells.map(cell ⇒ (cell.address, cell.value, cell.`type`, cell.mask, cell.formula, cell.note, cell.fontColor, cell.backgroundColor)))
 
-  private def headerOf(worksheet: Try[Worksheet]): Seq[String] = worksheet.success.value.header.columnNames
-
-  private def stringCell(address: String): Cell = (address, "VALE3", "STRING", "", "", "", "255,0,0", "")
-
-  private def blankCell(address: String): Cell = (address, "", "BLANK", "", "", "", "", "")
-
-  private def numericCell(address: String, number: String): Cell = (address, number, "NUMERIC", "", "", "", "255,0,0", "")
-
-  private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
-
-  private def currencyCell(address: String): Cell = (address, "15,34", "NUMERIC", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
+  private def groupsFrom(worksheet: Try[Worksheet]): Seq[Seq[Seq[Cell]]] = worksheet.success.value.groups
+    .map(group ⇒ group
+      .map(line ⇒ line.cells
+        .map(cell ⇒ (cell.address, cell.value, cell.`type`, cell.mask, cell.formula, cell.note, cell.fontColor, cell.backgroundColor))
+      )
+    )
 
   private def stringLine(lineNumber: String): Seq[Cell] =
     Seq(stringCell(s"A$lineNumber"), stringCell(s"B$lineNumber"), stringCell(s"C$lineNumber"), stringCell(s"D$lineNumber"))
 
   private def blankLine(lineNumber: String): Seq[Cell] =
     Seq(blankCell(s"A$lineNumber"), blankCell(s"B$lineNumber"), blankCell(s"C$lineNumber"), blankCell(s"D$lineNumber"))
+
+  private def stringCell(address: String): Cell = (address, "VALE3", "STRING", "", "", "", "255,0,0", "")
+
+  private def numericCell(address: String, number: String): Cell = (address, number, "NUMERIC", "", "", "", "255,0,0", "")
+
+  private def blankCell(address: String): Cell = (address, "", "BLANK", "", "", "", "", "")
+
+  private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
+
+  private def currencyCell(address: String): Cell = (address, "15,34", "NUMERIC", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
