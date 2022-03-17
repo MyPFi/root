@@ -207,7 +207,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
               exception should have(
                 'class(classOf[IllegalArgumentException]),
-                'message(s"Irregular empty line interval found between the regular lines of $TEST_SHEET_NAME. No more than two empty lines are allowed in this position.")
+                'message(s"Irregular empty line interval (5:7) found between the regular lines of $TEST_SHEET_NAME. No more than two empty lines are allowed in this position.")
               )
             }
           }
@@ -397,9 +397,9 @@ class WorksheetTest extends FixtureAnyFreeSpec :
         val TEST_SHEET = poiWorkbook.getSheet("GroupsNoEmptyLineAfterHeader")
 
         groupsFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
-          Seq(standardLine( "2"), standardLine( "3"), standardLine( "4")),
-          Seq(standardLine( "6"), standardLine( "7"), standardLine( "8")),
-          Seq(standardLine( "10"))
+          Seq(standardLine("2"), standardLine("3"), standardLine("4")),
+          Seq(standardLine("6"), standardLine("7"), standardLine("8")),
+          Seq(standardLine("10"))
         )
       }
     }

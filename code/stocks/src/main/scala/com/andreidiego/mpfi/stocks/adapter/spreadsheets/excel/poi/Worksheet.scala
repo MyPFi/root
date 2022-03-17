@@ -72,7 +72,7 @@ object Worksheet:
           case Seq(first, second, third) ⇒ false
           case Seq(first, second, third, fourth) ⇒
             if first.isEmpty && second.isEmpty && third.isEmpty && fourth.isNotEmpty then
-              throw new IllegalArgumentException(s"Irregular empty line interval found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
+              throw new IllegalArgumentException(s"Irregular empty line interval (${first.index}:${third.index}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
             else false
       }
 
@@ -122,6 +122,8 @@ object Worksheet:
     private def isEmpty: Boolean = cells.forall(_.isEmpty)
 
     private def isNotEmpty: Boolean = !isEmpty
+
+    private def index: String = cells.head.address.tail
 
   extension (cell: Cell)
 
