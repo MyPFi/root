@@ -10,9 +10,9 @@ case class Line private(cells: Seq[Cell])
 // TODO Replace Try + exceptions with Either
 object Line:
 
-  def from(poiRow: XSSFRow): Try[Line] = for {
+  def from(poiRow: XSSFRow, size: Int): Try[Line] = for {
     validatedPOIRow ← poiRow.validated
-  } yield Line(validatedPOIRow.cells)
+  } yield Line(validatedPOIRow.cells(size))
 
   extension (poiRow: XSSFRow)
 
@@ -28,6 +28,6 @@ object Line:
 
     private def hasNoCells: Boolean = Option(poiRow).forall(_.getLastCellNum == -1)
 
-    private def cells: Seq[Cell] =
-      (0 until poiRow.getLastCellNum)
+    private def cells(qty: Int): Seq[Cell] =
+      (0 until qty)
         .map(index ⇒ Cell.from(poiRow.getCell(index, CREATE_NULL_AS_BLANK)).get)

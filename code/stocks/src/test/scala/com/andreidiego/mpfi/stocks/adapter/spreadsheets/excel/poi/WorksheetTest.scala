@@ -212,20 +212,6 @@ class WorksheetTest extends FixtureAnyFreeSpec :
             }
           }
         }
-        "whose lines contain more cells than the header." in { poiWorkbook =>
-          val TEST_SHEET_NAME = "ContentBeyondHeadersLimit"
-          val TEST_SHEET = poiWorkbook.getSheet(TEST_SHEET_NAME)
-          val cellAddress = "E3"
-          val cellContent = "15,34"
-          val headerLimit = "D"
-
-          val exception = Worksheet.from(TEST_SHEET).failure.exception
-
-          exception should have(
-            'class(classOf[IllegalArgumentException]),
-            'message(s"A cell ($cellAddress) with value ($cellContent) was found in $TEST_SHEET_NAME beyond the limits imposed by the header ($headerLimit column).")
-          )
-        }
         "whose header" - {
           "is not in the first line." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("HeaderOutOfPlace")
