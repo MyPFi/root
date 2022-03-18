@@ -11,7 +11,6 @@ import org.scalatest.matchers.dsl.MatcherWords.not.be
 import java.io.File
 import scala.language.deprecated.symbolLiterals
 import scala.util.Try
-import scala.Seq
 
 // TODO Replace Try + exceptions with Either
 class WorksheetTest extends FixtureAnyFreeSpec :
@@ -364,6 +363,11 @@ class WorksheetTest extends FixtureAnyFreeSpec :
           }
         }
       }
+    }
+    "filter out trailing empty lines." in { poiWorkbook =>
+      val TEST_SHEET = poiWorkbook.getSheet("TrailingEmptyLines")
+
+      linesFrom(Worksheet.from(TEST_SHEET)) should have size 10
     }
     "create group of lines containing those regular lines constrained between empty lines when there is" - {
       "no empty line right after the header." in { poiWorkbook =>

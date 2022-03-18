@@ -79,7 +79,12 @@ object Worksheet:
     lines
   }
 
-  private def linesFrom(rows: Seq[XSSFRow]): Try[Seq[Line]] = Try(rows.map(row ⇒ Line.from(row).get))
+  private def linesFrom(rows: Seq[XSSFRow]): Try[Seq[Line]] = Try {
+    rows.map(row ⇒ Line.from(row).get)
+      .reverse
+      .dropWhile(_.isEmpty)
+      .reverse
+  }
 
   private def grouped(lines: Seq[Line]): Seq[Seq[Line]] = lines
     .drop(1)
