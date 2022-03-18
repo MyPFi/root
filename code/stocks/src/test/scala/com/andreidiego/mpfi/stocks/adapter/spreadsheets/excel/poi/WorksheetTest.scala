@@ -7,6 +7,7 @@ import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.TryValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.dsl.MatcherWords.not.be
+import org.scalatest.Inspectors.forAll
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
@@ -392,10 +393,20 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
         headerFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
       }
-      "a set of lines sorted by their position in the worksheet with cells within lines sorted in the same way." in { poiWorkbook =>
-        val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+      "a set of lines" - {
+        "sorted by their position in the worksheet with cells within lines sorted in the same way." in { poiWorkbook =>
+          val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-        linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+          linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs VALID_TINY_WORKSHEET_CONTENTS
+        }
+        "with no less cells than the header's size." in { poiWorkbook =>
+          val TEST_SHEET = poiWorkbook.getSheet("LastTwoCellsEmpty")
+
+          forAll(linesFrom(Worksheet.from(TEST_SHEET)).drop(2)) { line ⇒
+            line should have size 4
+            line.map(_._2) should contain theSameElementsInOrderAs Seq("05/11/2008", "78174", "", "")
+          }
+        }
       }
       "a set of groups sorted by their position in the worksheet with lines within groups and cells within lines sorted in the same way." in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet("GroupsNoEmptyLineAfterHeader")
