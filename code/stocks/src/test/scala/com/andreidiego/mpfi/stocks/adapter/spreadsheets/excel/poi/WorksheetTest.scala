@@ -420,16 +420,21 @@ class WorksheetTest extends FixtureAnyFreeSpec :
     }
     "forbid manipulation of its internal header." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
-      val poiHeaderRow = poiWorkbook.getSheet(VALID_TINY_WORKSHEET).getRow(0)
 
       "val header: Header = Worksheet.from(TEST_SHEET).success.value.header" should compile
-      "Worksheet.from(TEST_SHEET).success.value.header = Header.from(poiHeaderRow).success.value" shouldNot compile
+      "Worksheet.from(TEST_SHEET).success.value.header = header" shouldNot compile
     }
     "forbid manipulation of its internal lines." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
       "val lines: Seq[Line] = Worksheet.from(TEST_SHEET).success.value.lines" should compile
-      "Worksheet.from(TEST_SHEET).success.value.lines = VALID_TINY_WORKSHEET_CONTENTS" shouldNot compile
+      "Worksheet.from(TEST_SHEET).success.value.lines = lines" shouldNot compile
+    }
+    "forbid manipulation of its internal groups." in { poiWorkbook ⇒
+      val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+
+      "val groups: Seq[Seq[Line]] = Worksheet.from(TEST_SHEET).success.value.groups" should compile
+      "Worksheet.from(TEST_SHEET).success.value.groups = groups" shouldNot compile
     }
   }
 
