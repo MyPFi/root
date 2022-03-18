@@ -460,7 +460,7 @@ class POIExcelExtractorTest extends FixtureAnyWordSpec :
       }
     }
     "return the number of the last non-empty line before an irregular three empty-line block" when {
-      "given a worksheet containing non-empty regular (non-header) lines." taggedAs Slow in { excelExtractor =>
+      "given a worksheet containing non-empty regular (non-header) lines." taggedAs Slow ignore { excelExtractor =>
         val TEST_SHEET = "Notas de Corretagem"
 
         excelExtractor.lastLineNumberIn(TEST_SHEET) should be(602)
