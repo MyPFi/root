@@ -4,9 +4,11 @@ import excel.poi.{Cell, Line, Worksheet}
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
-class BrokerageNote(val operations: Seq[Operation])
+class BrokerageNote(val operations: Seq[Operation], val financialSummary: FinancialSummary)
 
 class Operation
+
+class FinancialSummary
 
 object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
@@ -19,7 +21,8 @@ object BrokerageNotesWorksheetReader:
 
   extension (group: Group)
     private def toBrokerageNote: BrokerageNote = BrokerageNote(
-      group.filter(!_.isSummary).map(_ ⇒ Operation())
+      group.filter(!_.isSummary).map(_ ⇒ Operation()),
+      FinancialSummary()
     )
 
   extension (line: Line)

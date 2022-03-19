@@ -1,6 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import excel.poi.{Line, Worksheet}
+import excel.poi.{Cell, Line, Worksheet}
 import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.Outcome
@@ -51,6 +51,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forAll(operations)(_ shouldBe a[Operation])
       }
+      "'SummaryLine' into a 'FinancialSummary'" in { poiWorkbook ⇒
+        val worksheet = Worksheet.from(poiWorkbook.getSheet("3")).get
+        assume(worksheet.summaryLines.size == 2)
+
+        val financialSummaries = BrokerageNotesWorksheetReader.from(worksheet).financialSummaries
+
+        financialSummaries should have size 2
+
+        forAll(financialSummaries)(_ shouldBe a[FinancialSummary])
+      }
     }
   }
 
@@ -62,9 +72,27 @@ object BrokerageNotesWorksheetReaderTest:
   extension (worksheet: Worksheet)
 
     private def nonSummaryLines: Seq[Line] =
-      worksheet.groups.flatMap(_.filter(!_.cells.filter(_.value.nonEmpty).forall(_.`type` == FORMULA)))
+      worksheet.groups.flatMap(_.filter(!_.isSummary))
+
+    private def summaryLines: Seq[Line] =
+      worksheet.groups.flatMap(_.filter(isSummary))
 
   extension (brokerageNotesWorksheetReader: BrokerageNotesWorksheetReader)
 
     private def operations: Seq[Operation] =
       brokerageNotesWorksheetReader.brokerageNotes.flatMap(_.operations)
+
+    private def financialSummaries: Seq[FinancialSummary] =
+      brokerageNotesWorksheetReader.brokerageNotes.map(_.financialSummary)
+
+  extension (line: Line)
+
+    private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
+
+    private def nonEmptyCells: Seq[Cell] = line.cells.filter(nonEmpty)
+
+  extension (cell: Cell)
+
+    private def isFormula: Boolean = cell.`type` == FORMULA
+
+    private def nonEmpty: Boolean = cell.value.nonEmpty
