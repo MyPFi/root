@@ -82,6 +82,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         forExactly(5, operations)(_ shouldBe a[SellingOperation])
       }
     }
+    "generate a 'FinancialSummary', for 'Groups' of one 'Line', whose fields would replicate the corresponding ones from the one 'Line' in the 'Group'." in { poiWorkbook ⇒
+      val worksheet = Worksheet.from(poiWorkbook.getSheet("5")).get
+      assume(worksheet.groups.size == 3)
+      assume(worksheet.groups.forall(_.size == 1))
+
+      val operations = BrokerageNotesWorksheetReader.from(worksheet).operations
+      val financialSummaries = BrokerageNotesWorksheetReader.from(worksheet).financialSummaries
+
+      financialSummaries should have size 3
+
+      forAll(financialSummaries.zip(operations)) { financialSummaryAndOperation ⇒
+        val financialSummary = financialSummaryAndOperation._1
+        val operation = financialSummaryAndOperation._2
+
+        financialSummary.volume should equal(operation.volume)
+        financialSummary.settlementFee should equal(operation.settlementFee)
+        financialSummary.negotiationFees should equal(operation.negotiationFees)
+        financialSummary.brokerage should equal(operation.brokerage)
+        financialSummary.serviceTax should equal(operation.serviceTax)
+        financialSummary.incomeTaxAtSource should equal(operation.incomeTaxAtSource)
+        financialSummary.total should equal(operation.total)
+      }
+    }
   }
 
 object BrokerageNotesWorksheetReaderTest:
