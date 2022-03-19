@@ -41,7 +41,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forAll(brokerageNotes)(_ shouldBe a[BrokerageNote])
       }
-      "non-'SummaryLine' into an 'Operation'" in { poiWorkbook ⇒
+      "non-'SummaryLine' into an 'Operation'." in { poiWorkbook ⇒
         val worksheet = Worksheet.from(poiWorkbook.getSheet("2")).get
         assume(worksheet.nonSummaryLines.size == 7)
 
@@ -51,7 +51,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forAll(operations)(_ shouldBe a[Operation])
       }
-      "'SummaryLine' into a 'FinancialSummary'" in { poiWorkbook ⇒
+      "'SummaryLine' into a 'FinancialSummary'." in { poiWorkbook ⇒
         val worksheet = Worksheet.from(poiWorkbook.getSheet("3")).get
         assume(worksheet.summaryLines.size == 2)
 
@@ -61,7 +61,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forAll(financialSummaries)(_ shouldBe a[FinancialSummary])
       }
-      "red non-'SummaryLine' into a 'BuyingOperation'" in { poiWorkbook ⇒
+      "red non-'SummaryLine' into a 'BuyingOperation'." in { poiWorkbook ⇒
         val worksheet = Worksheet.from(poiWorkbook.getSheet("4")).get
         assume(worksheet.redNonSummaryLines.size == 6)
 
@@ -71,6 +71,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forExactly(6, operations)(_ shouldBe a[BuyingOperation])
       }
+      "blue non-'SummaryLine' into a 'SellingOperation'." in { poiWorkbook ⇒
+        val worksheet = Worksheet.from(poiWorkbook.getSheet("4")).get
+        assume(worksheet.blueNonSummaryLines.size == 5)
+
+        val operations = BrokerageNotesWorksheetReader.from(worksheet).operations
+
+        operations should have size 11
+
+        forExactly(5, operations)(_ shouldBe a[SellingOperation])
+      }
     }
   }
 
@@ -79,6 +89,7 @@ object BrokerageNotesWorksheetReaderTest:
 
   private val FORMULA = "FORMULA"
   private val RED = "255,0,0"
+  private val BLUE = "68,114,196"
 
   extension (worksheet: Worksheet)
 
@@ -90,6 +101,9 @@ object BrokerageNotesWorksheetReaderTest:
 
     private def redNonSummaryLines: Seq[Line] =
       nonSummaryLines.filter(allNonEmptyCellsRed)
+
+    private def blueNonSummaryLines: Seq[Line] =
+      nonSummaryLines.filter(allNonEmptyCellsBlue)
 
   extension (brokerageNotesWorksheetReader: BrokerageNotesWorksheetReader)
 
@@ -109,6 +123,8 @@ object BrokerageNotesWorksheetReaderTest:
 
     private def allNonEmptyCellsRed: Boolean = nonEmptyCells.forall(redFont)
 
+    private def allNonEmptyCellsBlue: Boolean = nonEmptyCells.forall(blueFont)
+
   extension (cell: Cell)
 
     private def isFormula: Boolean = cell.`type` == FORMULA
@@ -116,3 +132,5 @@ object BrokerageNotesWorksheetReaderTest:
     private def nonEmpty: Boolean = cell.value.nonEmpty
 
     private def redFont: Boolean = cell.fontColor == RED
+
+    private def blueFont: Boolean = cell.fontColor == BLUE

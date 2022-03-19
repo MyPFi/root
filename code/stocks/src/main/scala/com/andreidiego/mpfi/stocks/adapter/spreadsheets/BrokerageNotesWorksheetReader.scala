@@ -10,13 +10,17 @@ class Operation
 
 class BuyingOperation extends Operation
 
+class SellingOperation extends Operation
+
 class FinancialSummary
 
 object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
 
   private val FORMULA = "FORMULA"
-
+  private val RED = "255,0,0"
+  private val BLUE = "68,114,196"
+  
   def from(worksheet: Worksheet): BrokerageNotesWorksheetReader = BrokerageNotesWorksheetReader(
     worksheet.groups.map(_.toBrokerageNote)
   )
@@ -36,7 +40,8 @@ object BrokerageNotesWorksheetReader:
     private def cells: Seq[Cell] = line.cells
 
     private def toOperation: Operation = cells.head.fontColor match {
-      case "255,0,0" ⇒ BuyingOperation()
+      case RED ⇒ BuyingOperation()
+      case BLUE ⇒ SellingOperation()
       case _ ⇒ Operation()
     }
 
