@@ -8,6 +8,8 @@ class BrokerageNote(val operations: Seq[Operation], val financialSummary: Financ
 
 class Operation
 
+class BuyingOperation extends Operation
+
 class FinancialSummary
 
 object BrokerageNotesWorksheetReader:
@@ -21,7 +23,7 @@ object BrokerageNotesWorksheetReader:
 
   extension (group: Group)
     private def toBrokerageNote: BrokerageNote = BrokerageNote(
-      group.filter(!_.isSummary).map(_ ⇒ Operation()),
+      group.filter(!_.isSummary).map(_.toOperation),
       FinancialSummary()
     )
 
@@ -29,7 +31,14 @@ object BrokerageNotesWorksheetReader:
 
     private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
 
-    private def nonEmptyCells: Seq[Cell] = line.cells.filter(nonEmpty)
+    private def nonEmptyCells: Seq[Cell] = cells.filter(nonEmpty)
+
+    private def cells: Seq[Cell] = line.cells
+
+    private def toOperation: Operation = cells.head.fontColor match {
+      case "255,0,0" ⇒ BuyingOperation()
+      case _ ⇒ Operation()
+    }
 
   extension (cell: Cell)
 

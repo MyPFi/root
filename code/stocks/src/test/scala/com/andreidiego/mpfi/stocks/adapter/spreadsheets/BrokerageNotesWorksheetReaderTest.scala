@@ -6,7 +6,7 @@ import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.Outcome
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.Inspectors.forAll
+import org.scalatest.Inspectors.{forAll, forExactly}
 
 import java.io.File
 
@@ -61,6 +61,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         forAll(financialSummaries)(_ shouldBe a[FinancialSummary])
       }
+      "red non-'SummaryLine' into a 'BuyingOperation'" in { poiWorkbook ⇒
+        val worksheet = Worksheet.from(poiWorkbook.getSheet("4")).get
+        assume(worksheet.redNonSummaryLines.size == 6)
+
+        val operations = BrokerageNotesWorksheetReader.from(worksheet).operations
+
+        operations should have size 11
+
+        forExactly(6, operations)(_ shouldBe a[BuyingOperation])
+      }
     }
   }
 
@@ -68,6 +78,7 @@ object BrokerageNotesWorksheetReaderTest:
   private val TEST_SPREADSHEET = "BrokerageNotes.xlsx"
 
   private val FORMULA = "FORMULA"
+  private val RED = "255,0,0"
 
   extension (worksheet: Worksheet)
 
@@ -76,6 +87,9 @@ object BrokerageNotesWorksheetReaderTest:
 
     private def summaryLines: Seq[Line] =
       worksheet.groups.flatMap(_.filter(isSummary))
+
+    private def redNonSummaryLines: Seq[Line] =
+      nonSummaryLines.filter(allNonEmptyCellsRed)
 
   extension (brokerageNotesWorksheetReader: BrokerageNotesWorksheetReader)
 
@@ -89,10 +103,16 @@ object BrokerageNotesWorksheetReaderTest:
 
     private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
 
-    private def nonEmptyCells: Seq[Cell] = line.cells.filter(nonEmpty)
+    private def nonEmptyCells: Seq[Cell] = cells.filter(nonEmpty)
+
+    private def cells: Seq[Cell] = line.cells
+
+    private def allNonEmptyCellsRed: Boolean = nonEmptyCells.forall(redFont)
 
   extension (cell: Cell)
 
     private def isFormula: Boolean = cell.`type` == FORMULA
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
+
+    private def redFont: Boolean = cell.fontColor == RED
