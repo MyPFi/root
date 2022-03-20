@@ -30,16 +30,11 @@ object BrokerageNotesWorksheetReader:
   extension (group: Group)
 
     private def toBrokerageNote: BrokerageNote = BrokerageNote(
-      group.filter(!_.isSummary).map(_.toOperation),
-      FinancialSummary(group.toTuple._1, group.toTuple._2, group.toTuple._3, group.toTuple._4, group.toTuple._5, group.toTuple._6, group.toTuple._7)
+      nonSummaryLines.map(_.toOperation),
+      group.head.toFinancialSummary
     )
 
-    // TODO Would this be a good use case for Shapeless?
-    private def toTuple: (String, String, String, String, String, String, String) = {
-      group.head.cells.map(_.value) match {
-        case Seq(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, _*) ⇒ (v6, v7, v8, v9, v10, v11, v12)
-      }
-    }
+    private def nonSummaryLines: Seq[Line] = group.filter(!_.isSummary)
 
   extension (line: Line)
 
@@ -50,16 +45,13 @@ object BrokerageNotesWorksheetReader:
     private def cells: Seq[Cell] = line.cells
 
     private def toOperation: Operation = cells.head.fontColor match {
-      case RED ⇒ BuyingOperation(
-        line.cells(5).value, line.cells(6).value, line.cells(7).value, line.cells(8).value, line.cells(9).value, line.cells(10).value, line.cells(11).value
-      )
-      case BLUE ⇒ SellingOperation(
-        line.cells(5).value, line.cells(6).value, line.cells(7).value, line.cells(8).value, line.cells(9).value, line.cells(10).value, line.cells(11).value
-      )
-      case _ ⇒ Operation(
-        line.cells(5).value, line.cells(6).value, line.cells(7).value, line.cells(8).value, line.cells(9).value, line.cells(10).value, line.cells(11).value
-      )
+      case RED ⇒ BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
+      case BLUE ⇒ SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
+      case _ ⇒ Operation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
     }
+
+    private def toFinancialSummary: FinancialSummary =
+      FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
 
   extension (cell: Cell)
 
