@@ -41,12 +41,16 @@ object BrokerageNotesWorksheetReader:
   extension (group: Group)
 
     private def validated(worksheetName: String): Try[Group] = Try {
-      group.reduceLeft { (line1: Line, line2: Line) ⇒
-        if line2.isSummary then line1
-        else
-          if line1.cells.head.value != line2.cells.head.value then
-            throw new IllegalArgumentException(s"Invalid 'BrokerageNote' (${line2.cells.tail.head.value}) found on 'Worksheet' $worksheetName. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but ${line2.cells.head.value} in ${line2.cells.head.address} is different.")
-          else line2
+      group.reduceLeft { (first: Line, second: Line) ⇒
+        if second.isSummary then first
+        else {
+          val firstTradingDateCell = first.cells.head
+          val secondTradingDateCell = second.cells.head
+
+          if firstTradingDateCell.value != secondTradingDateCell.value then
+            throw new IllegalArgumentException(s"An invalid 'BrokerageNote' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'.")
+          else second
+        }
       }
 
       group

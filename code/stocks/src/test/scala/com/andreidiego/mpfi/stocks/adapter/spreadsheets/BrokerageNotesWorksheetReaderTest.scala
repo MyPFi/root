@@ -41,7 +41,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
       exception should have(
         'class(classOf[IllegalArgumentException]),
-        'message(s"Invalid 'BrokerageNote' (1662) found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but 06/11/2008 in A3 is different.")
+        'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
       )
     }
     "turn every" - {
