@@ -43,11 +43,6 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         'class(classOf[IllegalArgumentException]),
         'message(s"Invalid 'BrokerageNote' (1662) found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but 06/11/2008 in A3 is different.")
       )
-
-      //      exception.getCause should have(
-      //        'class(classOf[IllegalArgumentException]),
-      //        'message("Header is empty.")
-      //      )
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
