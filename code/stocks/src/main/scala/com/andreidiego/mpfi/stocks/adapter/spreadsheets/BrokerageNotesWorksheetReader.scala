@@ -2,6 +2,8 @@ package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
 import excel.poi.{Cell, Line, Worksheet}
 
+import scala.util.Try
+
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
 class BrokerageNote(val operations: Seq[Operation], val financialSummary: FinancialSummary)
@@ -23,11 +25,32 @@ object BrokerageNotesWorksheetReader:
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
-  def from(worksheet: Worksheet): BrokerageNotesWorksheetReader = BrokerageNotesWorksheetReader(
-    worksheet.groups.map(_.toBrokerageNote)
-  )
+  def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
+    BrokerageNotesWorksheetReader(
+      worksheet.groups
+        .map(_.validated(worksheet.name)
+          .map(_.toBrokerageNote).get
+        )
+    )
+  }
+
+  extension (worksheet: Worksheet)
+
+    private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
 
   extension (group: Group)
+
+    private def validated(worksheetName: String): Try[Group] = Try {
+      group.reduceLeft { (line1: Line, line2: Line) ⇒
+        if line2.isSummary then line1
+        else
+          if line1.cells.head.value != line2.cells.head.value then
+            throw new IllegalArgumentException(s"Invalid 'BrokerageNote' (${line2.cells.tail.head.value}) found on 'Worksheet' $worksheetName. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but ${line2.cells.head.value} in ${line2.cells.head.address} is different.")
+          else line2
+      }
+
+      group
+    }
 
     private def toBrokerageNote: BrokerageNote = BrokerageNote(
       nonSummaryLines.map(_.toOperation),

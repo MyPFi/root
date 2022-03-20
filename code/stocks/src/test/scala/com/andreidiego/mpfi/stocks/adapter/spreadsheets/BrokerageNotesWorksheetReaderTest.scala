@@ -7,8 +7,11 @@ import org.scalatest.Outcome
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.Inspectors.{forAll, forExactly}
+import org.scalatest.TryValues.*
 
 import java.io.File
+import scala.language.deprecated.symbolLiterals
+import scala.util.Try
 
 class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
@@ -29,6 +32,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("1")).get
 
       "BrokerageNotesWorksheetReader.from(TEST_SHEET)" should compile
+    }
+    "fail to be built when given a 'Worksheet' whose 'BrokerageNotes' have different 'TradingDate's." in { poiWorkbook ⇒
+      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+      assume(TEST_SHEET.groups.size == 4)
+
+      val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+      exception should have(
+        'class(classOf[IllegalArgumentException]),
+        'message(s"Invalid 'BrokerageNote' (1662) found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but 06/11/2008 in A3 is different.")
+      )
+
+      //      exception.getCause should have(
+      //        'class(classOf[IllegalArgumentException]),
+      //        'message("Header is empty.")
+      //      )
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
@@ -128,10 +147,12 @@ object BrokerageNotesWorksheetReaderTest:
     private def blueNonSummaryLines: Seq[Line] =
       nonSummaryLines.filter(allNonEmptyCellsBlue)
 
-  extension (brokerageNotesWorksheetReader: BrokerageNotesWorksheetReader)
+    private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
+
+  extension (brokerageNotesWorksheetReaderTry: Try[BrokerageNotesWorksheetReader])
 
     private def brokerageNotes: Seq[BrokerageNote] =
-      brokerageNotesWorksheetReader.brokerageNotes
+      brokerageNotesWorksheetReaderTry.success.value.brokerageNotes
 
     private def operations: Seq[Operation] =
       brokerageNotes.flatMap(_.operations)
