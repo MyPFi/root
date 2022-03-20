@@ -25,6 +25,13 @@ object Worksheet:
     else poiWorksheet.getRowOrCreateEmpty(0)
   }
 
+  private def linesFrom(rows: Seq[XSSFRow])(headerSize: Int): Try[Seq[Line]] = Try {
+    rows.map(row ⇒ Line.from(row, headerSize).get)
+      .reverse
+      .dropWhile(_.isEmpty)
+      .reverse
+  }
+
   private def validated(lines: Seq[Line])(headerSize: Int, sheetName: String): Try[Seq[Line]] = for {
     a ← assertRegularLinesFoundIn(lines)(sheetName)
     b ← assertNoMoreThanOneEmptyLineRightAfterHeaderIn(a)(sheetName)
@@ -58,13 +65,6 @@ object Worksheet:
       }
 
     lines
-  }
-
-  private def linesFrom(rows: Seq[XSSFRow])(headerSize: Int): Try[Seq[Line]] = Try {
-    rows.map(row ⇒ Line.from(row, headerSize).get)
-      .reverse
-      .dropWhile(_.isEmpty)
-      .reverse
   }
 
   private def grouped(lines: Seq[Line]): Seq[Seq[Line]] = lines
