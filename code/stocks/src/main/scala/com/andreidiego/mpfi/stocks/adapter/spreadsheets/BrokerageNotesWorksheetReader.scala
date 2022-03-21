@@ -29,8 +29,8 @@ object BrokerageNotesWorksheetReader:
     BrokerageNotesWorksheetReader(
       worksheet.groups.map(_
         .validatedWith(
-          assertOperationsHaveSameTradingDate(worksheet.name),
-          assertOperationsHaveSameNoteNumber(worksheet.name),
+          assertLinesInGroupHaveSameTradingDate(worksheet.name),
+          assertLinesInGroupHaveSameNoteNumber(worksheet.name),
           assertCellsInLineHaveSameFontColor(worksheet.name)
         )
         .map(_.toBrokerageNote)
@@ -39,27 +39,27 @@ object BrokerageNotesWorksheetReader:
     )
   }
 
-  private def assertOperationsHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
+  private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
     val secondTradingDateCell = second.cells.head
 
     if firstTradingDateCell.value != secondTradingDateCell.value then throw new IllegalArgumentException(
-      s"An invalid 'BrokerageNote' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
+      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
     ) else second
 
-  private def assertOperationsHaveSameNoteNumber(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
+  private def assertLinesInGroupHaveSameNoteNumber(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstNoteNumberCell = first.cells.tail.head
     val secondNoteNumberCell = second.cells.tail.head
 
     if firstNoteNumberCell.value != secondNoteNumberCell.value then throw new IllegalArgumentException(
-      s"An invalid 'BrokerageNote' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
+      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
     ) else second
 
   private def assertCellsInLineHaveSameFontColor(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
 
     firstLine.nonEmptyCells.reduceLeft { (firstCell: Cell, secondCell: Cell) ⇒
       if firstCell.fontColor != secondCell.fontColor then throw new IllegalArgumentException(
-        s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' but '${secondCell.fontColor}' in '${secondCell.address}' is different from '${firstCell.fontColor}' in '${firstCell.address}'."
+        s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${secondCell.fontColor}' in '${secondCell.address}' is different from '${firstCell.fontColor}' in '${firstCell.address}'."
       ) else secondCell
     }
 

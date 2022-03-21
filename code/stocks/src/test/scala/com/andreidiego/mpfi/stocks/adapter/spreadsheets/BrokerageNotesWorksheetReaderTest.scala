@@ -35,7 +35,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
     }
     "fail to be built when" - {
       "given a 'Worksheet' whose" - {
-        "'BrokerageNotes' have different" - {
+        "'Groups' contain 'Lines' with different" - {
           "'TradingDate's." in { poiWorkbook ⇒
             val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
             assume(TEST_SHEET.groups.size == 4)
@@ -44,7 +44,8 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+              // Todo Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
+              'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
             )
           }
           "'NoteNumbers's." in { poiWorkbook ⇒
@@ -55,7 +56,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"An invalid 'BrokerageNote' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '1663' in 'B3' is different from '1662' in 'B2'.")
+              'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
             )
           }
         }
@@ -67,7 +68,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
           exception should have(
             'class(classOf[IllegalArgumentException]),
             // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
-            'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' but '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
+            'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
           )
         }
       }
