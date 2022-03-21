@@ -27,12 +27,32 @@ object BrokerageNotesWorksheetReader:
 
   def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
     BrokerageNotesWorksheetReader(
-      worksheet.groups
-        .map(_.validated(worksheet.name)
-          .map(_.toBrokerageNote).get
+      worksheet.groups.map(_
+        .validatedWith(
+          assertOperationsHaveSameTradingDate(worksheet.name),
+          assertOperationsHaveSameNoteNumber(worksheet.name)
         )
+        .map(_.toBrokerageNote)
+        .get
+      )
     )
   }
+
+  private def assertOperationsHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
+    val firstTradingDateCell = first.cells.head
+    val secondTradingDateCell = second.cells.head
+
+    if firstTradingDateCell.value != secondTradingDateCell.value then throw new IllegalArgumentException(
+      s"An invalid 'BrokerageNote' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
+    ) else second
+
+  private def assertOperationsHaveSameNoteNumber(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
+    val firstNoteNumberCell = first.cells.tail.head
+    val secondNoteNumberCell = second.cells.tail.head
+
+    if firstNoteNumberCell.value != secondNoteNumberCell.value then throw new IllegalArgumentException(
+      s"An invalid 'BrokerageNote' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
+    ) else second
 
   extension (worksheet: Worksheet)
 
@@ -40,17 +60,12 @@ object BrokerageNotesWorksheetReader:
 
   extension (group: Group)
 
-    private def validated(worksheetName: String): Try[Group] = Try {
+    private def validatedWith(validations: (Line, Line) ⇒ Line*): Try[Group] = Try {
       group.reduceLeft { (first: Line, second: Line) ⇒
         if second.isSummary then first
-        else {
-          val firstTradingDateCell = first.cells.head
-          val secondTradingDateCell = second.cells.head
-
-          if firstTradingDateCell.value != secondTradingDateCell.value then
-            throw new IllegalArgumentException(s"An invalid 'BrokerageNote' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'.")
-          else second
-        }
+        else
+          validations.foreach(_ (first, second))
+          second
       }
 
       group

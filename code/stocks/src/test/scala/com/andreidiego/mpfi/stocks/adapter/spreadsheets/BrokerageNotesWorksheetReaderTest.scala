@@ -33,16 +33,31 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
       "BrokerageNotesWorksheetReader.from(TEST_SHEET)" should compile
     }
-    "fail to be built when given a 'Worksheet' whose 'BrokerageNotes' have different 'TradingDate's." in { poiWorkbook ⇒
-      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
-      assume(TEST_SHEET.groups.size == 4)
+    "fail to be built when" - {
+      "given a 'Worksheet' whose 'BrokerageNotes' have different" - {
+        "'TradingDate's." in { poiWorkbook ⇒
+          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+          assume(TEST_SHEET.groups.size == 4)
 
-      val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+          val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-      exception should have(
-        'class(classOf[IllegalArgumentException]),
-        'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDates' should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
-      )
+          exception should have(
+            'class(classOf[IllegalArgumentException]),
+            'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+          )
+        }
+        "'NoteNumbers's." in { poiWorkbook ⇒
+          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
+          assume(TEST_SHEET.groups.size == 4)
+
+          val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+          exception should have(
+            'class(classOf[IllegalArgumentException]),
+            'message(s"An invalid 'BrokerageNote' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '1663' in 'B3' is different from '1662' in 'B2'.")
+          )
+        }
+      }
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
