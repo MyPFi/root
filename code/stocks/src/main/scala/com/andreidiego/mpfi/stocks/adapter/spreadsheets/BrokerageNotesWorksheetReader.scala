@@ -30,7 +30,8 @@ object BrokerageNotesWorksheetReader:
       worksheet.groups.map(_
         .validatedWith(
           assertOperationsHaveSameTradingDate(worksheet.name),
-          assertOperationsHaveSameNoteNumber(worksheet.name)
+          assertOperationsHaveSameNoteNumber(worksheet.name),
+          assertCellsInLineHaveSameFontColor(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -53,6 +54,16 @@ object BrokerageNotesWorksheetReader:
     if firstNoteNumberCell.value != secondNoteNumberCell.value then throw new IllegalArgumentException(
       s"An invalid 'BrokerageNote' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
     ) else second
+
+  private def assertCellsInLineHaveSameFontColor(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+
+    firstLine.nonEmptyCells.reduceLeft { (firstCell: Cell, secondCell: Cell) ⇒
+      if firstCell.fontColor != secondCell.fontColor then throw new IllegalArgumentException(
+        s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' but '${secondCell.fontColor}' in '${secondCell.address}' is different from '${firstCell.fontColor}' in '${firstCell.address}'."
+      ) else secondCell
+    }
+
+    secondLine
 
   extension (worksheet: Worksheet)
 

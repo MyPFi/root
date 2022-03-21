@@ -34,27 +34,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
       "BrokerageNotesWorksheetReader.from(TEST_SHEET)" should compile
     }
     "fail to be built when" - {
-      "given a 'Worksheet' whose 'BrokerageNotes' have different" - {
-        "'TradingDate's." in { poiWorkbook ⇒
-          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
-          assume(TEST_SHEET.groups.size == 4)
+      "given a 'Worksheet' whose" - {
+        "'BrokerageNotes' have different" - {
+          "'TradingDate's." in { poiWorkbook ⇒
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+            assume(TEST_SHEET.groups.size == 4)
 
-          val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-          exception should have(
-            'class(classOf[IllegalArgumentException]),
-            'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
-          )
+            exception should have(
+              'class(classOf[IllegalArgumentException]),
+              'message(s"An invalid 'BrokerageNote' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Operations' in a 'BrokerageNote' but '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+            )
+          }
+          "'NoteNumbers's." in { poiWorkbook ⇒
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
+            assume(TEST_SHEET.groups.size == 4)
+
+            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+            exception should have(
+              'class(classOf[IllegalArgumentException]),
+              'message(s"An invalid 'BrokerageNote' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '1663' in 'B3' is different from '1662' in 'B2'.")
+            )
+          }
         }
-        "'NoteNumbers's." in { poiWorkbook ⇒
-          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
-          assume(TEST_SHEET.groups.size == 4)
+        "'Line's have 'Cell's with different font-colors." in { poiWorkbook ⇒
+          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
 
           val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
           exception should have(
             'class(classOf[IllegalArgumentException]),
-            'message(s"An invalid 'BrokerageNote' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Operations' in a 'BrokerageNote' but '1663' in 'B3' is different from '1662' in 'B2'.")
+            // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
+            'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' but '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
           )
         }
       }
@@ -157,6 +170,7 @@ object BrokerageNotesWorksheetReaderTest:
     private def blueNonSummaryLines: Seq[Line] =
       nonSummaryLines.filter(allNonEmptyCellsBlue)
 
+    // TODO This property should be added to the actual 'Worksheet' class
     private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
 
   extension (brokerageNotesWorksheetReaderTry: Try[BrokerageNotesWorksheetReader])
