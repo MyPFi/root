@@ -60,22 +60,35 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
             )
           }
         }
-        "'Line's have 'Cell's with different font-colors." in { poiWorkbook ⇒
-          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
+        "'Line's have 'Cell's" - {
+          "with different font-colors." in { poiWorkbook ⇒
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
 
-          val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-          exception should have(
-            'class(classOf[IllegalArgumentException]),
-            // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
-            'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
-          )
+            exception should have(
+              'class(classOf[IllegalArgumentException]),
+              // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
+              'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
+            )
+          }
+          "whose font-colors are neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithBlackFontColor")).get
+
+            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+            exception should have(
+              'class(classOf[IllegalArgumentException]),
+              // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
+              'message(s"An invalid 'Line' ('05/11/2008 - 1662 - GGBR4 - 100') was found on 'Worksheet' ${TEST_SHEET.name}. 'Line's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn them into 'Operation's but this 'Line' has font-color '0,0,0'.")
+            )
+          }
         }
       }
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("2")).get
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSameTradingDate&Note")).get
         assume(TEST_SHEET.groups.size == 4)
 
         val brokerageNotes = BrokerageNotesWorksheetReader.from(TEST_SHEET).brokerageNotes
@@ -85,7 +98,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         forAll(brokerageNotes)(_ shouldBe a[BrokerageNote])
       }
       "non-'SummaryLine' into an 'Operation'." in { poiWorkbook ⇒
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("2")).get
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSameTradingDate&Note")).get
         assume(TEST_SHEET.nonSummaryLines.size == 7)
 
         val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
@@ -95,7 +108,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         forAll(operations)(_ shouldBe a[Operation])
       }
       "'SummaryLine' into a 'FinancialSummary'." in { poiWorkbook ⇒
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("3")).get
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSummary")).get
         assume(TEST_SHEET.summaryLines.size == 2)
 
         val financialSummaries = BrokerageNotesWorksheetReader.from(TEST_SHEET).financialSummaries
@@ -105,7 +118,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         forAll(financialSummaries)(_ shouldBe a[FinancialSummary])
       }
       "red non-'SummaryLine' into a 'BuyingOperation'." in { poiWorkbook ⇒
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("4")).get
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("BuyingAndSellingOperations")).get
         assume(TEST_SHEET.redNonSummaryLines.size == 6)
 
         val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
@@ -115,7 +128,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
         forExactly(6, operations)(_ shouldBe a[BuyingOperation])
       }
       "blue non-'SummaryLine' into a 'SellingOperation'." in { poiWorkbook ⇒
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("4")).get
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("BuyingAndSellingOperations")).get
         assume(TEST_SHEET.blueNonSummaryLines.size == 5)
 
         val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
@@ -126,7 +139,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
       }
     }
     "generate a 'FinancialSummary', for 'Groups' of one 'Line', whose fields would replicate the corresponding ones from the one 'Line' in the 'Group'." in { poiWorkbook ⇒
-      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("5")).get
+      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SingleLineGroups")).get
       assume(TEST_SHEET.groups.size == 3)
       assume(TEST_SHEET.groups.forall(_.size == 1))
 

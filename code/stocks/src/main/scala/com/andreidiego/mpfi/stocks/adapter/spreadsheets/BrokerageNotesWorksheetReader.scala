@@ -31,7 +31,8 @@ object BrokerageNotesWorksheetReader:
         .validatedWith(
           assertLinesInGroupHaveSameTradingDate(worksheet.name),
           assertLinesInGroupHaveSameNoteNumber(worksheet.name),
-          assertCellsInLineHaveSameFontColor(worksheet.name)
+          assertCellsInLineHaveSameFontColor(worksheet.name),
+          assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -62,7 +63,17 @@ object BrokerageNotesWorksheetReader:
         s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${secondCell.fontColor}' in '${secondCell.address}' is different from '${firstCell.fontColor}' in '${firstCell.address}'."
       ) else secondCell
     }
+    secondLine
 
+  private def assertCellsInLineHaveFontColorRedOrBlue(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+
+    firstLine.nonEmptyCells.reduceLeft { (firstCell: Cell, secondCell: Cell) ⇒
+      firstCell.fontColor match
+        case "255,0,0" | "68,114,196" ⇒ secondCell
+        case _ ⇒ throw new IllegalArgumentException(
+          s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'Line's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn them into 'Operation's but this 'Line' has font-color '0,0,0'."
+        )
+    }
     secondLine
 
   extension (worksheet: Worksheet)
@@ -78,7 +89,6 @@ object BrokerageNotesWorksheetReader:
           validations.foreach(_ (first, second))
           second
       }
-
       group
     }
 
