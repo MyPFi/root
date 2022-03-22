@@ -32,7 +32,8 @@ object BrokerageNotesWorksheetReader:
           assertLinesInGroupHaveSameTradingDate(worksheet.name),
           assertLinesInGroupHaveSameNoteNumber(worksheet.name),
           assertCellsInLineHaveSameFontColor(worksheet.name),
-          assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
+          assertCellsInLineHaveFontColorRedOrBlue(worksheet.name),
+          assertCellsInLineAreCalculatedCorrectly(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -76,6 +77,17 @@ object BrokerageNotesWorksheetReader:
     }
     secondLine
 
+  private def assertCellsInLineAreCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+    val qtyCell = firstLine.cells(3)
+    val priceCell = firstLine.cells(4)
+    val volumeCell = firstLine.cells(5)
+    val expectedValue = qtyCell.asInt * priceCell.asDouble
+
+    if volumeCell.asDouble != expectedValue then throw new IllegalArgumentException(
+      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedValue', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
+    )
+    secondLine
+
   extension (worksheet: Worksheet)
 
     private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
@@ -107,6 +119,8 @@ object BrokerageNotesWorksheetReader:
 
     private def cells: Seq[Cell] = line.cells
 
+    private def calculatedCells: Seq[Cell] = cells.filter(_.address.startsWith("F"))
+
     private def toOperation: Operation = cells.head.fontColor match {
       case RED ⇒ BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
       case BLUE ⇒ SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
@@ -121,3 +135,7 @@ object BrokerageNotesWorksheetReader:
     private def isFormula: Boolean = cell.`type` == FORMULA
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
+
+    private def asInt: Int = cell.value.toInt
+
+    private def asDouble: Double = cell.value.replace(",", ".").toDouble

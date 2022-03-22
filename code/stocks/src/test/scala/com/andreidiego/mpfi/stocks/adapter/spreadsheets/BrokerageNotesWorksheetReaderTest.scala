@@ -60,7 +60,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
             )
           }
         }
-        "'Line's have 'Cell's" - {
+        "'Line's contain 'Cell's" - {
           "with different font-colors." in { poiWorkbook ⇒
             val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
 
@@ -82,6 +82,21 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
               'message(s"An invalid 'Line' ('05/11/2008 - 1662 - GGBR4 - 100') was found on 'Worksheet' ${TEST_SHEET.name}. 'Line's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn them into 'Operation's but this 'Line' has font-color '0,0,0'.")
             )
+          }
+          "whose values are supposed to have been calculated from other 'Cell's but, do not pass the recalculation test, namely:" - {
+            "For 'Operation's:" - {
+              "'Volume'." in { poiWorkbook ⇒
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("VolumeDoesNotMatchQtyTimesPrice")).get
+
+                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                exception should have(
+                  'class(classOf[IllegalArgumentException]),
+                  // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
+                  'message(s"An invalid calculated 'Cell' ('F2:Volume') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7030.0', which is equal to 'D2:Qty * E2:Price (200 * 35.15)' but, it actually contained '7030.01'.")
+                )
+              }
+            }
           }
         }
       }
