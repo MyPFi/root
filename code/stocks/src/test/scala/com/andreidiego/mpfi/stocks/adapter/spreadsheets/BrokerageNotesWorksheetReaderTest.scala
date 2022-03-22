@@ -85,7 +85,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
           }
           "whose values are supposed to have been calculated from other 'Cell's but, do not pass the recalculation test, namely:" - {
             "For 'Operation's:" - {
-              "'Volume'." in { poiWorkbook ⇒
+              "'Volume', which should equal 'Qty' * 'Price'." in { poiWorkbook ⇒
                 val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("VolumeDoesNotMatchQtyTimesPrice")).get
 
                 val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
