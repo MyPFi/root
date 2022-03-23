@@ -4,7 +4,7 @@ import SettlementFeeRate.OperationalMode
 import SettlementFeeRate.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
 import scala.collection.SortedMap
 import scala.math.Ordering.Implicits.*
@@ -64,6 +64,35 @@ object SettlementFeeRate:
   def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate = SettlementFeeRate(ratesHistory).forOperationalMode(operationalMode)
 
   def at(tradingDate: LocalDate): SettlementFeeRate = SettlementFeeRate(ratesHistory).at(tradingDate)
+
+// TODO This will become a separate service soon
+object NegotiationFeesRate:
+  private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+  val PRE_OPENING: LocalTime = LocalTime.parse("09:45")
+  val TRADING: LocalTime = LocalTime.parse("10:00")
+  val CLOSING_CALL: LocalTime = LocalTime.parse("16:55")
+
+  private val ratesHistory: SortedMap[LocalDate, SortedMap[LocalTime, Double]] = SortedMap(
+    LocalDate.parse("01/01/0001", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00007, CLOSING_CALL -> 0.00007),
+    LocalDate.parse("26/11/2013", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
+    LocalDate.parse("28/10/2019", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00004, TRADING -> 0.000032, CLOSING_CALL -> 0.00004),
+    LocalDate.parse("02/02/2021", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
+  )
+
+  def at(tradingDateTime: LocalDateTime): Double = ratesHistory
+    .filter(_._1.isNotAfter(tradingDateTime.toLocalDate))
+    .last
+    ._2
+    .filter(_._1.isNotAfter(tradingDateTime.toLocalTime))
+    .last
+    ._2
+
+  extension (date: LocalDate)
+    private def isNotAfter(other: LocalDate): Boolean = date.isBefore(other) || date.equals(other)
+
+  extension (time: LocalTime)
+    private def isNotAfter(other: LocalTime): Boolean = time.isBefore(other) || time.equals(other)
 
 object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
@@ -144,6 +173,17 @@ object BrokerageNotesWorksheetReader:
 
     if settlementFeeCell.asDouble != expectedSettlementFee then throw new IllegalArgumentException(
       s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${settlementFeeRate.formatted("%.5f")})' but, it actually contained '${settlementFeeCell.asDouble}'."
+    )
+
+    val negotiationsFeeCell = firstLine.cells(7)
+    val tradingTime = NegotiationFeesRate.TRADING
+    // TODO Same challenge here since 'NegotiationFees' is also dependent on the time of order execution which is not part of the brokerage note document.
+    val negotiationsFeeRate = NegotiationFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
+    val expectedNegotiationsFee = (volumeCell.asDouble * negotiationsFeeRate).formatted("%.2f")
+    val actualNegotiationsFee = negotiationsFeeCell.asDouble.formatted("%.2f")
+
+    if actualNegotiationsFee != expectedNegotiationsFee then throw new IllegalArgumentException(
+      s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volumeCell.asDouble} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
     )
     secondLine
 

@@ -117,6 +117,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
+              "'NegotiationFees', which should equal the 'Volume' * 'NegotiationFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
+                "'Trading'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationsFee")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'Cell' ('H2:NegotiationsFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.55', which is equal to 'F2:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (11000.0 * 0.0050%)' but, it actually contained '0.56'.")
+                  )
+                }
+              }
             }
           }
         }
