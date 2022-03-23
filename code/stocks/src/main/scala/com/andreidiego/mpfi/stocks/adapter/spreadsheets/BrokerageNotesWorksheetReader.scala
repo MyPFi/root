@@ -1,11 +1,13 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import SettlementFeeRate.OperationalMode
-import SettlementFeeRate.OperationalMode.Normal
+import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, SettlementFeeRate}
+import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode
+import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import scala.collection.SortedMap
 import scala.math.Ordering.Implicits.*
 import scala.util.Try
@@ -24,84 +26,12 @@ class SellingOperation(volume: String, settlementFee: String, negotiationFees: S
 
 class FinancialSummary(val volume: String, val settlementFee: String, val negotiationFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
 
-// TODO This will become a separate service soon
-class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]):
-
-  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate =
-    SettlementFeeRate(
-      ratesHistory
-        .map((rateRecord: (LocalDate, Map[OperationalMode, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == operationalMode))
-    )
-
-  def at(tradingDate: LocalDate): SettlementFeeRate =
-    SettlementFeeRate(
-      SortedMap(
-        ratesHistory
-          .filter(_._1.isBefore(tradingDate))
-          .last
-      )
-    )
-
-  def value: Double =
-    val ratesByOperationalModes: Map[OperationalMode, Double] = ratesHistory.last._2
-
-    if ratesByOperationalModes.size == 1 then ratesByOperationalModes.last._2
-    else ratesByOperationalModes.getOrElse(Normal, 0.0)
-
-object SettlementFeeRate:
-  enum OperationalMode:
-    case Normal, DayTrade
-
-  import BrokerageNotesWorksheetReader.dateTimeFormatter
-  import OperationalMode.*
-
-  private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
-    LocalDate.parse("01/01/0001", dateTimeFormatter) -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
-    LocalDate.parse("30/12/2009", dateTimeFormatter) -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
-    LocalDate.parse("12/03/2021", dateTimeFormatter) -> Map(Normal -> 0.00025, DayTrade -> 0.00018)
-  )
-
-  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate = SettlementFeeRate(ratesHistory).forOperationalMode(operationalMode)
-
-  def at(tradingDate: LocalDate): SettlementFeeRate = SettlementFeeRate(ratesHistory).at(tradingDate)
-
-// TODO This will become a separate service soon
-object NegotiationFeesRate:
-  private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-  val PRE_OPENING: LocalTime = LocalTime.parse("09:45")
-  val TRADING: LocalTime = LocalTime.parse("10:00")
-  val CLOSING_CALL: LocalTime = LocalTime.parse("16:55")
-
-  private val ratesHistory: SortedMap[LocalDate, SortedMap[LocalTime, Double]] = SortedMap(
-    LocalDate.parse("01/01/0001", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00007, CLOSING_CALL -> 0.00007),
-    LocalDate.parse("26/11/2013", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
-    LocalDate.parse("28/10/2019", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00004, TRADING -> 0.000032, CLOSING_CALL -> 0.00004),
-    LocalDate.parse("02/02/2021", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
-  )
-
-  def at(tradingDateTime: LocalDateTime): Double = ratesHistory
-    .filter(_._1.isNotAfter(tradingDateTime.toLocalDate))
-    .last
-    ._2
-    .filter(_._1.isNotAfter(tradingDateTime.toLocalTime))
-    .last
-    ._2
-
-  extension (date: LocalDate)
-    private def isNotAfter(other: LocalDate): Boolean = date.isBefore(other) || date.equals(other)
-
-  extension (time: LocalTime)
-    private def isNotAfter(other: LocalTime): Boolean = time.isBefore(other) || time.equals(other)
-
 object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
 
   private val FORMULA = "FORMULA"
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
-
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
     BrokerageNotesWorksheetReader(
@@ -248,7 +178,7 @@ object BrokerageNotesWorksheetReader:
 
     private def asDouble: Double = cell.value.replace(",", ".").toDouble
 
-    private def asLocalDate: LocalDate = LocalDate.parse(cell.value, dateTimeFormatter)
+    private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
   extension (double: Double)
-    private def formatted(format: String): String = String.format(java.util.Locale.US, format, double)
+    private def formatted(format: String): String = String.format(Locale.US, format, double)

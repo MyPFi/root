@@ -96,7 +96,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 )
               }
               "'SettlementFee', which should equal the 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
-                "'Normal'" in { poiWorkbook ⇒
+                "'Normal'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
                   val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
@@ -106,7 +106,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
                   )
                 }
-                "'DayTrade'" ignore { poiWorkbook ⇒
+                "'DayTrade'." ignore { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
                   val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
