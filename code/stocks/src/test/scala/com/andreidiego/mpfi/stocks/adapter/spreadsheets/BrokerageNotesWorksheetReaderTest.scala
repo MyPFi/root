@@ -92,9 +92,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                 exception should have(
                   'class(classOf[IllegalArgumentException]),
-                  // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
                   'message(s"An invalid calculated 'Cell' ('F2:Volume') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7030.0', which is equal to 'D2:Qty * E2:Price (200 * 35.15)' but, it actually contained '7030.01'.")
                 )
+              }
+              "'SettlementFee', which should equal the 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
+                "'Normal'" in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
+                  )
+                }
               }
             }
           }

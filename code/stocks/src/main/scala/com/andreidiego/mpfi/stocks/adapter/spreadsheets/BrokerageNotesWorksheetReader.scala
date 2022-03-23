@@ -1,7 +1,13 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
+import SettlementFeeRate.OperationalMode
+import SettlementFeeRate.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import scala.collection.SortedMap
+import scala.math.Ordering.Implicits.*
 import scala.util.Try
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
@@ -18,12 +24,55 @@ class SellingOperation(volume: String, settlementFee: String, negotiationFees: S
 
 class FinancialSummary(val volume: String, val settlementFee: String, val negotiationFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
 
+// TODO This will become a separate service soon
+class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]):
+
+  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate =
+    SettlementFeeRate(
+      ratesHistory
+        .map((rateRecord: (LocalDate, Map[OperationalMode, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == operationalMode))
+    )
+
+  def at(tradingDate: LocalDate): SettlementFeeRate =
+    SettlementFeeRate(
+      SortedMap(
+        ratesHistory
+          .filter(_._1.isBefore(tradingDate))
+          .last
+      )
+    )
+
+  def value: Double =
+    val ratesByOperationalModes: Map[OperationalMode, Double] = ratesHistory.last._2
+
+    if ratesByOperationalModes.size == 1 then ratesByOperationalModes.last._2
+    else ratesByOperationalModes.getOrElse(Normal, 0.0)
+
+object SettlementFeeRate:
+  enum OperationalMode:
+    case Normal, DayTrade
+
+  import BrokerageNotesWorksheetReader.dateTimeFormatter
+  import OperationalMode.*
+
+  private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
+    LocalDate.parse("01/01/0001", dateTimeFormatter) -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
+    LocalDate.parse("30/12/2009", dateTimeFormatter) -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
+    LocalDate.parse("12/03/2021", dateTimeFormatter) -> Map(Normal -> 0.00025, DayTrade -> 0.00018)
+  )
+
+  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate = SettlementFeeRate(ratesHistory).forOperationalMode(operationalMode)
+
+  def at(tradingDate: LocalDate): SettlementFeeRate = SettlementFeeRate(ratesHistory).at(tradingDate)
+
 object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
 
   private val FORMULA = "FORMULA"
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
+
+  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
     BrokerageNotesWorksheetReader(
@@ -81,10 +130,19 @@ object BrokerageNotesWorksheetReader:
     val qtyCell = firstLine.cells(3)
     val priceCell = firstLine.cells(4)
     val volumeCell = firstLine.cells(5)
-    val expectedValue = qtyCell.asInt * priceCell.asDouble
+    val expectedVolume = qtyCell.asInt * priceCell.asDouble
 
-    if volumeCell.asDouble != expectedValue then throw new IllegalArgumentException(
-      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedValue', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
+    if volumeCell.asDouble != expectedVolume then throw new IllegalArgumentException(
+      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
+    )
+
+    val settlementFeeCell = firstLine.cells(6)
+    val tradingDate = firstLine.cells.head.asLocalDate
+    val settlementFeeRate = SettlementFeeRate.forOperationalMode(Normal).at(tradingDate).value
+    val expectedSettlementFee = volumeCell.asDouble * settlementFeeRate
+
+    if settlementFeeCell.asDouble != expectedSettlementFee then throw new IllegalArgumentException(
+      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${settlementFeeRate.formatted("%.5f")})' but, it actually contained '${settlementFeeCell.asDouble}'."
     )
     secondLine
 
@@ -139,3 +197,8 @@ object BrokerageNotesWorksheetReader:
     private def asInt: Int = cell.value.toInt
 
     private def asDouble: Double = cell.value.replace(",", ".").toDouble
+
+    private def asLocalDate: LocalDate = LocalDate.parse(cell.value, dateTimeFormatter)
+
+  extension (double: Double)
+    private def formatted(format: String): String = String.format(java.util.Locale.US, format, double)
