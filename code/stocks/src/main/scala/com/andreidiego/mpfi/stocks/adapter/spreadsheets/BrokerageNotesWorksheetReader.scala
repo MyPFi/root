@@ -1,8 +1,7 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, ServiceTaxRate, SettlementFeeRate}
-import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode
-import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode.Normal
+import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, OperationalMode, ServiceTaxRate, SettlementFeeRate}
+import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}

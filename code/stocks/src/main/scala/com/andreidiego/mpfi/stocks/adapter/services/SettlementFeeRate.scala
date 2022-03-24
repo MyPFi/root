@@ -1,7 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.services
 
-import SettlementFeeRate.OperationalMode
-import SettlementFeeRate.OperationalMode.*
+import OperationalMode.*
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -9,8 +8,9 @@ import scala.collection.SortedMap
 
 // TODO This will become a separate service soon
 class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]):
+
   import SettlementFeeRate.*
-  
+
   def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate =
     SettlementFeeRate(
       ratesHistory
@@ -33,9 +33,6 @@ class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[Opera
     else ratesByOperationalModes.getOrElse(Normal, 0.0)
 
 object SettlementFeeRate:
-  enum OperationalMode:
-    case Normal, DayTrade
-
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
