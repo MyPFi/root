@@ -107,7 +107,7 @@ object BrokerageNotesWorksheetReader:
     val expectedSettlementFee = volumeCell.asDouble * settlementFeeRate
 
     if settlementFeeCell.asDouble != expectedSettlementFee then throw new IllegalArgumentException(
-      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${settlementFeeRate.formatted("%.5f")})' but, it actually contained '${settlementFeeCell.asDouble}'."
+      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${(settlementFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '${settlementFeeCell.asDouble}'."
     )
     secondLine
 

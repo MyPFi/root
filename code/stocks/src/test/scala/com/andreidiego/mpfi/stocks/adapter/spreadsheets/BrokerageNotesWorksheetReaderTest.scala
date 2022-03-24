@@ -103,7 +103,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   exception should have(
                     'class(classOf[IllegalArgumentException]),
-                    'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
+                    'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.0250%)' but, it actually contained '2.76'.")
                   )
                 }
                 "'DayTrade'." ignore { poiWorkbook ⇒
