@@ -1,6 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, SettlementFeeRate}
+import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, ServiceTaxRate, SettlementFeeRate}
 import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode
 import com.andreidiego.mpfi.stocks.adapter.services.SettlementFeeRate.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
@@ -43,7 +43,8 @@ object BrokerageNotesWorksheetReader:
           assertCellsInLineHaveFontColorRedOrBlue(worksheet.name),
           assertVolumeIsCalculatedCorrectly(worksheet.name),
           assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
-          assertNegotiationFeesIsCalculatedCorrectly(worksheet.name)
+          assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
+          assertServiceTaxIsCalculatedCorrectly(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -123,6 +124,19 @@ object BrokerageNotesWorksheetReader:
 
     if actualNegotiationsFee != expectedNegotiationsFee then throw new IllegalArgumentException(
       s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volumeCell.asDouble} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
+    )
+    secondLine
+
+  private def assertServiceTaxIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+    val tradingDate = firstLine.cells.head.asLocalDate
+    val brokerageCell = firstLine.cells(8)
+    val serviceTaxCell = firstLine.cells(9)
+    val serviceTaxRate = ServiceTaxRate.at(tradingDate).value
+    val expectedServiceTax = (brokerageCell.asDouble * serviceTaxRate).formatted("%.2f")
+    val actualServiceTax = serviceTaxCell.asDouble.formatted("%.2f")
+
+    if actualServiceTax != expectedServiceTax then throw new IllegalArgumentException(
+      s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerageCell.asDouble} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
     )
     secondLine
 

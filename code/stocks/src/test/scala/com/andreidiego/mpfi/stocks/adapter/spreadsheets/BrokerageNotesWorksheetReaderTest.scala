@@ -149,6 +149,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
+              "'ServiceTax', which should equal the 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTax")).get
+
+                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                exception should have(
+                  'class(classOf[IllegalArgumentException]),
+                  'message(s"An invalid calculated 'Cell' ('J2:ServiceTax') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.13', which is equal to 'I2:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (1.99 * 6.5%)' but, it actually contained '0.12'.")
+                )
+              }
             }
           }
         }
