@@ -1,13 +1,12 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import com.andreidiego.mpfi.stocks.adapter.services.{NegotiationFeesRate, OperationalMode, ServiceTaxRate, SettlementFeeRate}
+import com.andreidiego.mpfi.stocks.adapter.services.*
 import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import scala.collection.SortedMap
 import scala.math.Ordering.Implicits.*
 import scala.util.Try
 
@@ -43,7 +42,8 @@ object BrokerageNotesWorksheetReader:
           assertVolumeIsCalculatedCorrectly(worksheet.name),
           assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
           assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
-          assertServiceTaxIsCalculatedCorrectly(worksheet.name)
+          assertServiceTaxIsCalculatedCorrectly(worksheet.name),
+          assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -130,6 +130,7 @@ object BrokerageNotesWorksheetReader:
     val tradingDate = firstLine.cells.head.asLocalDate
     val brokerageCell = firstLine.cells(8)
     val serviceTaxCell = firstLine.cells(9)
+    // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
     val serviceTaxRate = ServiceTaxRate.at(tradingDate).value
     val expectedServiceTax = (brokerageCell.asDouble * serviceTaxRate).formatted("%.2f")
     val actualServiceTax = serviceTaxCell.asDouble.formatted("%.2f")
@@ -137,6 +138,35 @@ object BrokerageNotesWorksheetReader:
     if actualServiceTax != expectedServiceTax then throw new IllegalArgumentException(
       s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerageCell.asDouble} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
     )
+    secondLine
+
+  private def assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+    firstLine.cells.head.fontColor match
+      case BLUE ⇒
+        val tickerCell = firstLine.cells(2)
+        val qtyCell = firstLine.cells(3)
+        val volumeCell = firstLine.cells(5)
+        val settlementFeeCell = firstLine.cells(6)
+        val negotiationFeesCell = firstLine.cells(7)
+        val brokerageCell = firstLine.cells(8)
+        val serviceTaxCell = firstLine.cells(9)
+        val incomeTaxAtSourceCell = firstLine.cells(10)
+
+        val tradingDate = firstLine.cells.head.asLocalDate
+        val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
+        val operationNetResult = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
+        val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qtyCell.asInt
+        // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
+        val operationProfit = operationNetResult - operationAverageCost
+        val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
+        val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble
+
+        given comparisonPrecision: Double = 0.02
+
+        if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then throw new IllegalArgumentException(
+          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
+        )
+      case _ ⇒
     secondLine
 
   extension (worksheet: Worksheet)
@@ -195,3 +225,5 @@ object BrokerageNotesWorksheetReader:
 
   extension (double: Double)
     private def formatted(format: String): String = String.format(Locale.US, format, double)
+
+    private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
