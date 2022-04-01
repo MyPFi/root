@@ -37,22 +37,37 @@ object BrokerageNotesWorksheetReader:
     BrokerageNotesWorksheetReader(
       worksheet.groups.map(_
         .validatedWith(
-          assertLinesInGroupHaveSameTradingDate(worksheet.name),
-          assertLinesInGroupHaveSameNoteNumber(worksheet.name),
-          assertCellsInLineHaveSameFontColor(worksheet.name),
-          assertCellsInLineHaveFontColorRedOrBlue(worksheet.name),
-          assertVolumeIsCalculatedCorrectly(worksheet.name),
-          assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
-          assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
-          assertServiceTaxIsCalculatedCorrectly(worksheet.name),
-          assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
-          assertTotalIsCalculatedCorrectly(worksheet.name)
+          Seq(
+            assertMultilineGroupHasSummary(worksheet.name)
+          ),
+          Seq(
+            assertLinesInGroupHaveSameTradingDate(worksheet.name),
+            assertLinesInGroupHaveSameNoteNumber(worksheet.name),
+            assertCellsInLineHaveSameFontColor(worksheet.name),
+            assertCellsInLineHaveFontColorRedOrBlue(worksheet.name),
+            assertVolumeIsCalculatedCorrectly(worksheet.name),
+            assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
+            assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
+            assertServiceTaxIsCalculatedCorrectly(worksheet.name),
+            assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
+            assertTotalIsCalculatedCorrectly(worksheet.name)
+          )
         )
         .map(_.toBrokerageNote)
         .get
       )
     )
   }
+
+  private def assertMultilineGroupHasSummary(worksheetName: String): Group ⇒ Group = group ⇒
+    group.nonSummaryLines match
+      case Seq(a, b, _*) ⇒ group.summary match
+        case None ⇒ throw new IllegalArgumentException(
+          s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. 'MultilineGroup's must have a 'SummaryLine'."
+        )
+        case _ ⇒
+      case _ ⇒
+    group
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
@@ -205,11 +220,13 @@ object BrokerageNotesWorksheetReader:
 
   extension (group: Group)
 
-    private def validatedWith(validations: (Line, Line) ⇒ Line*): Try[Group] = Try {
+    private def validatedWith(groupValidations: Seq[Group ⇒ Group] = Seq(), lineValidations: Seq[(Line, Line) ⇒ Line] = Seq()): Try[Group] = Try {
+      groupValidations.foreach(_ (group))
+
       group.reduceLeft { (first: Line, second: Line) ⇒
         if second.isSummary then first
         else
-          validations.foreach(_ (first, second))
+          lineValidations.foreach(_ (first, second))
           second
       }
       group
@@ -222,15 +239,15 @@ object BrokerageNotesWorksheetReader:
 
     private def nonSummaryLines: Seq[Line] = group.filter(!_.isSummary)
 
-  extension (line: Line)
+    private def summary: Option[Line] = Option(group.last).filter(_.isSummary)
 
-    private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
+  extension (line: Line)
 
     private def nonEmptyCells: Seq[Cell] = cells.filter(nonEmpty)
 
     private def cells: Seq[Cell] = line.cells
 
-    private def calculatedCells: Seq[Cell] = cells.filter(_.address.startsWith("F"))
+    private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
 
     private def toOperation: Operation = cells.head.fontColor match {
       case RED ⇒ BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
@@ -245,17 +262,18 @@ object BrokerageNotesWorksheetReader:
 
     private def isFormula: Boolean = cell.`type` == FORMULA
 
-    private def nonEmpty: Boolean = cell.value.nonEmpty
+    private def asDouble: Double = cell.value.replace(",", ".").toDouble
 
     private def asInt: Int = cell.value.toInt
 
-    private def asDouble: Double = cell.value.replace(",", ".").toDouble
-
     private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
+    private def nonEmpty: Boolean = cell.value.nonEmpty
 
     private def isCurrency: Boolean = cell.`type` == "NUMERIC" && cell.mask.contains("$")
 
   extension (double: Double)
-    private def formatted(format: String): String = String.format(Locale.US, format, double)
 
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
+
+    private def formatted(format: String): String = String.format(Locale.US, format, double)

@@ -35,28 +35,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
     }
     "fail to be built when" - {
       "given a 'Worksheet' whose" - {
-        "'Groups' contain 'Lines' with different" - {
-          "'TradingDate's." in { poiWorkbook ⇒
-            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
-            assume(TEST_SHEET.groups.size == 4)
+        "'Groups'" - {
+          "contain 'Lines' with different" - {
+            "'TradingDate's." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+              assume(TEST_SHEET.groups.size == 4)
 
-            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
-              // Todo Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
-              'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
-            )
+              exception should have(
+                'class(classOf[IllegalArgumentException]),
+                // Todo Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
+                'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+              )
+            }
+            "'NoteNumbers's." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
+              assume(TEST_SHEET.groups.size == 4)
+
+              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+              exception should have(
+                'class(classOf[IllegalArgumentException]),
+                'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
+              )
+            }
           }
-          "'NoteNumbers's." in { poiWorkbook ⇒
-            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
-            assume(TEST_SHEET.groups.size == 4)
+          "that contain more than one 'Operation' don't have a 'Summary'." in { poiWorkbook ⇒
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
 
             val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
+              'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. 'MultilineGroup's must have a 'SummaryLine'.")
             )
           }
         }
