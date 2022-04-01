@@ -141,6 +141,8 @@ object BrokerageNotesWorksheetReader:
     secondLine
 
   private def assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+    val incomeTaxAtSourceCell = firstLine.cells(10)
+
     firstLine.cells.head.fontColor match
       case BLUE ⇒
         val tickerCell = firstLine.cells(2)
@@ -150,7 +152,6 @@ object BrokerageNotesWorksheetReader:
         val negotiationFeesCell = firstLine.cells(7)
         val brokerageCell = firstLine.cells(8)
         val serviceTaxCell = firstLine.cells(9)
-        val incomeTaxAtSourceCell = firstLine.cells(10)
 
         val tradingDate = firstLine.cells.head.asLocalDate
         val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
@@ -167,6 +168,9 @@ object BrokerageNotesWorksheetReader:
           s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
         )
       case _ ⇒
+        if incomeTaxAtSourceCell.nonEmpty && (!incomeTaxAtSourceCell.isCurrency || incomeTaxAtSourceCell.asDouble > 0.0) then throw new IllegalArgumentException(
+          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+        )
     secondLine
 
   extension (worksheet: Worksheet)
@@ -222,6 +226,8 @@ object BrokerageNotesWorksheetReader:
     private def asDouble: Double = cell.value.replace(",", ".").toDouble
 
     private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
+    private def isCurrency: Boolean = cell.`type` == "NUMERIC" && cell.mask.contains("$")
 
   extension (double: Double)
     private def formatted(format: String): String = String.format(Locale.US, format, double)

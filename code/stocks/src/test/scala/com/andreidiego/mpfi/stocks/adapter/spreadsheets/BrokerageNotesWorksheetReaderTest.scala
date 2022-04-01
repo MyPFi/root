@@ -159,15 +159,39 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   'message(s"An invalid calculated 'Cell' ('J2:ServiceTax') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.13', which is equal to 'I2:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (1.99 * 6.5%)' but, it actually contained '0.12'.")
                 )
               }
-              "'IncomeTaxAtSource', which, for 'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
+              "'IncomeTaxAtSource', which, for" - {
+                "'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
 
-                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-                exception should have(
-                  'class(classOf[IllegalArgumentException]),
-                  'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
-                )
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
+                  )
+                }
+                "'BuyiungOperations', should not be calculated and, therefore, should not contain values that are either" - {
+                  "non-currencies" in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("IncomeTaxAtSourceNot$OnBuying")).get
+
+                    val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                    exception should have(
+                      'class(classOf[IllegalArgumentException]),
+                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to be either empty or equal to '0.00' but, it actually contained '1'.")
+                    )
+                  }
+                  "or non-zero." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NonZeroIncomeTaxAtSourceBuying")).get
+
+                    val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                    exception should have(
+                      'class(classOf[IllegalArgumentException]),
+                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
+                    )
+                  }
+                }
               }
             }
           }
