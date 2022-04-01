@@ -170,7 +170,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
                   )
                 }
-                "'BuyiungOperations', should not be calculated and, therefore, should not contain values that are either" - {
+                "'BuyingOperations', should not be calculated and, therefore, should not contain values that are either" - {
                   "non-currencies" in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("IncomeTaxAtSourceNot$OnBuying")).get
 
@@ -191,6 +191,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
                     )
                   }
+                }
+              }
+              "'Total', which, for" - {
+                "'SellingOperations', should equal the 'Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForSelling")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
+                  )
                 }
               }
             }

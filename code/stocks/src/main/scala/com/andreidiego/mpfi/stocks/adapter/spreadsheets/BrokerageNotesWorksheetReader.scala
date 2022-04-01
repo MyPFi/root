@@ -31,6 +31,8 @@ object BrokerageNotesWorksheetReader:
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
+  given comparisonPrecision: Double = 0.02
+
   def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
     BrokerageNotesWorksheetReader(
       worksheet.groups.map(_
@@ -43,7 +45,8 @@ object BrokerageNotesWorksheetReader:
           assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
           assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
           assertServiceTaxIsCalculatedCorrectly(worksheet.name),
-          assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name)
+          assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
+          assertTotalIsCalculatedCorrectly(worksheet.name)
         )
         .map(_.toBrokerageNote)
         .get
@@ -162,8 +165,6 @@ object BrokerageNotesWorksheetReader:
         val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
         val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble
 
-        given comparisonPrecision: Double = 0.02
-
         if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then throw new IllegalArgumentException(
           s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
         )
@@ -171,6 +172,26 @@ object BrokerageNotesWorksheetReader:
         if incomeTaxAtSourceCell.nonEmpty && (!incomeTaxAtSourceCell.isCurrency || incomeTaxAtSourceCell.asDouble > 0.0) then throw new IllegalArgumentException(
           s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
         )
+    secondLine
+
+  private def assertTotalIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+
+    firstLine.cells.head.fontColor match
+      case BLUE ⇒
+        val volumeCell = firstLine.cells(5)
+        val settlementFeeCell = firstLine.cells(6)
+        val negotiationFeesCell = firstLine.cells(7)
+        val brokerageCell = firstLine.cells(8)
+        val serviceTaxCell = firstLine.cells(9)
+        val totalCell = firstLine.cells(11)
+
+        val expectedTotal = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
+        val actualTotal = totalCell.asDouble
+
+        if actualTotal !~= expectedTotal then throw new IllegalArgumentException(
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+        )
+      case _ ⇒
     secondLine
 
   extension (worksheet: Worksheet)
