@@ -175,16 +175,15 @@ object BrokerageNotesWorksheetReader:
     secondLine
 
   private def assertTotalIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
+    val volumeCell = firstLine.cells(5)
+    val settlementFeeCell = firstLine.cells(6)
+    val negotiationFeesCell = firstLine.cells(7)
+    val brokerageCell = firstLine.cells(8)
+    val serviceTaxCell = firstLine.cells(9)
+    val totalCell = firstLine.cells(11)
 
     firstLine.cells.head.fontColor match
       case BLUE ⇒
-        val volumeCell = firstLine.cells(5)
-        val settlementFeeCell = firstLine.cells(6)
-        val negotiationFeesCell = firstLine.cells(7)
-        val brokerageCell = firstLine.cells(8)
-        val serviceTaxCell = firstLine.cells(9)
-        val totalCell = firstLine.cells(11)
-
         val expectedTotal = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
         val actualTotal = totalCell.asDouble
 
@@ -192,6 +191,12 @@ object BrokerageNotesWorksheetReader:
           s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
         )
       case _ ⇒
+        val expectedTotal = volumeCell.asDouble + settlementFeeCell.asDouble + negotiationFeesCell.asDouble + brokerageCell.asDouble + serviceTaxCell.asDouble
+        val actualTotal = totalCell.asDouble
+
+        if actualTotal !~= expectedTotal then throw new IllegalArgumentException(
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${negotiationFeesCell.address}:NegotiationFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+        )
     secondLine
 
   extension (worksheet: Worksheet)

@@ -204,6 +204,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
                   )
                 }
+                "'BuyingOperations', should equal 'Volume' + 'SettlementFee' + 'NegotiationFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForBuying")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '11005.42', which is equal to 'F2:Volume' + 'G2:SettlementFee' + 'H2:NegotiationFees' + 'I2:Brokerage' + 'J2:ServiceTax' but, it actually contained '11005.45'.")
+                  )
+                }
               }
             }
           }
