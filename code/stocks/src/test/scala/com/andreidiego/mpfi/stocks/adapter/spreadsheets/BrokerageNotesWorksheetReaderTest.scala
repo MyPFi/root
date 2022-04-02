@@ -240,15 +240,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
             }
-            "For 'FinancialSummary', the accessory costs' columns below, which should, each, equal the sum of the corresponding field for each 'Operation' in the 'BrokerageNote': 'SettlementFee'." in { poiWorkbook ⇒
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
+            "For 'FinancialSummary's:" - {
+              "the accessory costs' columns below, which should, each, equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote', namely:" - {
+                "'SettlementFee'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
 
-              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
-              )
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
+                  )
+                }
+                "'NegotiationFees'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationFeesSummary")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'SummaryCell' ('H4:NegotiationFeesSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '1.13', which is the sum of all 'NegotiationFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
+                  )
+                }
+              }
             }
           }
         }

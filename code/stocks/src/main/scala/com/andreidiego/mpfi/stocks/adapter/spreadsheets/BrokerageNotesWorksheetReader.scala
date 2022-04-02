@@ -28,6 +28,7 @@ object BrokerageNotesWorksheetReader:
   private type Group = Seq[Line]
 
   private val FORMULA = "FORMULA"
+  private val NUMERIC = "NUMERIC"
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
@@ -39,7 +40,8 @@ object BrokerageNotesWorksheetReader:
         .validatedWith(
           Seq(
             assertMultilineGroupHasSummary(worksheet.name),
-            assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name)
+            assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name),
+              assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name)
           ),
           Seq(
             assertLinesInGroupHaveSameTradingDate(worksheet.name),
@@ -82,16 +84,23 @@ object BrokerageNotesWorksheetReader:
     group
 
   private def assertSettlementFeeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(worksheetName, group)
+
+  private def assertSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(worksheetName: String, group: Group) = {
     if group.hasSummary then
-      val settlementFeeSummaryCell = group.last.cells(6)
+      val summaryCell = group.last.cells(cellIndex)
 
-      val expectedSettlementFeeSummary = group.dropRight(1).foldLeft(0.0)((acc, line) ⇒ acc + line.cells(6).asDouble)
-      val actualSettlementFeeSummary = settlementFeeSummaryCell.asDouble
+      val expectedCellSummary = group.dropRight(1).foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble)
+      val actualCellSummary = summaryCell.asDouble
 
-      if actualSettlementFeeSummary !~= expectedSettlementFeeSummary then throw new IllegalArgumentException(
-        s"An invalid calculated 'SummaryCell' ('${settlementFeeSummaryCell.address}:SettlementFeeSummary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSettlementFeeSummary.formatted("%.2f")}', which is the sum of all 'SettlementFee's of the 'Group' (${group.head.cells(6).address}...${group.takeRight(2).head.cells(6).address}) but, it actually contained '${actualSettlementFeeSummary.formatted("%.2f")}'."
+      if actualCellSummary !~= expectedCellSummary then throw new IllegalArgumentException(
+        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedCellSummary.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualCellSummary.formatted("%.2f")}'."
       )
     group
+  }
+
+  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(worksheetName, group)
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
@@ -300,7 +309,7 @@ object BrokerageNotesWorksheetReader:
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
 
-    private def isCurrency: Boolean = cell.`type` == "NUMERIC" && cell.mask.contains("$")
+    private def isCurrency: Boolean = cell.`type` == NUMERIC && cell.mask.contains("$")
 
   extension (double: Double)
 
