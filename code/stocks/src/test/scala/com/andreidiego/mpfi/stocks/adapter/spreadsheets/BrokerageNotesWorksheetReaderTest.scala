@@ -282,6 +282,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's of the 'Group' (J2...J3) but, it actually contained '0.29'.")
                   )
                 }
+                // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
+                "'IncomeTaxAtSource'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's of the 'Group' (K2...K4) but, it actually contained '0.05'.")
+                  )
+                }
               }
             }
           }

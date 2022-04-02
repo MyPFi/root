@@ -43,7 +43,8 @@ object BrokerageNotesWorksheetReader:
             assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name),
             assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name),
             assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
-            assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name)
+            assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
+            assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name)
           ),
           Seq(
             assertLinesInGroupHaveSameTradingDate(worksheet.name),
@@ -109,6 +110,9 @@ object BrokerageNotesWorksheetReader:
 
   private def assertServiceTaxSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
     assertSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(worksheetName, group)
+
+  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(worksheetName, group)
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
