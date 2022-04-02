@@ -294,6 +294,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
+              "the columns below, which should, each, consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result: 'Volume'." in { poiWorkbook ⇒
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidMixedBrokerageNote")).get
+
+                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                exception should have(
+                  'class(classOf[IllegalArgumentException]),
+                  'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (F2...F3) but, it actually contained '16810.00'.")
+                )
+              }
             }
           }
         }

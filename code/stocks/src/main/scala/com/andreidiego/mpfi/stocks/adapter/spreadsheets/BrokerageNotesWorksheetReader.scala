@@ -44,7 +44,8 @@ object BrokerageNotesWorksheetReader:
             assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name),
             assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
             assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
-            assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name)
+            assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name),
+            assertVolumeSummaryIsCalculatedCorrectly(worksheet.name)
           ),
           Seq(
             assertLinesInGroupHaveSameTradingDate(worksheet.name),
@@ -113,6 +114,24 @@ object BrokerageNotesWorksheetReader:
 
   private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
     assertSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(worksheetName, group)
+
+  private def assertVolumeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    group.summary.foreach { summary ⇒
+      val volumeSummaryCellIndex = 5
+      val volumeSummaryCell = summary.cells(volumeSummaryCellIndex)
+      val expectedVolumeSummary = group.nonSummaryLines.map(_.toOperation).foldLeft(0.0) { (acc, operation) ⇒
+        operation match {
+          case operation: BuyingOperation ⇒ acc - operation.volume.asDouble
+          case _ ⇒ acc + operation.volume.asDouble
+        }
+      }
+      val actualVolumeSummary = volumeSummaryCell.asDouble
+
+      if actualVolumeSummary !~= expectedVolumeSummary then throw new IllegalArgumentException(
+        s"An invalid calculated 'SummaryCell' ('${volumeSummaryCell.address}:VolumeSummary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedVolumeSummary.formatted("%.2f")}', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (${group.head.cells(volumeSummaryCellIndex).address}...${group.takeRight(2).head.cells(volumeSummaryCellIndex).address}) but, it actually contained '${actualVolumeSummary.formatted("%.2f")}'."
+      )
+    }
+    group
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
@@ -328,3 +347,7 @@ object BrokerageNotesWorksheetReader:
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
 
     private def formatted(format: String): String = String.format(Locale.US, format, double)
+
+  extension (string: String)
+
+    private def asDouble: Double = string.replace(",", ".").toDouble
