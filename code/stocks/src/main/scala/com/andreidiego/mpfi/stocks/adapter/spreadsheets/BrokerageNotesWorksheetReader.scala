@@ -45,7 +45,8 @@ object BrokerageNotesWorksheetReader:
             assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
             assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
             assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name),
-            assertVolumeSummaryIsCalculatedCorrectly(worksheet.name)
+            assertVolumeSummaryIsCalculatedCorrectly(worksheet.name),
+            assertTotalSummaryIsCalculatedCorrectly(worksheet.name)
           ),
           Seq(
             assertLinesInGroupHaveSameTradingDate(worksheet.name),
@@ -88,50 +89,56 @@ object BrokerageNotesWorksheetReader:
     group
 
   private def assertSettlementFeeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(worksheetName, group)
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(worksheetName, group)
 
-  private def assertSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(worksheetName: String, group: Group) = {
-    if group.hasSummary then
-      val summaryCell = group.last.cells(cellIndex)
-
-      val expectedCellSummary = group.dropRight(1).foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble)
-      val actualCellSummary = summaryCell.asDouble
-
-      if actualCellSummary !~= expectedCellSummary then throw new IllegalArgumentException(
-        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedCellSummary.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualCellSummary.formatted("%.2f")}'."
-      )
-    group
-  }
-
-  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(worksheetName, group)
-
-  private def assertBrokerageSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertSummaryCellIsCalculatedCorrectly(8, "Brokerage")(worksheetName, group)
-
-  private def assertServiceTaxSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(worksheetName, group)
-
-  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(worksheetName, group)
-
-  private def assertVolumeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+  private def assertOperationIndependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(worksheetName: String, group: Group) =
     group.summary.foreach { summary ⇒
-      val volumeSummaryCellIndex = 5
-      val volumeSummaryCell = summary.cells(volumeSummaryCellIndex)
-      val expectedVolumeSummary = group.nonSummaryLines.map(_.toOperation).foldLeft(0.0) { (acc, operation) ⇒
-        operation match {
-          case operation: BuyingOperation ⇒ acc - operation.volume.asDouble
-          case _ ⇒ acc + operation.volume.asDouble
-        }
-      }
-      val actualVolumeSummary = volumeSummaryCell.asDouble
+      val summaryCell = summary.cells(cellIndex)
 
-      if actualVolumeSummary !~= expectedVolumeSummary then throw new IllegalArgumentException(
-        s"An invalid calculated 'SummaryCell' ('${volumeSummaryCell.address}:VolumeSummary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedVolumeSummary.formatted("%.2f")}', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (${group.head.cells(volumeSummaryCellIndex).address}...${group.takeRight(2).head.cells(volumeSummaryCellIndex).address}) but, it actually contained '${actualVolumeSummary.formatted("%.2f")}'."
+      val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble)
+      val actualSummaryValue = summaryCell.asDouble
+
+      if actualSummaryValue !~= expectedSummaryValue then throw new IllegalArgumentException(
+        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
       )
     }
     group
+
+  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(worksheetName, group)
+
+  private def assertBrokerageSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(8, "Brokerage")(worksheetName, group)
+
+  private def assertServiceTaxSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(worksheetName, group)
+
+  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(worksheetName, group)
+
+  private def assertVolumeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationDependentSummaryCellIsCalculatedCorrectly(5, "Volume", _.volume.asDouble)(worksheetName, group)
+
+  private def assertOperationDependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String, valueToSummarizeFrom: Operation ⇒ Double)(worksheetName: String, group: Group) =
+    group.summary.foreach { summary ⇒
+      val summaryCell = summary.cells(cellIndex)
+
+      val expectedSummaryValue = group.nonSummaryLines.map(_.toOperation).foldLeft(0.0) { (acc, operation) ⇒
+        operation match {
+          case operation: BuyingOperation ⇒ acc - valueToSummarizeFrom(operation)
+          case _ ⇒ acc + valueToSummarizeFrom(operation)
+        }
+      }
+      val actualSummaryValue = summaryCell.asDouble
+
+      if actualSummaryValue !~= expectedSummaryValue then throw new IllegalArgumentException(
+        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '$cellName's minus the sum of all 'BuyingOperation's '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+      )
+    }
+    group
+
+  private def assertTotalSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    assertOperationDependentSummaryCellIsCalculatedCorrectly(11, "Total", _.total.asDouble)(worksheetName, group)
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
     val firstTradingDateCell = first.cells.head
