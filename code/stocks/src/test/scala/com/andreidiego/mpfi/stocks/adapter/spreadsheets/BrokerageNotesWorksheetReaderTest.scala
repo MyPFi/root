@@ -262,6 +262,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'SummaryCell' ('H4:NegotiationFeesSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '1.13', which is the sum of all 'NegotiationFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
                   )
                 }
+                "'Brokerage'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
+
+                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+                  exception should have(
+                    'class(classOf[IllegalArgumentException]),
+                    'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '3.98', which is the sum of all 'Brokerage's of the 'Group' (I2...I3) but, it actually contained '3.95'.")
+                  )
+                }
               }
             }
           }
