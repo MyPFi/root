@@ -62,9 +62,20 @@ object BrokerageNotesWorksheetReader:
   private def assertMultilineGroupHasSummary(worksheetName: String): Group ⇒ Group = group ⇒
     group.nonSummaryLines match
       case Seq(a, b, _*) ⇒ group.summary match
-        case None ⇒ throw new IllegalArgumentException(
-          s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. 'MultilineGroup's must have a 'SummaryLine'."
-        )
+        case None ⇒ group.summaryLikeLine match
+          case Some(summaryLikeLine) ⇒
+            val invalidSummaryCells = summaryLikeLine
+              .nonEmptyCells
+              .filter(!_.isFormula)
+              .map(cell ⇒ s"${cell.address}:${cell.`type`}")
+              .mkString("[", ",", "]")
+
+            throw new IllegalArgumentException(
+              s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '$invalidSummaryCells'."
+            )
+          case _ ⇒ throw new IllegalArgumentException(
+            s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. 'MultilineGroup's must have a 'SummaryLine'."
+          )
         case _ ⇒
       case _ ⇒
     group
@@ -241,6 +252,8 @@ object BrokerageNotesWorksheetReader:
 
     private def summary: Option[Line] = Option(group.last).filter(_.isSummary)
 
+    private def summaryLikeLine: Option[Line] = Option(group.last).filter(_.isSummaryLikeLine)
+
   extension (line: Line)
 
     private def nonEmptyCells: Seq[Cell] = cells.filter(nonEmpty)
@@ -257,6 +270,8 @@ object BrokerageNotesWorksheetReader:
 
     private def toFinancialSummary: FinancialSummary =
       FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
+
+    private def isSummaryLikeLine: Boolean = nonEmptyCells.count(_.isFormula) > nonEmptyCells.size / 2
 
   extension (cell: Cell)
 

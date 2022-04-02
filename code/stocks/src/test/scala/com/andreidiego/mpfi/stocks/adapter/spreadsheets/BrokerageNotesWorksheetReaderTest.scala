@@ -61,15 +61,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               )
             }
           }
-          "that contain more than one 'Operation' don't have a 'Summary'." in { poiWorkbook ⇒
-            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
+          "that contain more than one 'Operation'" - {
+            "don't have a 'Summary'." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
 
-            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
-              'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. 'MultilineGroup's must have a 'SummaryLine'.")
-            )
+              exception should have(
+                'class(classOf[IllegalArgumentException]),
+                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. 'MultilineGroup's must have a 'SummaryLine'.")
+              )
+            }
+            "have an invalid 'Summary' (one where not all empty cells are formulas)." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithInvalidSummary")).get
+
+              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+              exception should have(
+                'class(classOf[IllegalArgumentException]),
+                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:NUMERIC]'.")
+              )
+            }
           }
         }
         "'Line's contain 'Cell's" - {
