@@ -38,7 +38,8 @@ object BrokerageNotesWorksheetReader:
       worksheet.groups.map(_
         .validatedWith(
           Seq(
-            assertMultilineGroupHasSummary(worksheet.name)
+            assertMultilineGroupHasSummary(worksheet.name),
+            assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name)
           ),
           Seq(
             assertLinesInGroupHaveSameTradingDate(worksheet.name),
@@ -78,6 +79,18 @@ object BrokerageNotesWorksheetReader:
           )
         case _ ⇒
       case _ ⇒
+    group
+
+  private def assertSettlementFeeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
+    if group.hasSummary then
+      val settlementFeeSummaryCell = group.last.cells(6)
+
+      val expectedSettlementFeeSummary = group.dropRight(1).foldLeft(0.0)((acc, line) ⇒ acc + line.cells(6).asDouble)
+      val actualSettlementFeeSummary = settlementFeeSummaryCell.asDouble
+
+      if actualSettlementFeeSummary !~= expectedSettlementFeeSummary then throw new IllegalArgumentException(
+        s"An invalid calculated 'SummaryCell' ('${settlementFeeSummaryCell.address}:SettlementFeeSummary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSettlementFeeSummary.formatted("%.2f")}', which is the sum of all 'SettlementFee's of the 'Group' (${group.head.cells(6).address}...${group.takeRight(2).head.cells(6).address}) but, it actually contained '${actualSettlementFeeSummary.formatted("%.2f")}'."
+      )
     group
 
   private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
@@ -253,6 +266,8 @@ object BrokerageNotesWorksheetReader:
     private def summary: Option[Line] = Option(group.last).filter(_.isSummary)
 
     private def summaryLikeLine: Option[Line] = Option(group.last).filter(_.isSummaryLikeLine)
+
+    private def hasSummary: Boolean = summary.nonEmpty
 
   extension (line: Line)
 

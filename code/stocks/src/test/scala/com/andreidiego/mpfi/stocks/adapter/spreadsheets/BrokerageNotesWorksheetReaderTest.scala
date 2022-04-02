@@ -240,6 +240,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
             }
+            "For 'FinancialSummary', the accessory costs' columns below, which should, each, equal the sum of the corresponding field for each 'Operation' in the 'BrokerageNote': 'SettlementFee'." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
+
+              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+
+              exception should have(
+                'class(classOf[IllegalArgumentException]),
+                'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
+              )
+            }
           }
         }
       }
