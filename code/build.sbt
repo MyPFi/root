@@ -40,7 +40,5 @@ lazy val mpfiStocks = project
     libraryDependencies += pdfBox,
     libraryDependencies += apachePOI,
     libraryDependencies += apachePOIOOXML,
-    libraryDependencies += htmlCleaner,
     libraryDependencies += scalaTest % Test,
-    libraryDependencies += concordion % Test
   )
