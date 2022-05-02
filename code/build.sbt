@@ -40,5 +40,6 @@ lazy val mpfiStocks = project
     libraryDependencies += pdfBox,
     libraryDependencies += apachePOI,
     libraryDependencies += apachePOIOOXML,
+    libraryDependencies += cats,
     libraryDependencies += scalaTest % Test,
   )

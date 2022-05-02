@@ -6,5 +6,6 @@ object Dependencies {
   lazy val pdfBox = "org.apache.pdfbox" % "pdfbox" % "3.0.0-alpha2"
   lazy val apachePOI = "org.apache.poi" % "poi" % "5.2.2"
   lazy val apachePOIOOXML = "org.apache.poi" % "poi-ooxml" % "5.2.2"
+  lazy val cats = "org.typelevel" %% "cats-core" % "2.7.0"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.11"
 }

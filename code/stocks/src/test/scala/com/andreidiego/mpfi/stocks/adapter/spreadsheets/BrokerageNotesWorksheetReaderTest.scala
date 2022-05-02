@@ -1,17 +1,19 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
+import BrokerageNotesWorksheetReader.BrokerageNoteReaderError
+import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.{RequiredValueMissing, UnexpectedContentColor, UnexpectedContentType, UnexpectedContentValue}
+import cats.data.ValidatedNec
 import excel.poi.{Cell, Line, Worksheet}
 import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.Outcome
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.should.Matchers.*
+import org.scalatest.EitherValues.*
 import org.scalatest.Inspectors.{forAll, forExactly}
-import org.scalatest.TryValues.*
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
-import scala.util.Try
 
 class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
@@ -41,11 +43,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
               assume(TEST_SHEET.groups.size == 4)
 
-              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                // Todo Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
+              error should have(
+                'class(classOf[UnexpectedContentValue]),
+                // TODO Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
                 'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' ${TEST_SHEET.name}. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
               )
             }
@@ -53,10 +55,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
               assume(TEST_SHEET.groups.size == 4)
 
-              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[UnexpectedContentValue]),
                 'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' ${TEST_SHEET.name}. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
               )
             }
@@ -65,20 +67,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
             "don't have a 'Summary'." in { poiWorkbook ⇒
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
 
-              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[RequiredValueMissing]),
                 'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. 'MultilineGroup's must have a 'SummaryLine'.")
               )
             }
             "have an invalid 'Summary' (one where not all empty cells are formulas)." in { poiWorkbook ⇒
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithInvalidSummary")).get
 
-              val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[UnexpectedContentType]),
                 'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' ${TEST_SHEET.name}. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:NUMERIC]'.")
               )
             }
@@ -88,23 +90,21 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
           "with different font-colors." in { poiWorkbook ⇒
             val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
 
-            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+            val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
-              // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
-              'message(s"An invalid 'Line' ('05/11/2008 - 1662 - PETR4 - 200') was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '112,173,71' in 'B3' is different from '255,0,0' in 'A3'.")
+            error should have(
+              'class(classOf[UnexpectedContentColor]),
+              'message(s"An invalid 'Cell' 'B3' was found on 'Worksheet' ${TEST_SHEET.name}. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '68,114,196' in 'B3' is different from '255,0,0' in 'A3'.")
             )
           }
           "whose font-colors are neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
             val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithBlackFontColor")).get
 
-            val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+            val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
-              // TODO Replace the information about the 'Line' below by the lineNumber after it has been introcuced in the 'Line' class
-              'message(s"An invalid 'Line' ('05/11/2008 - 1662 - GGBR4 - 100') was found on 'Worksheet' ${TEST_SHEET.name}. 'Line's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn them into 'Operation's but this 'Line' has font-color '0,0,0'.")
+            error should have(
+              'class(classOf[UnexpectedContentColor]),
+              'message(s"An invalid 'Cell' 'A2' was found on 'Worksheet' ${TEST_SHEET.name}. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '0,0,0'.")
             )
           }
           "whose values are supposed to have been calculated from other 'Cell's but, do not pass the recalculation test, namely:" - {
@@ -112,10 +112,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               "'Volume', which should equal 'Qty' * 'Price'." in { poiWorkbook ⇒
                 val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("VolumeDoesNotMatchQtyTimesPrice")).get
 
-                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                exception should have(
-                  'class(classOf[IllegalArgumentException]),
+                error should have(
+                  'class(classOf[UnexpectedContentValue]),
                   'message(s"An invalid calculated 'Cell' ('F2:Volume') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7030.0', which is equal to 'D2:Qty * E2:Price (200 * 35.15)' but, it actually contained '7030.01'.")
                 )
               }
@@ -123,20 +123,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'Normal'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.0250%)' but, it actually contained '2.76'.")
                   )
                 }
                 "'DayTrade'." ignore { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
                   )
                 }
@@ -145,30 +145,30 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'PreOpening'." ignore { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
                   )
                 }
                 "'Trading'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationsFee")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('H2:NegotiationsFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.55', which is equal to 'F2:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (11000.0 * 0.0050%)' but, it actually contained '0.56'.")
                   )
                 }
                 "'ClosingCall'." ignore { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.0 * 0.00025)' but, it actually contained '2.76'.")
                   )
                 }
@@ -176,10 +176,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               "'ServiceTax', which should equal the 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
                 val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTax")).get
 
-                val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                exception should have(
-                  'class(classOf[IllegalArgumentException]),
+                error should have(
+                  'class(classOf[UnexpectedContentValue]),
                   'message(s"An invalid calculated 'Cell' ('J2:ServiceTax') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.13', which is equal to 'I2:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (1.99 * 6.5%)' but, it actually contained '0.12'.")
                 )
               }
@@ -187,10 +187,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
                   )
                 }
@@ -198,20 +198,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   "non-currencies" in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("IncomeTaxAtSourceNot$OnBuying")).get
 
-                    val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    exception should have(
-                      'class(classOf[IllegalArgumentException]),
+                    error should have(
+                      'class(classOf[UnexpectedContentType]),
                       'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to be either empty or equal to '0.00' but, it actually contained '1'.")
                     )
                   }
                   "or non-zero." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NonZeroIncomeTaxAtSourceBuying")).get
 
-                    val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    exception should have(
-                      'class(classOf[IllegalArgumentException]),
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
                       'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
                     )
                   }
@@ -221,20 +221,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'SellingOperations', should equal the 'Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForSelling")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
                   )
                 }
                 "'BuyingOperations', should equal 'Volume' + 'SettlementFee' + 'NegotiationFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForBuying")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '11005.42', which is equal to 'F2:Volume' + 'G2:SettlementFee' + 'H2:NegotiationFees' + 'I2:Brokerage' + 'J2:ServiceTax' but, it actually contained '11005.45'.")
                   )
                 }
@@ -245,40 +245,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'SettlementFee'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
                   )
                 }
                 "'NegotiationFees'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationFeesSummary")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('H4:NegotiationFeesSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '1.13', which is the sum of all 'NegotiationFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
                   )
                 }
                 "'Brokerage'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '3.98', which is the sum of all 'Brokerage's of the 'Group' (I2...I3) but, it actually contained '3.95'.")
                   )
                 }
                 "'ServiceTax'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTaxSummary")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's of the 'Group' (J2...J3) but, it actually contained '0.29'.")
                   )
                 }
@@ -286,10 +286,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'IncomeTaxAtSource'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's of the 'Group' (K2...K4) but, it actually contained '0.05'.")
                   )
                 }
@@ -298,20 +298,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 "'Volume'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedOps")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (F2...F3) but, it actually contained '16810.00'.")
                   )
                 }
                 "'Total'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedOps")).get
 
-                  val exception = BrokerageNotesWorksheetReader.from(TEST_SHEET).failure.exception
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  exception should have(
-                    'class(classOf[IllegalArgumentException]),
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
                     'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' ${TEST_SHEET.name}. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's of the 'Group' (L2...L3) but, it actually contained '16820.69'.")
                   )
                 }
@@ -405,6 +405,20 @@ object BrokerageNotesWorksheetReaderTest:
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
+  extension (brokerageNotesWorksheetReaderValidated: ValidatedNec[BrokerageNoteReaderError, BrokerageNotesWorksheetReader])
+
+    private def brokerageNotes: Seq[BrokerageNote] =
+      brokerageNotesWorksheetReaderValidated.toEither.value.brokerageNotes
+
+    private def error: BrokerageNoteReaderError =
+      brokerageNotesWorksheetReaderValidated.toEither.left.value.head
+
+    private def operations: Seq[Operation] =
+      brokerageNotes.flatMap(_.operations)
+
+    private def financialSummaries: Seq[FinancialSummary] =
+      brokerageNotes.map(_.financialSummary)
+
   extension (worksheet: Worksheet)
 
     private def nonSummaryLines: Seq[Line] =
@@ -421,17 +435,6 @@ object BrokerageNotesWorksheetReaderTest:
 
     // TODO This property should be added to the actual 'Worksheet' class
     private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
-
-  extension (brokerageNotesWorksheetReaderTry: Try[BrokerageNotesWorksheetReader])
-
-    private def brokerageNotes: Seq[BrokerageNote] =
-      brokerageNotesWorksheetReaderTry.success.value.brokerageNotes
-
-    private def operations: Seq[Operation] =
-      brokerageNotes.flatMap(_.operations)
-
-    private def financialSummaries: Seq[FinancialSummary] =
-      brokerageNotes.map(_.financialSummary)
 
   extension (line: Line)
 

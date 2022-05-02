@@ -1,5 +1,9 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
+import cats.data.ValidatedNec
+import cats.implicits.*
+import cats.kernel.Semigroup
+import cats.syntax.validated.*
 import com.andreidiego.mpfi.stocks.adapter.services.*
 import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
@@ -7,8 +11,8 @@ import excel.poi.{Cell, Line, Worksheet}
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import scala.annotation.targetName
 import scala.math.Ordering.Implicits.*
-import scala.util.Try
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
@@ -16,15 +20,28 @@ class BrokerageNote(val operations: Seq[Operation], val financialSummary: Financ
 
 class Operation(val volume: String, val settlementFee: String, val negotiationFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
 
-class BuyingOperation(volume: String, settlementFee: String, negotiationFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
+// TODO Add test for turning BuyingOperation into a case class
+case class BuyingOperation(override val volume: String, override val settlementFee: String, override val negotiationFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
   extends Operation(volume, settlementFee, negotiationFees, brokerage, serviceTax, incomeTaxAtSource, total)
 
-class SellingOperation(volume: String, settlementFee: String, negotiationFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
+// TODO Add test for turning SellingOperation into a case class
+case class SellingOperation(override val volume: String, override val settlementFee: String, override val negotiationFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
   extends Operation(volume, settlementFee, negotiationFees, brokerage, serviceTax, incomeTaxAtSource, total)
 
-class FinancialSummary(val volume: String, val settlementFee: String, val negotiationFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
+// TODO Add test for turning FinancialSummary into a case class
+case class FinancialSummary(volume: String, settlementFee: String, negotiationFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
 
 object BrokerageNotesWorksheetReader:
+  enum BrokerageNoteReaderError(message: String):
+    case RequiredValueMissing(message: String) extends BrokerageNoteReaderError(message)
+    case UnexpectedContentValue(message: String) extends BrokerageNoteReaderError(message)
+    case UnexpectedContentType(message: String) extends BrokerageNoteReaderError(message)
+    case UnexpectedContentColor(message: String) extends BrokerageNoteReaderError(message)
+
+  import BrokerageNoteReaderError.*
+
+  type ErrorsOr[A] = ValidatedNec[BrokerageNoteReaderError, A]
+
   private type Group = Seq[Line]
 
   private val FORMULA = "FORMULA"
@@ -34,93 +51,89 @@ object BrokerageNotesWorksheetReader:
 
   given comparisonPrecision: Double = 0.02
 
-  def from(worksheet: Worksheet): Try[BrokerageNotesWorksheetReader] = Try {
-    BrokerageNotesWorksheetReader(
-      worksheet.groups.map(_
-        .validatedWith(
-          Seq(
-            assertMultilineGroupHasSummary(worksheet.name),
-            assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name),
-            assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name),
-            assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
-            assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
-            assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name),
-            assertVolumeSummaryIsCalculatedCorrectly(worksheet.name),
-            assertTotalSummaryIsCalculatedCorrectly(worksheet.name)
-          ),
-          Seq(
-            assertLinesInGroupHaveSameTradingDate(worksheet.name),
-            assertLinesInGroupHaveSameNoteNumber(worksheet.name),
-            assertCellsInLineHaveSameFontColor(worksheet.name),
-            assertCellsInLineHaveFontColorRedOrBlue(worksheet.name),
-            assertVolumeIsCalculatedCorrectly(worksheet.name),
-            assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
-            assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
-            assertServiceTaxIsCalculatedCorrectly(worksheet.name),
-            assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
-            assertTotalIsCalculatedCorrectly(worksheet.name)
-          )
-        )
-        .map(_.toBrokerageNote)
-        .get
-      )
-    )
-  }
+  given Semigroup[Group] = (x: Group, y: Group) => if x == y then x else x ++: y
 
-  private def assertMultilineGroupHasSummary(worksheetName: String): Group ⇒ Group = group ⇒
+  def from(worksheet: Worksheet): ErrorsOr[BrokerageNotesWorksheetReader] = worksheet.groups
+    .map(_.validatedWith(Seq(
+      assertMultilineGroupHasSummary(worksheet.name),
+      assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name),
+      assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name),
+      assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
+      assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
+      assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name),
+      assertVolumeSummaryIsCalculatedCorrectly(worksheet.name),
+      assertTotalSummaryIsCalculatedCorrectly(worksheet.name)
+    ), Seq(
+      assertVolumeIsCalculatedCorrectly(worksheet.name),
+      assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
+      assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
+      assertServiceTaxIsCalculatedCorrectly(worksheet.name),
+      assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
+      assertTotalIsCalculatedCorrectly(worksheet.name)
+    ), Seq(
+      assertLinesInGroupHaveSameTradingDate(worksheet.name),
+      assertLinesInGroupHaveSameNoteNumber(worksheet.name)
+    ), Seq(
+      assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
+    ), Seq(
+      assertCellsInLineHaveSameFontColor(worksheet.name)
+    )).andThen((group: Group) ⇒ Seq(group.toBrokerageNote).validNec))
+    .reduce(_ |+| _)
+    .map(BrokerageNotesWorksheetReader(_))
+
+  private def assertMultilineGroupHasSummary(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
     group.nonSummaryLines match
-      case Seq(a, b, _*) ⇒ group.summary match
+      case Seq(_, _, _*) ⇒ group.summary match
         case None ⇒ group.summaryLikeLine match
           case Some(summaryLikeLine) ⇒
-            val invalidSummaryCells = summaryLikeLine
-              .nonEmptyCells
+            val invalidSummaryCells = summaryLikeLine.nonEmptyCells
               .filter(!_.isFormula)
               .map(cell ⇒ s"${cell.address}:${cell.`type`}")
               .mkString("[", ",", "]")
 
-            throw new IllegalArgumentException(
+            UnexpectedContentType(
               s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '$invalidSummaryCells'."
-            )
-          case _ ⇒ throw new IllegalArgumentException(
+            ).invalidNec
+
+          case _ ⇒ RequiredValueMissing(
             s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. 'MultilineGroup's must have a 'SummaryLine'."
-          )
-        case _ ⇒
-      case _ ⇒
-    group
+          ).invalidNec
+        case _ ⇒ group.validNec
+      case _ ⇒ group.validNec
 
-  private def assertSettlementFeeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(worksheetName, group)
+  private def assertSettlementFeeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(group, worksheetName)
 
-  private def assertOperationIndependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(worksheetName: String, group: Group) =
-    group.summary.foreach { summary ⇒
+  private def assertOperationIndependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(group: Group, worksheetName: String): ErrorsOr[Group] =
+    group.summary.map { summary ⇒
       val summaryCell = summary.cells(cellIndex)
 
       val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble)
       val actualSummaryValue = summaryCell.asDouble
 
-      if actualSummaryValue !~= expectedSummaryValue then throw new IllegalArgumentException(
+      if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
         s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
-      )
-    }
-    group
+      ).invalidNec
+      else group.validNec
+    }.getOrElse(group.validNec)
 
-  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(worksheetName, group)
+  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(group, worksheetName)
 
-  private def assertBrokerageSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(8, "Brokerage")(worksheetName, group)
+  private def assertBrokerageSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(8, "Brokerage")(group, worksheetName)
 
-  private def assertServiceTaxSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(worksheetName, group)
+  private def assertServiceTaxSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(group, worksheetName)
 
-  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(worksheetName, group)
+  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(group, worksheetName)
 
-  private def assertVolumeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationDependentSummaryCellIsCalculatedCorrectly(5, "Volume", _.volume.asDouble)(worksheetName, group)
+  private def assertVolumeSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationDependentSummaryCellIsCalculatedCorrectly(5, "Volume", _.volume.asDouble)(group, worksheetName)
 
-  private def assertOperationDependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String, valueToSummarizeFrom: Operation ⇒ Double)(worksheetName: String, group: Group) =
-    group.summary.foreach { summary ⇒
+  private def assertOperationDependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String, valueToSummarizeFrom: Operation ⇒ Double)(group: Group, worksheetName: String) =
+    group.summary.map { summary ⇒
       val summaryCell = summary.cells(cellIndex)
 
       val expectedSummaryValue = group.nonSummaryLines.map(_.toOperation).foldLeft(0.0) { (acc, operation) ⇒
@@ -131,159 +144,167 @@ object BrokerageNotesWorksheetReader:
       }
       val actualSummaryValue = summaryCell.asDouble
 
-      if actualSummaryValue !~= expectedSummaryValue then throw new IllegalArgumentException(
+      if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
         s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '$cellName's minus the sum of all 'BuyingOperation's '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
-      )
-    }
-    group
+      ).invalidNec
+      else group.validNec
+    }.getOrElse(group.validNec)
 
-  private def assertTotalSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ Group = group ⇒
-    assertOperationDependentSummaryCellIsCalculatedCorrectly(11, "Total", _.total.asDouble)(worksheetName, group)
+  private def assertTotalSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationDependentSummaryCellIsCalculatedCorrectly(11, "Total", _.total.asDouble)(group, worksheetName)
 
-  private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
-    val firstTradingDateCell = first.cells.head
-    val secondTradingDateCell = second.cells.head
-
-    if firstTradingDateCell.value != secondTradingDateCell.value then throw new IllegalArgumentException(
-      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
-    ) else second
-
-  private def assertLinesInGroupHaveSameNoteNumber(worksheetName: String): (Line, Line) ⇒ Line = (first: Line, second: Line) ⇒
-    val firstNoteNumberCell = first.cells.tail.head
-    val secondNoteNumberCell = second.cells.tail.head
-
-    if firstNoteNumberCell.value != secondNoteNumberCell.value then throw new IllegalArgumentException(
-      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
-    ) else second
-
-  private def assertCellsInLineHaveSameFontColor(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-
-    firstLine.nonEmptyCells.reduceLeft { (firstCell: Cell, secondCell: Cell) ⇒
-      if firstCell.fontColor != secondCell.fontColor then throw new IllegalArgumentException(
-        s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${secondCell.fontColor}' in '${secondCell.address}' is different from '${firstCell.fontColor}' in '${firstCell.address}'."
-      ) else secondCell
-    }
-    secondLine
-
-  private def assertCellsInLineHaveFontColorRedOrBlue(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-
-    firstLine.nonEmptyCells.reduceLeft { (firstCell: Cell, secondCell: Cell) ⇒
-      firstCell.fontColor match
-        case "255,0,0" | "68,114,196" ⇒ secondCell
-        case _ ⇒ throw new IllegalArgumentException(
-          s"An invalid 'Line' ('${firstLine.cells.head.value} - ${firstLine.cells.tail.head.value} - ${firstLine.cells.tail.tail.head.value} - ${firstLine.cells.tail.tail.tail.head.value}') was found on 'Worksheet' $worksheetName. 'Line's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn them into 'Operation's but this 'Line' has font-color '0,0,0'."
-        )
-    }
-    secondLine
-
-  private def assertVolumeIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val qtyCell = firstLine.cells(3)
-    val priceCell = firstLine.cells(4)
-    val volumeCell = firstLine.cells(5)
+  private def assertVolumeIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val qtyCell = line.cells(3)
+    val priceCell = line.cells(4)
+    val volumeCell = line.cells(5)
     val expectedVolume = qtyCell.asInt * priceCell.asDouble
 
-    if volumeCell.asDouble != expectedVolume then throw new IllegalArgumentException(
+    if volumeCell.asDouble != expectedVolume then UnexpectedContentValue(
       s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
-    )
-    secondLine
+    ).invalidNec
+    else group.validNec
 
-  private def assertSettlementFeeIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val volumeCell = firstLine.cells(5)
-    val settlementFeeCell = firstLine.cells(6)
-    val tradingDate = firstLine.cells.head.asLocalDate
+  private def assertSettlementFeeIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val volumeCell = line.cells(5)
+    val settlementFeeCell = line.cells(6)
+    val tradingDate = line.cells.head.asLocalDate
     // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
     val settlementFeeRate = SettlementFeeRate.forOperationalMode(Normal).at(tradingDate).value
     val expectedSettlementFee = volumeCell.asDouble * settlementFeeRate
 
-    if settlementFeeCell.asDouble != expectedSettlementFee then throw new IllegalArgumentException(
+    if settlementFeeCell.asDouble != expectedSettlementFee then UnexpectedContentValue(
       s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${(settlementFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '${settlementFeeCell.asDouble}'."
-    )
-    secondLine
+    ).invalidNec
+    else group.validNec
 
-  private def assertNegotiationFeesIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val volumeCell = firstLine.cells(5)
-    val negotiationsFeeCell = firstLine.cells(7)
-    val tradingDate = firstLine.cells.head.asLocalDate
+  private def assertNegotiationFeesIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val volumeCell = line.cells(5)
+    val negotiationsFeeCell = line.cells(7)
+    val tradingDate = line.cells.head.asLocalDate
     val tradingTime = NegotiationFeesRate.TRADING
     // TODO Same challenge here since 'NegotiationFees' is also dependent on the time of order execution which is not part of the brokerage note document.
     val negotiationsFeeRate = NegotiationFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
     val expectedNegotiationsFee = (volumeCell.asDouble * negotiationsFeeRate).formatted("%.2f")
     val actualNegotiationsFee = negotiationsFeeCell.asDouble.formatted("%.2f")
 
-    if actualNegotiationsFee != expectedNegotiationsFee then throw new IllegalArgumentException(
+    if actualNegotiationsFee != expectedNegotiationsFee then UnexpectedContentValue(
       s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volumeCell.asDouble} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
-    )
-    secondLine
+    ).invalidNec
+    else group.validNec
 
-  private def assertServiceTaxIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val tradingDate = firstLine.cells.head.asLocalDate
-    val brokerageCell = firstLine.cells(8)
-    val serviceTaxCell = firstLine.cells(9)
+  private def assertServiceTaxIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val tradingDate = line.cells.head.asLocalDate
+    val brokerageCell = line.cells(8)
+    val serviceTaxCell = line.cells(9)
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
     val serviceTaxRate = ServiceTaxRate.at(tradingDate).value
     val expectedServiceTax = (brokerageCell.asDouble * serviceTaxRate).formatted("%.2f")
     val actualServiceTax = serviceTaxCell.asDouble.formatted("%.2f")
 
-    if actualServiceTax != expectedServiceTax then throw new IllegalArgumentException(
+    if actualServiceTax != expectedServiceTax then UnexpectedContentValue(
       s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerageCell.asDouble} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
-    )
-    secondLine
+    ).invalidNec
+    else group.validNec
 
-  private def assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val incomeTaxAtSourceCell = firstLine.cells(10)
+  private def assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val incomeTaxAtSourceCell = line.cells(10)
 
-    firstLine.cells.head.fontColor match
+    line.cells.head.fontColor match
       case BLUE ⇒
-        val tickerCell = firstLine.cells(2)
-        val qtyCell = firstLine.cells(3)
-        val volumeCell = firstLine.cells(5)
-        val settlementFeeCell = firstLine.cells(6)
-        val negotiationFeesCell = firstLine.cells(7)
-        val brokerageCell = firstLine.cells(8)
-        val serviceTaxCell = firstLine.cells(9)
+        val tickerCell = line.cells(2)
+        val qtyCell = line.cells(3)
+        val volumeCell = line.cells(5)
+        val settlementFeeCell = line.cells(6)
+        val negotiationFeesCell = line.cells(7)
+        val brokerageCell = line.cells(8)
+        val serviceTaxCell = line.cells(9)
 
-        val tradingDate = firstLine.cells.head.asLocalDate
+        val tradingDate = line.cells.head.asLocalDate
         val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
         val operationNetResult = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
         val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qtyCell.asInt
         // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
         val operationProfit = operationNetResult - operationAverageCost
         val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
+        // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
         val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble
 
-        if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then throw new IllegalArgumentException(
+        if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
           s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
-        )
+        ).invalidNec
+        else group.validNec
       case _ ⇒
-        if incomeTaxAtSourceCell.nonEmpty && (!incomeTaxAtSourceCell.isCurrency || incomeTaxAtSourceCell.asDouble > 0.0) then throw new IllegalArgumentException(
-          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
-        )
-    secondLine
+        if incomeTaxAtSourceCell.nonEmpty then {
+          if !incomeTaxAtSourceCell.isCurrency then UnexpectedContentType(
+            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+          ).invalidNec
+          else group.validNec
+        } combine {
+          if incomeTaxAtSourceCell.asDouble > 0.0 then UnexpectedContentValue(
+            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+          ).invalidNec
+          else group.validNec
+        }
+        else group.validNec
 
-  private def assertTotalIsCalculatedCorrectly(worksheetName: String): (Line, Line) ⇒ Line = (firstLine: Line, secondLine: Line) ⇒
-    val volumeCell = firstLine.cells(5)
-    val settlementFeeCell = firstLine.cells(6)
-    val negotiationFeesCell = firstLine.cells(7)
-    val brokerageCell = firstLine.cells(8)
-    val serviceTaxCell = firstLine.cells(9)
-    val totalCell = firstLine.cells(11)
+  private def assertTotalIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+    val volumeCell = line.cells(5)
+    val settlementFeeCell = line.cells(6)
+    val negotiationFeesCell = line.cells(7)
+    val brokerageCell = line.cells(8)
+    val serviceTaxCell = line.cells(9)
+    val totalCell = line.cells(11)
 
-    firstLine.cells.head.fontColor match
+    line.cells.head.fontColor match
       case BLUE ⇒
         val expectedTotal = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
         val actualTotal = totalCell.asDouble
 
-        if actualTotal !~= expectedTotal then throw new IllegalArgumentException(
+        if actualTotal !~= expectedTotal then UnexpectedContentValue(
           s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
-        )
+        ).invalidNec
+        else group.validNec
       case _ ⇒
         val expectedTotal = volumeCell.asDouble + settlementFeeCell.asDouble + negotiationFeesCell.asDouble + brokerageCell.asDouble + serviceTaxCell.asDouble
         val actualTotal = totalCell.asDouble
 
-        if actualTotal !~= expectedTotal then throw new IllegalArgumentException(
+        if actualTotal !~= expectedTotal then UnexpectedContentValue(
           s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${negotiationFeesCell.address}:NegotiationFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
-        )
-    secondLine
+        ).invalidNec
+        else group.validNec
+
+  private def assertLinesInGroupHaveSameTradingDate(worksheetName: String): Group ⇒ (Line, Line) ⇒ ErrorsOr[Group] = group ⇒ (first: Line, second: Line) ⇒
+    val firstTradingDateCell = first.cells.head
+    val secondTradingDateCell = second.cells.head
+
+    if firstTradingDateCell.value != secondTradingDateCell.value then UnexpectedContentValue(
+      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
+    ).invalidNec
+    else group.validNec
+
+  private def assertLinesInGroupHaveSameNoteNumber(worksheetName: String): Group ⇒ (Line, Line) ⇒ ErrorsOr[Group] = group ⇒ (first: Line, second: Line) ⇒
+    val firstNoteNumberCell = first.cells.tail.head
+    val secondNoteNumberCell = second.cells.tail.head
+
+    if firstNoteNumberCell.value != secondNoteNumberCell.value then UnexpectedContentValue(
+      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
+    ).invalidNec
+    else group.validNec
+
+  // TODO Add a test for making sure we do not require empty cells to have a fontColor
+  private def assertCellsInLineHaveFontColorRedOrBlue(worksheetName: String): Group ⇒ Cell ⇒ ErrorsOr[Group] = group ⇒ cell ⇒
+    cell.fontColor match
+      case "255,0,0" | "68,114,196" | "" ⇒ group.validNec
+      case _ ⇒ UnexpectedContentColor(
+        s"An invalid 'Cell' '${cell.address}' was found on 'Worksheet' $worksheetName. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '${cell.fontColor}'."
+      ).invalidNec
+
+  // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells
+  private def assertCellsInLineHaveSameFontColor(worksheetName: String): Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group] = group ⇒ (first: Cell, second: Cell) ⇒
+    if first.fontColor.nonEmpty && second.fontColor.nonEmpty && first.fontColor != second.fontColor then UnexpectedContentColor(
+      s"An invalid 'Cell' '${second.address}' was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${second.fontColor}' in '${second.address}' is different from '${first.fontColor}' in '${first.address}'."
+    ).invalidNec
+    else group.validNec
 
   extension (worksheet: Worksheet)
 
@@ -291,30 +312,48 @@ object BrokerageNotesWorksheetReader:
 
   extension (group: Group)
 
-    private def validatedWith(groupValidations: Seq[Group ⇒ Group] = Seq(), lineValidations: Seq[(Line, Line) ⇒ Line] = Seq()): Try[Group] = Try {
-      groupValidations.foreach(_ (group))
+    private def validatedWith(groupValidations: Seq[Group ⇒ ErrorsOr[Group]] = Seq(),
+                              lineValidations: Seq[Group ⇒ Line ⇒ ErrorsOr[Group]] = Seq(),
+                              interLineValidations: Seq[Group ⇒ (Line, Line) ⇒ ErrorsOr[Group]] = Seq(),
+                              cellValidations: Seq[Group ⇒ Cell ⇒ ErrorsOr[Group]] = Seq(),
+                              interCellValidations: Seq[Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group]] = Seq()
+                             ): ErrorsOr[Group] =
+      group.nonSummaryLines.sliding(2).foldLeft(
+        group.nonSummaryLines.foldLeft(groupValidations.map(_ (group)).reduce(_ `combine` _)) { (acc, line) ⇒
+          line.cells.foldLeft(acc.combine(lineValidations.map(_ (group)(line)).reduce(_ `combine` _))) { (acc, cell) ⇒
+            acc.combine(cellValidations.map(_ (group)(cell)).reduce(_ `combine` _))
+          }
+        }
+      ) { (independentValidations, lines) ⇒
+        lines match
+          case Seq(line1, line2, _*) ⇒
+            val lineValidations = independentValidations.combine(interLineValidations.map(_ (group)(line1, line2)).reduce(_ `combine` _))
 
-      group.reduceLeft { (first: Line, second: Line) ⇒
-        if second.isSummary then first
-        else
-          lineValidations.foreach(_ (first, second))
-          second
+            validateCellsFromLine(line1)(interCellValidations, lineValidations)
+          // TODO How do we validate the cells of the last line??? if nonSummaryLines.size > 1 then validateCells of the latest nonSummaryLine
+          case Seq(line) ⇒
+            validateCellsFromLine(line)(interCellValidations, independentValidations)
       }
-      group
-    }
+
+    private def validateCellsFromLine(line: Line)(cellValidations: Seq[Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group]], accumulatedValidations: ErrorsOr[Group]) =
+      line.cells.sliding(2).foldLeft(accumulatedValidations) { (errorAccumulator, cells) ⇒
+        cells match
+          case Seq(cell1, cell2, _*) ⇒
+            errorAccumulator.combine(cellValidations.map(_ (group)(cell1, cell2)).reduce(_ `combine` _))
+          case Seq(_) ⇒
+            group.validNec
+      }
 
     private def toBrokerageNote: BrokerageNote = BrokerageNote(
       nonSummaryLines.map(_.toOperation),
       group.head.toFinancialSummary
     )
 
-    private def nonSummaryLines: Seq[Line] = group.filter(!_.isSummary)
+    private def nonSummaryLines: Seq[Line] = group.filter(line => !line.isSummary && !line.isSummaryLikeLine)
 
     private def summary: Option[Line] = Option(group.last).filter(_.isSummary)
 
     private def summaryLikeLine: Option[Line] = Option(group.last).filter(_.isSummaryLikeLine)
-
-    private def hasSummary: Boolean = summary.nonEmpty
 
   extension (line: Line)
 
@@ -351,6 +390,7 @@ object BrokerageNotesWorksheetReader:
 
   extension (double: Double)
 
+    @targetName("differentBeyondPrecision")
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
 
     private def formatted(format: String): String = String.format(Locale.US, format, double)
