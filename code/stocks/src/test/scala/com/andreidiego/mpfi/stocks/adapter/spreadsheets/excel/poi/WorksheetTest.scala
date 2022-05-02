@@ -373,6 +373,12 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
       groupsFrom(Worksheet.from(TEST_SHEET)) should have size 1
     }
+    // TODO ???should the group in the worksheet below be allowed???
+    "???should the group in the worksheet below be allowed???" ignore { poiWorkbook =>
+      val TEST_SHEET = poiWorkbook.getSheet("BrokerageNotes.xlsx._BugInGroupFormation_")
+
+      groupsFrom(Worksheet.from(TEST_SHEET)) should have size 1
+    }
     "expose" - {
       "a header with cells sorted by their position in the worksheet." in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
