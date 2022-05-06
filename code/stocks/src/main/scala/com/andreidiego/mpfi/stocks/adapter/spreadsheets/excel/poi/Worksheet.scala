@@ -5,7 +5,7 @@ import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow, XSSFSheet}
 import scala.util.Try
 
 // TODO Header and Groups does not seem to fit at this level in the architecture. They are higher level concepts and seem to be closer the domain in the sense that they reflect a specific/constrained way of organizing spreadsheets
-case class Worksheet private(header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
+case class Worksheet private(name: String, header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
 
 // TODO Replace Try + exceptions with Validated
 object Worksheet:
@@ -16,7 +16,7 @@ object Worksheet:
     numberOfColumns = header.columnNames.size
     lines ← linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns)
     validatedLines ← validated(lines)(poiWorksheet.getSheetName)
-  } yield Worksheet(header, validatedLines, grouped(validatedLines))
+  } yield Worksheet(poiWorksheet.getSheetName, header, validatedLines, grouped(validatedLines))
 
   private def rowZeroFrom(poiWorksheet: XSSFSheet) = Try {
     if poiWorksheet.isEmpty then

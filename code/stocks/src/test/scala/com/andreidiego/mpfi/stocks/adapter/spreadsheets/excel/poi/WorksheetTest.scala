@@ -379,6 +379,11 @@ class WorksheetTest extends FixtureAnyFreeSpec :
       groupsFrom(Worksheet.from(TEST_SHEET)) should have size 1
     }
     "expose" - {
+      "a name, which is the name of the underlying Excel worksheet." in { poiWorkbook =>
+        val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
+
+        nameFrom(Worksheet.from(TEST_SHEET)) should be (VALID_TINY_WORKSHEET)
+      }
       "a header with cells sorted by their position in the worksheet." in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
@@ -459,6 +464,8 @@ object WorksheetTest:
   private val VALID_TINY_WORKSHEET_CONTENTS = Seq(HEADER, blankLine("2"), stringLine("3"), stringLine("4"))
 
   private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), numericCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), numericCell(s"D$lineNumber", "200"))
+
+  private def nameFrom(worksheet: Try[Worksheet]): String = worksheet.success.value.name
 
   private def headerFrom(worksheet: Try[Worksheet]): Seq[String] = worksheet.success.value.header.columnNames
 
