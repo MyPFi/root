@@ -243,6 +243,16 @@ class LineTest extends FixtureAnyFreeSpec :
         }
       }
     }
+    "be empty if all its cells are empty." in { poiWorksheet ⇒
+      val emptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_BLANKS)
+
+      Line.from(emptyPOIRow, SIZE_OF_LINE_WITH_MULTIPLE_BLANKS).success.value shouldBe empty
+    }
+    "not be empty if not all its cells are empty." in { poiWorksheet ⇒
+      val nonEmptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL)
+
+      assert(Line.from(nonEmptyPOIRow, SIZE_OF_LINE_WITH_TRAILING_EMPTY_CELL).success.value.isNotEmpty)
+    }
     "equal another Line with the same configuration." in { poiWorksheet ⇒
       val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
 
