@@ -7,7 +7,7 @@ import scala.util.{Failure, Try}
 
 case class Line private(cells: Seq[Cell])
 
-// TODO Replace Try + exceptions with Either
+// TODO Replace Try + exceptions with Validated
 object Line:
 
   def from(poiRow: XSSFRow, size: Int): Try[Line] = for {

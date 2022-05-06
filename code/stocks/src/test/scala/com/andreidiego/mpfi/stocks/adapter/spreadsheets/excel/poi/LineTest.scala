@@ -12,7 +12,7 @@ import java.io.File
 import scala.language.deprecated.symbolLiterals
 import scala.util.Try
 
-// TODO Replace Try + exceptions with Either
+// TODO Replace Try + exceptions with Validated
 class LineTest extends FixtureAnyFreeSpec :
 
   import LineTest.*
@@ -28,7 +28,7 @@ class LineTest extends FixtureAnyFreeSpec :
     finally testWorkbook.close()
 
   "A Line should" - {
-    "be built from a POI Row and a size." in { ignoredPOIWorksheet ⇒
+    "be built from a POI Row and a size." in { _ ⇒
       val poiRegularRow = new XSSFWorkbook().createSheet("1").createRow(0)
 
       "Line.from(poiRegularRow, 1)" should compile
@@ -104,13 +104,13 @@ class LineTest extends FixtureAnyFreeSpec :
       }
     }
     "fail to be built when" - {
-      "given a sequence of strings instead of a POI Row." in { poiWorksheet =>
+      "given a sequence of strings instead of a POI Row." in { _ =>
         """Line(Seq(("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")))""" shouldNot compile
       }
       "given a POI Row" - {
         "that" - {
           "is" - {
-            "null." in { poiWorksheet =>
+            "null." in { _ =>
               val exception = Line.from(null, ZERO).failure.exception
 
               exception should have(
@@ -123,7 +123,7 @@ class LineTest extends FixtureAnyFreeSpec :
                 'message("""Cannot invoke "org.apache.poi.xssf.usermodel.XSSFRow.getRowNum()" because "poiRow$1" is null""")
               )
             }
-            "empty (no cells)." in { poiWorksheet =>
+            "empty (no cells)." in { _ =>
               val poiRegularRow = new XSSFWorkbook().createSheet("1").createRow(0)
 
               val exception = Line.from(poiRegularRow, ZERO).failure.exception
