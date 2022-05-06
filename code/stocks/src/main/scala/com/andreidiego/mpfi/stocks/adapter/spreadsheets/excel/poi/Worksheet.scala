@@ -7,16 +7,15 @@ import scala.util.Try
 // TODO Header and Groups does not seem to fit at this level in the architecture. They are higher level concepts and seem to be closer the domain in the sense that they reflect a specific/constrained way of organizing spreadsheets
 case class Worksheet private(header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
 
-// TODO Replace Try + exceptions with Either
+// TODO Replace Try + exceptions with Validated
 object Worksheet:
 
-  //  TODO In a second pass, this looks like a sweet spot for cats.Validated
   def from(poiWorksheet: XSSFSheet): Try[Worksheet] = for {
     poiHeaderRow ← rowZeroFrom(poiWorksheet)
     header ← Header.from(poiHeaderRow)
     numberOfColumns = header.columnNames.size
     lines ← linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns)
-    validatedLines ← validated(lines)(numberOfColumns, poiWorksheet.getSheetName)
+    validatedLines ← validated(lines)(poiWorksheet.getSheetName)
   } yield Worksheet(header, validatedLines, grouped(validatedLines))
 
   private def rowZeroFrom(poiWorksheet: XSSFSheet) = Try {
@@ -32,7 +31,7 @@ object Worksheet:
       .reverse
   }
 
-  private def validated(lines: Seq[Line])(headerSize: Int, sheetName: String): Try[Seq[Line]] = for {
+  private def validated(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = for {
     a ← assertRegularLinesFoundIn(lines)(sheetName)
     b ← assertNoMoreThanOneEmptyLineRightAfterHeaderIn(a)(sheetName)
     c ← assertNoThreeEmptyLinesBetweenRegularLinesOf(b)(sheetName)
@@ -54,10 +53,10 @@ object Worksheet:
 
   private def assertNoThreeEmptyLinesBetweenRegularLinesOf(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = Try {
     lines.sliding(4)
-      .foldLeft(false) { (found, value) ⇒
+      .foldLeft(false) { (_, value) ⇒
         value match
-          case Seq(first, second) ⇒ false
-          case Seq(first, second, third) ⇒ false
+          case Seq(_, _) ⇒ false
+          case Seq(_, _, _) ⇒ false
           case Seq(first, second, third, fourth) ⇒
             if first.isEmpty && second.isEmpty && third.isEmpty && fourth.isNotEmpty then
               throw new IllegalArgumentException(s"Irregular empty line interval (${first.index}:${third.index}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
