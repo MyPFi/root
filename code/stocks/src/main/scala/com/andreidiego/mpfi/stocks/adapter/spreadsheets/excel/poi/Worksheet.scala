@@ -79,7 +79,7 @@ object Worksheet:
   extension (poiWorksheet: XSSFSheet)
 
     private def getRowOrCreateEmpty(rowNumber: Int): XSSFRow =
-      Option(poiWorksheet.getRow(0)).getOrElse(poiWorksheet.createRow(0))
+      Option(poiWorksheet.getRow(rowNumber)).getOrElse(poiWorksheet.createRow(0))
 
     private def withEmptyRows(size: Int): Seq[XSSFRow] =
 
