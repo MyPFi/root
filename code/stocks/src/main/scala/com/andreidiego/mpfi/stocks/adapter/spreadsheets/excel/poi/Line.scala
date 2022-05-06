@@ -6,7 +6,6 @@ import org.apache.poi.xssf.usermodel.XSSFRow
 import scala.util.{Failure, Try}
 
 case class Line private(number: Int, cells: Seq[Cell]):
-  import Line._
   def isEmpty: Boolean = cells.forall(_.isEmpty)
   def isNotEmpty: Boolean = !isEmpty
 
@@ -34,7 +33,3 @@ object Line:
     private def cells(qty: Int): Seq[Cell] =
       (0 until qty)
         .map(index ⇒ Cell.from(poiRow.getCell(index, CREATE_NULL_AS_BLANK)).get)
-
-  extension (cell: Cell)
-
-    private def isEmpty: Boolean = cell.value.isBlank
