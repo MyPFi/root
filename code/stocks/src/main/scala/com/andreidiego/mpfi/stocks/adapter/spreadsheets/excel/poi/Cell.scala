@@ -13,6 +13,7 @@ import scala.util.{Failure, Try}
 // TODO backgroundColor can be a RGB array ("0,0,0")
 case class Cell private(address: String, value: String, `type`: String, mask: String, formula: String, note: String, fontColor: String, backgroundColor: String):
   def isEmpty: Boolean = value.isBlank
+  def isNotEmpty: Boolean = !isEmpty
 
 // TODO Replace Try + exceptions with Validated
 object Cell:
