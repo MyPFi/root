@@ -45,7 +45,7 @@ object Worksheet:
   }
 
   private def assertNoMoreThanOneEmptyLineRightAfterHeaderIn(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = Try {
-    if lines.tail.take(2).forall(isEmpty) then
+    if lines.tail.take(2).forall(_.isEmpty) then
       throw new IllegalArgumentException(s"Irregular empty line interval found right after the header of $sheetName. Only one empty line is allowed in this position.")
 
     lines
@@ -59,7 +59,7 @@ object Worksheet:
           case Seq(_, _, _) ⇒ false
           case Seq(first, second, third, fourth) ⇒
             if first.isEmpty && second.isEmpty && third.isEmpty && fourth.isNotEmpty then
-              throw new IllegalArgumentException(s"Irregular empty line interval (${first.index}:${third.index}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
+              throw new IllegalArgumentException(s"Irregular empty line interval (${first.number}:${third.number}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
             else false
       }
 
@@ -95,17 +95,3 @@ object Worksheet:
         .map(index ⇒ Option(poiWorksheet.getRow(index)).getOrElse(newRow(index, size)))
 
     private def isEmpty: Boolean = poiWorksheet.getLastRowNum == -1
-
-  extension (line: Line)
-
-    private def isEmpty: Boolean = cells.forall(_.isEmpty)
-
-    private def cells: Seq[Cell] = line.cells
-
-    private def isNotEmpty: Boolean = !isEmpty
-
-    private def index: String = cells.head.address.tail
-
-  extension (cell: Cell)
-
-    private def isEmpty: Boolean = cell.value.isBlank
