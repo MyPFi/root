@@ -245,7 +245,7 @@ class LineTest extends FixtureAnyFreeSpec :
       "a number." in { poiWorksheet ⇒
         val poiRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
 
-        numberOf(Line.from(poiRow, SIZE_OF_LINE_WITH_STRING)) should be (INDEX_OF_LINE_WITH_STRING + 1)
+        numberOf(Line.from(poiRow, SIZE_OF_LINE_WITH_STRING)) should be(INDEX_OF_LINE_WITH_STRING + 1)
       }
     }
     "be empty if all its cells are empty." in { poiWorksheet ⇒
@@ -257,6 +257,11 @@ class LineTest extends FixtureAnyFreeSpec :
       val nonEmptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL)
 
       assert(Line.from(nonEmptyPOIRow, SIZE_OF_LINE_WITH_TRAILING_EMPTY_CELL).success.value.isNotEmpty)
+    }
+    "provide access to its non-empty cells." in { poiWorksheet ⇒
+      val poiRowWithOneEmptyCell = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_CELLS)
+
+      valuesOf(nonEmptyCellsOf(Line.from(poiRowWithOneEmptyCell, SIZE_OF_LINE_WITH_MULTIPLE_CELLS))) should contain theSameElementsInOrderAs Seq(INTEGER_VALUE, STRING_VALUE, "156348")
     }
     "equal another Line with the same configuration." in { poiWorksheet ⇒
       val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
@@ -357,3 +362,5 @@ object LineTest:
   private def backgroundColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.backgroundColor
 
   private def numberOf(line: Try[Line]): Int = line.success.value.number
+
+  private def nonEmptyCellsOf(line: Try[Line]): Seq[Cell] = line.success.value.nonEmptyCells

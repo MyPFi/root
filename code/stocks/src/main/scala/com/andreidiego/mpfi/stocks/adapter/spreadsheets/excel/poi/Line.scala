@@ -8,6 +8,7 @@ import scala.util.{Failure, Try}
 case class Line private(number: Int, cells: Seq[Cell]):
   def isEmpty: Boolean = cells.forall(_.isEmpty)
   def isNotEmpty: Boolean = !isEmpty
+  def nonEmptyCells: Seq[Cell] = cells.filter(_.isNotEmpty)
 
 // TODO Replace Try + exceptions with Validated
 object Line:
