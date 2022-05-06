@@ -5,7 +5,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow
 
 import scala.util.{Failure, Try}
 
-case class Line private(cells: Seq[Cell]):
+case class Line private(number: Int, cells: Seq[Cell]):
   import Line._
   def isEmpty: Boolean = cells.forall(_.isEmpty)
   def isNotEmpty: Boolean = !isEmpty
@@ -15,7 +15,7 @@ object Line:
 
   def from(poiRow: XSSFRow, size: Int): Try[Line] = for {
     validatedPOIRow ← poiRow.validated
-  } yield Line(validatedPOIRow.cells(size))
+  } yield Line(validatedPOIRow.getRowNum + 1, validatedPOIRow.cells(size))
 
   extension (poiRow: XSSFRow)
 

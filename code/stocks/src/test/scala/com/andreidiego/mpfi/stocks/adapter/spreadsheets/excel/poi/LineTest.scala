@@ -242,6 +242,11 @@ class LineTest extends FixtureAnyFreeSpec :
           }
         }
       }
+      "a number." in { poiWorksheet ⇒
+        val poiRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
+
+        numberOf(Line.from(poiRow, SIZE_OF_LINE_WITH_STRING)) should be (INDEX_OF_LINE_WITH_STRING + 1)
+      }
     }
     "be empty if all its cells are empty." in { poiWorksheet ⇒
       val emptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_BLANKS)
@@ -350,3 +355,5 @@ object LineTest:
   private def fontColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.fontColor
 
   private def backgroundColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.backgroundColor
+
+  private def numberOf(line: Try[Line]): Int = line.success.value.number
