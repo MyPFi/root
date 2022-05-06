@@ -99,6 +99,16 @@ class CellTest extends FixtureAnyFreeSpec :
           )
         }
       }
+      "be empty if its value is empty." in { poiRow ⇒
+        val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
+
+        Cell.from(emptyPOICell).success.value shouldBe empty
+      }
+      "not be empty if its value is not empty." in { poiRow ⇒
+        val nonEmptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        Cell.from(nonEmptyPOICell).success.value should not be empty
+      }
       "equal another Cell with the same configuration." in { poiRow ⇒
         val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
