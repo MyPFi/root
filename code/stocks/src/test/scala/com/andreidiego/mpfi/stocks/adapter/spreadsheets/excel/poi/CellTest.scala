@@ -12,7 +12,7 @@ import java.io.File
 import language.deprecated.symbolLiterals
 import scala.util.Try
 
-// TODO Replace Try + exceptions with Either
+// TODO Replace Try + exceptions with Validated
 class CellTest extends FixtureAnyFreeSpec :
 
   import CellTest.*
@@ -27,87 +27,141 @@ class CellTest extends FixtureAnyFreeSpec :
     try withFixture(test.toNoArgTest(testWorkbook.getSheet(CELL_WORKSHEET).getRow(0)))
     finally testWorkbook.close()
 
-  "A Cell should" - {
-    "be built from a POI Cell" in { ignoredPOIRow ⇒
-      val poiCell = new XSSFWorkbook().createSheet("1").createRow(0).createCell(0)
+  "A Cell" - {
+    "should" - {
+      "be built from a POI Cell" in { _ ⇒
+        val poiCell = new XSSFWorkbook().createSheet("1").createRow(0).createCell(0)
 
-      "Cell.from(poiCell)" should compile
-    }
-    "be successfully built when given a POI Cell that contains" - {
-      "a string." in { poiRow =>
+        "Cell.from(poiCell)" should compile
+      }
+      "be successfully built when given a POI Cell that contains" - {
+        "a string." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          valueOf(Cell.from(poiCell)) should be(STRING_VALUE)
+        }
+        "an integer." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER)
+
+          valueOf(Cell.from(poiCell)) should be(INTEGER_VALUE)
+        }
+        "a floating point number." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_NUMBER)
+
+          valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_VALUE)
+        }
+        "a date." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+
+          valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+        }
+        "currency." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
+
+          valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+        }
+        "blank." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
+
+          valueOf(Cell.from(poiCell)) should be(BLANK_VALUE)
+        }
+        "a separator." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
+
+          valueOf(Cell.from(poiCell)) should be(SEPARATOR_VALUE)
+        }
+        "a string formula." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+
+          valueOf(Cell.from(poiCell)) should be(STRING_FORMULA_VALUE)
+        }
+        "a numeric formula that results in an integer." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_FORMULA)
+
+          valueOf(Cell.from(poiCell)) should be(INTEGER_FORMULA_VALUE)
+        }
+        "a numeric formula that results in a floating point number." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_FORMULA)
+
+          valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_FORMULA_VALUE)
+        }
+      }
+      "fail to be built when given" - {
+        "string arguments instead of a POI Cell." in { _ =>
+          """Cell("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")""" shouldNot compile
+        }
+        "a POI Cell that is null." in { _ =>
+          val exception = Cell.from(null).failure.exception
+
+          exception should have(
+            'class(classOf[IllegalArgumentException]),
+            'message(s"Invalid cell found: null")
+          )
+        }
+      }
+      "equal another Cell with the same configuration." in { poiRow ⇒
         val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        valueOf(Cell.from(poiCell)) should be(STRING_VALUE)
+        Cell.from(poiCell) should equal(Cell.from(poiCell))
       }
-      "an integer." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER)
+      "not equal another Cell with a different configuration." in { poiRow ⇒
+        val poiCell1 = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+        val poiCell2 = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_RED)
 
-        valueOf(Cell.from(poiCell)) should be(INTEGER_VALUE)
+        Cell.from(poiCell1) should not equal Cell.from(poiCell2)
       }
-      "a floating point number." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_NUMBER)
-
-        valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_VALUE)
-      }
-      "a date." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
-
-        valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
-      }
-      "currency." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
-
-        valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
-      }
-      "blank." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
-
-        valueOf(Cell.from(poiCell)) should be(BLANK_VALUE)
-      }
-      "a separator." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
-
-        valueOf(Cell.from(poiCell)) should be(SEPARATOR_VALUE)
-      }
-      "a string formula." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
-
-        valueOf(Cell.from(poiCell)) should be(STRING_FORMULA_VALUE)
-      }
-      "a numeric formula that results in an integer." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_FORMULA)
-
-        valueOf(Cell.from(poiCell)) should be(INTEGER_FORMULA_VALUE)
-      }
-      "a numeric formula that results in a floating point number." in { poiRow =>
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_FORMULA)
-
-        valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_FORMULA_VALUE)
-      }
-    }
-    "fail to be built when given" - {
-      "string arguments instead of a POI Cell." in { ignoredPOIRow =>
-        """Cell("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")""" shouldNot compile
-      }
-      "a POI Cell that is null." in { poiRow =>
-        val exception = Cell.from(null).failure.exception
-
-        exception should have(
-          'class(classOf[IllegalArgumentException]),
-          'message(s"Invalid cell found: null")
-        )
-      }
-    }
-    "should always have" - {
-      "an address" in { poiRow ⇒
+      "forbid manipulation of its internal address." in { poiRow ⇒
         val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        addressOf(Cell.from(poiCell)) should be(ADDRESS_OF_CELL_WITH_STRING)
+        """Cell.from(poiCell).success.value.address = "address"""" shouldNot compile
       }
-      "a type" in { poiRow ⇒
+      "forbid manipulation of its internal value." in { poiRow ⇒
         val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        typeOf(Cell.from(poiCell)) should be(POI_STRING)
+        """Cell.from(poiCell).success.value.value = "value"""" shouldNot compile
+      }
+      "forbid manipulation of its internal type." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.`type` = "type"""" shouldNot compile
+      }
+      "forbid manipulation of its internal mask." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.mask = "mask"""" shouldNot compile
+      }
+      "forbid manipulation of its internal formula." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.formula = "formula"""" shouldNot compile
+      }
+      "forbid manipulation of its internal note." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.note = "note"""" shouldNot compile
+      }
+      "forbid manipulation of its internal fontColor." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.fontColor = "fontColor"""" shouldNot compile
+      }
+      "forbid manipulation of its internal backgroundColor." in { poiRow ⇒
+        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+        """Cell.from(poiCell).success.value.backgroundColor = "backgroundColor"""" shouldNot compile
+      }
+      //    TODO Currency with no decimals, 1 decimal and 2 decimals
+      "always have" - {
+        "an address" in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          addressOf(Cell.from(poiCell)) should be(ADDRESS_OF_CELL_WITH_STRING)
+        }
+        "a type" in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          typeOf(Cell.from(poiCell)) should be(POI_STRING)
+        }
       }
     }
     "could sometimes have" - {
@@ -177,58 +231,6 @@ class CellTest extends FixtureAnyFreeSpec :
         }
       }
     }
-    "equal another Cell with the same configuration." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      Cell.from(poiCell) should equal(Cell.from(poiCell))
-    }
-    "not equal another Cell with a different configuration." in { poiRow ⇒
-      val poiCell1 = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-      val poiCell2 = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_RED)
-
-      Cell.from(poiCell1) should not equal Cell.from(poiCell2)
-    }
-    "forbid manipulation of its internal address." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.address = "address"""" shouldNot compile
-    }
-    "forbid manipulation of its internal value." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.value = "value"""" shouldNot compile
-    }
-    "forbid manipulation of its internal type." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.`type` = "type"""" shouldNot compile
-    }
-    "forbid manipulation of its internal mask." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.mask = "mask"""" shouldNot compile
-    }
-    "forbid manipulation of its internal formula." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.formula = "formula"""" shouldNot compile
-    }
-    "forbid manipulation of its internal note." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.note = "note"""" shouldNot compile
-    }
-    "forbid manipulation of its internal fontColor." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.fontColor = "fontColor"""" shouldNot compile
-    }
-    "forbid manipulation of its internal backgroundColor." in { poiRow ⇒
-      val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-      """Cell.from(poiCell).success.value.backgroundColor = "backgroundColor"""" shouldNot compile
-    }
-    //    TODO Currency with no decimals, 1 decimal and 2 decimals
   }
 
 object CellTest:
