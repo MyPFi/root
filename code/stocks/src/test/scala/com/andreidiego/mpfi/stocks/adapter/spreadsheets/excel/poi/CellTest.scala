@@ -45,10 +45,10 @@ class CellTest extends FixtureAnyFreeSpec :
 
           valueOf(Cell.from(poiCell)) should be(INTEGER_VALUE)
         }
-        "a floating point number." in { poiRow =>
-          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_NUMBER)
+        "a double." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE)
 
-          valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_VALUE)
+          valueOf(Cell.from(poiCell)) should be(DOUBLE_VALUE)
         }
         "a date." in { poiRow =>
           val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
@@ -80,10 +80,10 @@ class CellTest extends FixtureAnyFreeSpec :
 
           valueOf(Cell.from(poiCell)) should be(INTEGER_FORMULA_VALUE)
         }
-        "a numeric formula that results in a floating point number." in { poiRow =>
-          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_FLOATING_POINT_FORMULA)
+        "a numeric formula that results in a double." in { poiRow =>
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_FORMULA)
 
-          valueOf(Cell.from(poiCell)) should be(FLOATING_POINT_FORMULA_VALUE)
+          valueOf(Cell.from(poiCell)) should be(DOUBLE_FORMULA_VALUE)
         }
       }
       "fail to be built when given" - {
@@ -253,8 +253,8 @@ object CellTest:
   private val POI_STRING = STRING.toString
   private val INDEX_OF_CELL_WITH_INTEGER = 1
   private val INTEGER_VALUE = "1"
-  private val INDEX_OF_CELL_WITH_FLOATING_POINT_NUMBER = 2
-  private val FLOATING_POINT_VALUE = "1.1"
+  private val INDEX_OF_CELL_WITH_DOUBLE = 2
+  private val DOUBLE_VALUE = "1.1"
   private val INDEX_OF_CELL_WITH_DATE = 3
   private val DATE_VALUE = "05/11/2008"
   private val MASK = "m/d/yy"
@@ -270,8 +270,8 @@ object CellTest:
   private val STRING_FORMULA_VALUE = "StringString"
   private val INDEX_OF_CELL_WITH_INTEGER_FORMULA = 8
   private val INTEGER_FORMULA_VALUE = "2"
-  private val INDEX_OF_CELL_WITH_FLOATING_POINT_FORMULA = 9
-  private val FLOATING_POINT_FORMULA_VALUE = "2.2"
+  private val INDEX_OF_CELL_WITH_DOUBLE_FORMULA = 9
+  private val DOUBLE_FORMULA_VALUE = "2.2"
   private val INDEX_OF_CELL_WITH_NOTE = 10
   private val NOTE = "Note"
   private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 11
