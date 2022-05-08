@@ -162,12 +162,12 @@ class CellTest extends FixtureAnyFreeSpec :
       }
       //    TODO Currency with no decimals, 1 decimal and 2 decimals
       "always have" - {
-        "an address" in { poiRow ⇒
+        "an address." in { poiRow ⇒
           val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
           addressOf(Cell.from(poiCell)) should be(ADDRESS_OF_CELL_WITH_STRING)
         }
-        "a type" in { poiRow ⇒
+        "a type." in { poiRow ⇒
           val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
           typeOf(Cell.from(poiCell)) should be(POI_STRING)
@@ -175,7 +175,7 @@ class CellTest extends FixtureAnyFreeSpec :
       }
     }
     "could sometimes have" - {
-      "a value" in { poiRow ⇒
+      "a value." in { poiRow ⇒
         val poiCellWithValue = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
         val poiCellWithNoValue = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
 
@@ -185,7 +185,7 @@ class CellTest extends FixtureAnyFreeSpec :
         value should be(STRING_VALUE)
         noValue should be(empty)
       }
-      "a mask" in { poiRow ⇒
+      "a mask." in { poiRow ⇒
         val poiCellWithMask = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
         val poiCellWithNoMask = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
@@ -195,7 +195,7 @@ class CellTest extends FixtureAnyFreeSpec :
         mask should be(MASK)
         noMask should be(empty)
       }
-      "a formula" in { poiRow ⇒
+      "a formula." in { poiRow ⇒
         val poiCellWithFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
         val poiCellWithNoFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
@@ -205,7 +205,7 @@ class CellTest extends FixtureAnyFreeSpec :
         formula should be(STRING_FORMULA)
         noFormula should be(empty)
       }
-      "a note" in { poiRow ⇒
+      "a note." in { poiRow ⇒
         val poiCellWithNote = poiRow.getCell(INDEX_OF_CELL_WITH_NOTE)
         val poiCellWithNoNote = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
@@ -216,7 +216,7 @@ class CellTest extends FixtureAnyFreeSpec :
         noNote should be(empty)
       }
       "color of" - {
-        "font" in { poiRow ⇒
+        "font." in { poiRow ⇒
           val poiCellWithFontColorRed = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_RED)
           val poiCellWithFontColorAutomatic = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC)
           val poiCellWithNoFontColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
@@ -229,7 +229,7 @@ class CellTest extends FixtureAnyFreeSpec :
           fontColor2 should be(FONT_COLOR_AUTOMATIC)
           noFontColor should be(empty)
         }
-        "background" in { poiRow ⇒
+        "background." in { poiRow ⇒
           val poiCellWithBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
           val poiCellWithNoBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
