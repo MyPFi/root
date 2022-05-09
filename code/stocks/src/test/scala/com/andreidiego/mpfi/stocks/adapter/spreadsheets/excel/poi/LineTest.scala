@@ -1,7 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
 import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.Outcome
@@ -169,7 +168,7 @@ class LineTest extends FixtureAnyFreeSpec :
           }
           "a type" in { poiWorksheet ⇒
             val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_CELLS)
-            val expectedTypes = Seq(POI_NUMERIC, POI_STRING, "STRING", POI_FORMULA)
+            val expectedTypes = Seq("INTEGER", "STRING", "STRING", "INTEGER")
 
             typesOf(cellsOf(Line.from(poiRegularRow, SIZE_OF_LINE_WITH_MULTIPLE_CELLS))) should contain theSameElementsInOrderAs expectedTypes
           }
@@ -331,10 +330,6 @@ object LineTest:
   private val LINE_WITH_ONLY_SEPARATOR_CELLS = Seq("", "", "", "")
   private val INDEX_OF_LINE_WITH_MULTIPLE_CELLS = 13
   private val SIZE_OF_LINE_WITH_MULTIPLE_CELLS = 4
-  private val POI_STRING = STRING.toString
-  private val POI_BLANK = BLANK.toString
-  private val POI_NUMERIC = NUMERIC.toString
-  private val POI_FORMULA = FORMULA.toString
   private val INDEX_OF_LINE_WITH_NOTE = 14
   private val SIZE_OF_LINE_WITH_NOTE = 1
   private val NOTE = "Uma nota de exemplo"

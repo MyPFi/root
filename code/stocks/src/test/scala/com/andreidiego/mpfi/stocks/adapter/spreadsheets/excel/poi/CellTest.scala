@@ -194,73 +194,184 @@ class CellTest extends FixtureAnyFreeSpec :
               }
             }
           }
+          "'INTEGER', when its underlying Excel value is" - {
+            "an integer" - {
+              "itself." in { poiRow ⇒
+                val poiCellWithInteger = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER)
+
+                typeOf(Cell.from(poiCellWithInteger)) should be(INTEGER)
+              }
+              "resulting from a formula." in { poiRow ⇒
+                val poiCellWithIntegerFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_FORMULA)
+
+                typeOf(Cell.from(poiCellWithIntegerFormula)) should be(INTEGER)
+              }
+            }
+            "an integer-shaped string" - {
+              "itself." in { poiRow ⇒
+                val poiCellWithIntegerShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING)
+
+                typeOf(Cell.from(poiCellWithIntegerShapedString)) should be(INTEGER)
+              }
+              "resulting from a formula." in { poiRow ⇒
+                val poiCellWithIntegerShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING_FORMULA)
+
+                typeOf(Cell.from(poiCellWithIntegerShapedStringFormula)) should be(INTEGER)
+              }
+            }
+          }
         }
       }
     }
-    "could sometimes have" - {
-      "a value." in { poiRow ⇒
-        val poiCellWithValue = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-        val poiCellWithNoValue = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
+    "could sometimes" - {
+      "have" - {
+        "a value." in { poiRow ⇒
+          val poiCellWithValue = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          val poiCellWithNoValue = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
 
-        val value = valueOf(Cell.from(poiCellWithValue))
-        val noValue = valueOf(Cell.from(poiCellWithNoValue))
+          val value = valueOf(Cell.from(poiCellWithValue))
+          val noValue = valueOf(Cell.from(poiCellWithNoValue))
 
-        value should be(STRING_VALUE)
-        noValue should be(empty)
-      }
-      "a mask." in { poiRow ⇒
-        val poiCellWithMask = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
-        val poiCellWithNoMask = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-        val mask = maskOf(Cell.from(poiCellWithMask))
-        val noMask = maskOf(Cell.from(poiCellWithNoMask))
-
-        mask should be(MASK)
-        noMask should be(empty)
-      }
-      "a formula." in { poiRow ⇒
-        val poiCellWithFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
-        val poiCellWithNoFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-        val formula = formulaOf(Cell.from(poiCellWithFormula))
-        val noFormula = formulaOf(Cell.from(poiCellWithNoFormula))
-
-        formula should be(STRING_FORMULA)
-        noFormula should be(empty)
-      }
-      "a note." in { poiRow ⇒
-        val poiCellWithNote = poiRow.getCell(INDEX_OF_CELL_WITH_NOTE)
-        val poiCellWithNoNote = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-        val note = noteOf(Cell.from(poiCellWithNote))
-        val noNote = noteOf(Cell.from(poiCellWithNoNote))
-
-        note should be(NOTE)
-        noNote should be(empty)
-      }
-      "color of" - {
-        "font." in { poiRow ⇒
-          val poiCellWithFontColorRed = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_RED)
-          val poiCellWithFontColorAutomatic = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC)
-          val poiCellWithNoFontColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
-
-          val fontColor1 = fontColorOf(Cell.from(poiCellWithFontColorRed))
-          val fontColor2 = fontColorOf(Cell.from(poiCellWithFontColorAutomatic))
-          val noFontColor = fontColorOf(Cell.from(poiCellWithNoFontColor))
-
-          fontColor1 should be(FONT_COLOR_RED)
-          fontColor2 should be(FONT_COLOR_AUTOMATIC)
-          noFontColor should be(empty)
+          value should be(STRING_VALUE)
+          noValue should be(empty)
         }
-        "background." in { poiRow ⇒
-          val poiCellWithBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
-          val poiCellWithNoBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+        "a mask." in { poiRow ⇒
+          val poiCellWithMask = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+          val poiCellWithNoMask = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-          val backgroundColor = backgroundColorOf(Cell.from(poiCellWithBackgroundColor))
-          val noBackgroundColor = backgroundColorOf(Cell.from(poiCellWithNoBackgroundColor))
+          val mask = maskOf(Cell.from(poiCellWithMask))
+          val noMask = maskOf(Cell.from(poiCellWithNoMask))
 
-          backgroundColor should be(BACKGROUND_COLOR)
-          noBackgroundColor should be(empty)
+          mask should be(MASK)
+          noMask should be(empty)
+        }
+        "a formula." in { poiRow ⇒
+          val poiCellWithFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+          val poiCellWithNoFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          val formula = formulaOf(Cell.from(poiCellWithFormula))
+          val noFormula = formulaOf(Cell.from(poiCellWithNoFormula))
+
+          formula should be(STRING_FORMULA)
+          noFormula should be(empty)
+        }
+        "a note." in { poiRow ⇒
+          val poiCellWithNote = poiRow.getCell(INDEX_OF_CELL_WITH_NOTE)
+          val poiCellWithNoNote = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          val note = noteOf(Cell.from(poiCellWithNote))
+          val noNote = noteOf(Cell.from(poiCellWithNoNote))
+
+          note should be(NOTE)
+          noNote should be(empty)
+        }
+        "color of" - {
+          "font." in { poiRow ⇒
+            val poiCellWithFontColorRed = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_RED)
+            val poiCellWithFontColorAutomatic = poiRow.getCell(INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC)
+            val poiCellWithNoFontColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
+
+            val fontColor1 = fontColorOf(Cell.from(poiCellWithFontColorRed))
+            val fontColor2 = fontColorOf(Cell.from(poiCellWithFontColorAutomatic))
+            val noFontColor = fontColorOf(Cell.from(poiCellWithNoFontColor))
+
+            fontColor1 should be(FONT_COLOR_RED)
+            fontColor2 should be(FONT_COLOR_AUTOMATIC)
+            noFontColor should be(empty)
+          }
+          "background." in { poiRow ⇒
+            val poiCellWithBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
+            val poiCellWithNoBackgroundColor = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+            val backgroundColor = backgroundColorOf(Cell.from(poiCellWithBackgroundColor))
+            val noBackgroundColor = backgroundColorOf(Cell.from(poiCellWithNoBackgroundColor))
+
+            backgroundColor should be(BACKGROUND_COLOR)
+            noBackgroundColor should be(empty)
+          }
+        }
+      }
+      "be converted to" - {
+        "'Int', when its underlying Excel value is" - {
+          "an integer" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithInteger = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER)
+
+              asInt(Cell.from(poiCellWithInteger)) should be(Some(INTEGER_VALUE.toInt))
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithIntegerFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_FORMULA)
+
+              asInt(Cell.from(poiCellWithIntegerFormula)) should be(Some(INTEGER_FORMULA_VALUE.toInt))
+            }
+          }
+          "an integer-shaped string" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithIntegerShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING)
+
+              asInt(Cell.from(poiCellWithIntegerShapedString)) should be(Some(INTEGER_SHAPED_STRING_VALUE.toInt))
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithIntegerShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING_FORMULA)
+
+              asInt(Cell.from(poiCellWithIntegerShapedStringFormula)) should be(Some(INTEGER_SHAPED_STRING_FORMULA_VALUE.toInt))
+            }
+          }
+        }
+      }
+      "not be converted to" - {
+        "'Int', for instance, when its underlying Excel value is" - {
+          "empty." in { poiRow ⇒
+            val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
+
+            asInt(Cell.from(emptyPOICell)) should be(None)
+          }
+          "a double." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDouble = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE)
+
+              asInt(Cell.from(poiCellWithDouble)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDoubleFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_FORMULA)
+
+              asInt(Cell.from(poiCellWithDoubleFormula)) should be(None)
+            }
+          }
+          "a double-shaped string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
+
+              asInt(Cell.from(poiCellWithDoubleShapedString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDoubleShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_FORMULA)
+
+              asInt(Cell.from(poiCellWithDoubleShapedStringFormula)) should be(None)
+            }
+          }
+          "an alphanumeric string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithString = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+              asInt(Cell.from(poiCellWithString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+
+              asInt(Cell.from(poiCellWithStringFormula)) should be(None)
+            }
+          }
+          "a date." in { poiRow ⇒
+            val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+
+            asInt(Cell.from(poiCellWithDate)) should be(None)
+          }
+          "a currency." in { poiRow ⇒
+            val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
+
+            asInt(Cell.from(poiCellWithCurrency)) should be(None)
+          }
         }
       }
     }
@@ -282,24 +393,31 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_STRING_FORMULA = 3
   private val STRING_FORMULA = "_xlfn.CONCAT(C1,C1)"
   private val STRING_FORMULA_VALUE = "StringString"
+  private val INTEGER = "INTEGER"
   private val INDEX_OF_CELL_WITH_INTEGER = 4
   private val INTEGER_VALUE = "1"
-  private val INDEX_OF_CELL_WITH_DOUBLE = 5
-  private val DOUBLE_VALUE = "1.1"
-  private val INDEX_OF_CELL_WITH_DATE = 6
-  private val DATE_VALUE = "05/11/2008"
-  private val MASK = "m/d/yy"
-  private val INDEX_OF_CELL_WITH_CURRENCY = 7
-  private val CURRENCY_VALUE = "1"
-  private val INDEX_OF_CELL_WITH_INTEGER_FORMULA = 8
+  private val INDEX_OF_CELL_WITH_INTEGER_FORMULA = 5
   private val INTEGER_FORMULA_VALUE = "2"
+  private val INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING = 6
+  private val INTEGER_SHAPED_STRING_VALUE = "1"
+  private val INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING_FORMULA = 7
+  private val INTEGER_SHAPED_STRING_FORMULA_VALUE = "11"
+  private val INDEX_OF_CELL_WITH_DOUBLE = 8
+  private val DOUBLE_VALUE = "1.1"
   private val INDEX_OF_CELL_WITH_DOUBLE_FORMULA = 9
   private val DOUBLE_FORMULA_VALUE = "2.2"
-  private val INDEX_OF_CELL_WITH_NOTE = 10
+  private val INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING = 10
+  private val INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_FORMULA = 11
+  private val INDEX_OF_CELL_WITH_DATE = 12
+  private val DATE_VALUE = "05/11/2008"
+  private val MASK = "m/d/yy"
+  private val INDEX_OF_CELL_WITH_CURRENCY = 13
+  private val CURRENCY_VALUE = "1,00"
+  private val INDEX_OF_CELL_WITH_NOTE = 14
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 11
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 15
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 12
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 16
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   private def valueOf(cell: Try[Cell]): String = cell.success.value.value
@@ -317,3 +435,5 @@ object CellTest:
   private def fontColorOf(cell: Try[Cell]): String = cell.success.value.fontColor
 
   private def backgroundColorOf(cell: Try[Cell]): String = cell.success.value.backgroundColor
+
+  private def asInt(cell: Try[Cell]): Option[Int] = cell.success.value.asInt

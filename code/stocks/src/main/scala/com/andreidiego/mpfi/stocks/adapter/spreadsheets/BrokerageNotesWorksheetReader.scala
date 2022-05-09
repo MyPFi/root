@@ -157,10 +157,10 @@ object BrokerageNotesWorksheetReader:
     val qtyCell = line.cells(3)
     val priceCell = line.cells(4)
     val volumeCell = line.cells(5)
-    val expectedVolume = qtyCell.asInt * priceCell.asDouble
+    val expectedVolume = qtyCell.asInt.get * priceCell.asDouble
 
     if volumeCell.asDouble != expectedVolume then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
+      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt.get} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
     ).invalidNec
     else group.validNec
 
@@ -222,7 +222,7 @@ object BrokerageNotesWorksheetReader:
         val tradingDate = line.cells.head.asLocalDate
         val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
         val operationNetResult = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
-        val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qtyCell.asInt
+        val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qtyCell.asInt.get
         // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
         val operationProfit = operationNetResult - operationAverageCost
         val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
@@ -379,8 +379,6 @@ object BrokerageNotesWorksheetReader:
     private def isFormula: Boolean = cell.`type` == FORMULA
 
     private def asDouble: Double = cell.value.replace(",", ".").toDouble
-
-    private def asInt: Int = cell.value.toInt
 
     private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 

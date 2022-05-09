@@ -106,7 +106,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER,
-              Seq(stringCell("A2"), numericCell("B2", "78174"), stringCell("C2"), numericCell("D2", "200"))
+              Seq(stringCell("A2"), integerCell("B2", "78174"), stringCell("C2"), integerCell("D2", "200"))
             )
           }
           "dates." in { poiWorkbook =>
@@ -124,7 +124,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
-              Seq(dateCell("A2"), blankCell("B2"), stringCell("C2"), numericCell("D2", "200"), currencyCell("E2"))
+              Seq(dateCell("A2"), blankCell("B2"), stringCell("C2"), integerCell("D2", "200"), currencyCell("E2"))
             )
           }
           "string formulas." in { poiWorkbook =>
@@ -132,7 +132,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
-              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "STRING", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), numericCell("D2", "200"), currencyCell("E2"))
+              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "STRING", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), integerCell("D2", "200"), currencyCell("E2"))
             )
           }
           "numeric formulas." in { poiWorkbook =>
@@ -463,7 +463,7 @@ object WorksheetTest:
   private val VALID_TINY_WORKSHEET = "ValidTinyWorksheet"
   private val VALID_TINY_WORKSHEET_CONTENTS = Seq(HEADER, blankLine("2"), stringLine("3"), stringLine("4"))
 
-  private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), numericCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), numericCell(s"D$lineNumber", "200"))
+  private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), integerCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), integerCell(s"D$lineNumber", "200"))
 
   private def nameFrom(worksheet: Try[Worksheet]): String = worksheet.success.value.name
 
@@ -488,7 +488,7 @@ object WorksheetTest:
 
   private def stringCell(address: String): Cell = (address, "VALE3", "STRING", "", "", "", "255,0,0", "")
 
-  private def numericCell(address: String, number: String): Cell = (address, number, "NUMERIC", "", "", "", "255,0,0", "")
+  private def integerCell(address: String, number: String): Cell = (address, number, "INTEGER", "", "", "", "255,0,0", "")
 
   private def blankCell(address: String): Cell = (address, "", "STRING", "", "", "", "", "")
 
