@@ -156,7 +156,7 @@ class LineTest extends FixtureAnyFreeSpec :
           val newLineCells = cellsOf(Line.from(poiRowWithOneCell, SIZE_OF_LINE_WITH_STRING_PLUS_ONE))
 
           newLineCells should have size SIZE_OF_LINE_WITH_STRING_PLUS_ONE
-          newLineCells.last.`type` should be(POI_BLANK)
+          newLineCells.last.`type` should be("STRING")
         }
       }
       "cells which" - {
@@ -169,7 +169,7 @@ class LineTest extends FixtureAnyFreeSpec :
           }
           "a type" in { poiWorksheet ⇒
             val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_CELLS)
-            val expectedTypes = Seq(POI_NUMERIC, POI_STRING, POI_BLANK, POI_FORMULA)
+            val expectedTypes = Seq(POI_NUMERIC, POI_STRING, "STRING", POI_FORMULA)
 
             typesOf(cellsOf(Line.from(poiRegularRow, SIZE_OF_LINE_WITH_MULTIPLE_CELLS))) should contain theSameElementsInOrderAs expectedTypes
           }

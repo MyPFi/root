@@ -1,7 +1,7 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.apache.poi.ss.usermodel.{DataFormatter, DateUtil, Row}
-import org.apache.poi.ss.usermodel.CellType.{FORMULA, NUMERIC}
+import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
 import org.apache.poi.util.LocaleUtil
 import org.apache.poi.xssf.usermodel.XSSFCell
 
@@ -73,7 +73,10 @@ object Cell:
 
     private def isInteger: Boolean = poiCell.getNumericCellValue.isValidInt
 
-    private def `type`: String = poiCell.getCellType.toString
+    private def `type`: String = poiCell.getCellType match
+      case BLANK | STRING ⇒ "STRING"
+      case FORMULA if poiCell.getCachedFormulaResultType == STRING => "STRING"
+      case t ⇒ t.toString
 
     private def mask: String =
       val mask = poiCell.getCellStyle.getDataFormatString

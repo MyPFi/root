@@ -1,7 +1,7 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.ss.usermodel.CellType.STRING
+
 import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.should.Matchers.*
@@ -167,10 +167,33 @@ class CellTest extends FixtureAnyFreeSpec :
 
           addressOf(Cell.from(poiCell)) should be(ADDRESS_OF_CELL_WITH_STRING)
         }
-        "a type." in { poiRow ⇒
-          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+        "type" - {
+          "'STRING', when its underlying Excel value is" - {
+            "empty, because it's" - {
+              "an empty cell." in { poiRow ⇒
+                val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
 
-          typeOf(Cell.from(poiCell)) should be(POI_STRING)
+                typeOf(Cell.from(emptyPOICell)) should be(STRING)
+              }
+              "a separator." in { poiRow ⇒
+                val separatorPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_SEPARATOR)
+
+                typeOf(Cell.from(separatorPOICell)) should be(STRING)
+              }
+            }
+            "an alphanumeric string" - {
+              "itself." in { poiRow ⇒
+                val poiCellWithString = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+                typeOf(Cell.from(poiCellWithString)) should be(STRING)
+              }
+              "resulting from a formula." in { poiRow ⇒
+                val poiCellWithStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+
+                typeOf(Cell.from(poiCellWithStringFormula)) should be(STRING)
+              }
+            }
+          }
         }
       }
     }
@@ -247,27 +270,27 @@ object CellTest:
   private val TEST_SPREADSHEET = "Cell.xlsx"
   private val CELL_WORKSHEET = "CellWorksheet"
 
-  private val INDEX_OF_CELL_WITH_STRING = 0
-  private val STRING_VALUE = "String"
-  private val ADDRESS_OF_CELL_WITH_STRING = "A1"
-  private val POI_STRING = STRING.toString
-  private val INDEX_OF_CELL_WITH_INTEGER = 1
-  private val INTEGER_VALUE = "1"
-  private val INDEX_OF_CELL_WITH_DOUBLE = 2
-  private val DOUBLE_VALUE = "1.1"
-  private val INDEX_OF_CELL_WITH_DATE = 3
-  private val DATE_VALUE = "05/11/2008"
-  private val MASK = "m/d/yy"
-  private val INDEX_OF_CELL_WITH_CURRENCY = 4
-  private val CURRENCY_VALUE = "1"
-  private val INDEX_OF_CELL_WITH_BLANK = 5
+  private val STRING = "STRING"
+  private val INDEX_OF_CELL_WITH_BLANK = 0
   private val BLANK_VALUE = ""
-  private val INDEX_OF_CELL_WITH_SEPARATOR = 6
+  private val INDEX_OF_CELL_WITH_SEPARATOR = 1
   private val SEPARATOR_VALUE = ""
   private val BACKGROUND_COLOR = "231,230,230"
-  private val INDEX_OF_CELL_WITH_STRING_FORMULA = 7
-  private val STRING_FORMULA = "_xlfn.CONCAT(A1,A1)"
+  private val INDEX_OF_CELL_WITH_STRING = 2
+  private val STRING_VALUE = "String"
+  private val ADDRESS_OF_CELL_WITH_STRING = "C1"
+  private val INDEX_OF_CELL_WITH_STRING_FORMULA = 3
+  private val STRING_FORMULA = "_xlfn.CONCAT(C1,C1)"
   private val STRING_FORMULA_VALUE = "StringString"
+  private val INDEX_OF_CELL_WITH_INTEGER = 4
+  private val INTEGER_VALUE = "1"
+  private val INDEX_OF_CELL_WITH_DOUBLE = 5
+  private val DOUBLE_VALUE = "1.1"
+  private val INDEX_OF_CELL_WITH_DATE = 6
+  private val DATE_VALUE = "05/11/2008"
+  private val MASK = "m/d/yy"
+  private val INDEX_OF_CELL_WITH_CURRENCY = 7
+  private val CURRENCY_VALUE = "1"
   private val INDEX_OF_CELL_WITH_INTEGER_FORMULA = 8
   private val INTEGER_FORMULA_VALUE = "2"
   private val INDEX_OF_CELL_WITH_DOUBLE_FORMULA = 9

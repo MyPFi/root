@@ -132,7 +132,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
-              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "FORMULA", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), numericCell("D2", "200"), currencyCell("E2"))
+              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "STRING", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), numericCell("D2", "200"), currencyCell("E2"))
             )
           }
           "numeric formulas." in { poiWorkbook =>
@@ -382,7 +382,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
       "a name, which is the name of the underlying Excel worksheet." in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-        nameFrom(Worksheet.from(TEST_SHEET)) should be (VALID_TINY_WORKSHEET)
+        nameFrom(Worksheet.from(TEST_SHEET)) should be(VALID_TINY_WORKSHEET)
       }
       "a header with cells sorted by their position in the worksheet." in { poiWorkbook =>
         val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
@@ -490,7 +490,7 @@ object WorksheetTest:
 
   private def numericCell(address: String, number: String): Cell = (address, number, "NUMERIC", "", "", "", "255,0,0", "")
 
-  private def blankCell(address: String): Cell = (address, "", "BLANK", "", "", "", "", "")
+  private def blankCell(address: String): Cell = (address, "", "STRING", "", "", "", "", "")
 
   private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
 
