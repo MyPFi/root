@@ -18,6 +18,8 @@ case class Cell private(address: String, value: String, `type`: String, mask: St
 
   def asInt: Option[Int] = value.toIntOption
 
+  def asDouble: Option[Double] = value.replace(",", ".").toDoubleOption
+
 // TODO Replace Try + exceptions with Validated
 object Cell:
   private val CURRENCY_FORMAT_ID = 8
@@ -56,12 +58,25 @@ object Cell:
       case NUMERIC if poiCell.isCurrency => f"${poiCell.getNumericCellValue}%1.2f"
       case NUMERIC if poiCell.isInteger ⇒ poiCell.getNumericCellValue.toInt.toString
       case NUMERIC ⇒ poiCell.getNumericCellValue.toString
+      case FORMULA if poiCell.getCachedFormulaResultType == STRING => poiCell.getStringCellValue
+        .toIntOption
+        .map(_.toString)
+        .orElse(poiCell.getStringCellValue
+          .replace(",", ".")
+          .toDoubleOption.map(_.toString)
+        ).getOrElse(poiCell.getStringCellValue)
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC =>
         if poiCell.getNumericCellValue.isValidInt then
           poiCell.getNumericCellValue.toInt.toString
         else
           poiCell.getNumericCellValue.toString
       case _ ⇒ poiCell.getStringCellValue
+        .toIntOption
+        .map(_.toString)
+        .orElse(poiCell.getStringCellValue
+          .replace(",", ".")
+          .toDoubleOption.map(_.toString)
+        ).getOrElse(poiCell.getStringCellValue)
 
     // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
     private def isDate: Boolean =
@@ -69,9 +84,11 @@ object Cell:
         poiCell.getCellStyle.getDataFormat == SHORT_DATE_FORMAT_ID
 
     // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
-    private def isCurrency: Boolean =
-      poiCell.getCellStyle.getDataFormat == CURRENCY_FORMAT_ID &&
+    private def isCurrency: Boolean = {
+      val format = poiCell.getCellStyle.getDataFormat
+      format == CURRENCY_FORMAT_ID &&
         poiCell.getCellStyle.getDataFormatString.contains("$")
+    }
 
     private def isInteger: Boolean = poiCell.getNumericCellValue.isValidInt
 
@@ -80,10 +97,17 @@ object Cell:
       // This branch assumes Text cells are treated as Text even if they contain only numbers.
       // This is what Excel advertises but it looks like POI does not respect that and, therefore, this branch is being ignored for that type of column, at least with the current version of POI
       // As this looks like a bug in POI, in order to be on the safe side and, trying to be future proof, we'll leave this here so, if this is "corrected" in future versions of POI, we're prepared.
-      case STRING ⇒ poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER").getOrElse("STRING")
-      case FORMULA if poiCell.getCachedFormulaResultType == STRING => poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER").getOrElse("STRING")
+      case STRING ⇒ poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER")
+        .orElse(poiCell.getStringCellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+        .getOrElse("STRING")
+      case FORMULA if poiCell.getCachedFormulaResultType == STRING =>
+        poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER")
+          .orElse(poiCell.getStringCellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+          .getOrElse("STRING")
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency => "INTEGER"
+      case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && !poiCell.isDate && !poiCell.isCurrency => "DOUBLE"
       case NUMERIC if poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency ⇒ "INTEGER"
+      case NUMERIC if !poiCell.isDate && !poiCell.isCurrency ⇒ "DOUBLE"
       case t ⇒ t.toString
 
     private def mask: String =

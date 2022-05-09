@@ -92,11 +92,11 @@ object BrokerageNotesWorksheetReader:
               .mkString("[", ",", "]")
 
             UnexpectedContentType(
-              s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '$invalidSummaryCells'."
+              s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' '$worksheetName'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '$invalidSummaryCells'."
             ).invalidNec
 
           case _ ⇒ RequiredValueMissing(
-            s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' $worksheetName. 'MultilineGroup's must have a 'SummaryLine'."
+            s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' '$worksheetName'. 'MultilineGroup's must have a 'SummaryLine'."
           ).invalidNec
         case _ ⇒ group.validNec
       case _ ⇒ group.validNec
@@ -108,11 +108,11 @@ object BrokerageNotesWorksheetReader:
     group.summary.map { summary ⇒
       val summaryCell = summary.cells(cellIndex)
 
-      val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble)
-      val actualSummaryValue = summaryCell.asDouble
+      val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble.getOrElse(0.0))
+      val actualSummaryValue = summaryCell.asDouble.getOrElse(0.0)
 
       if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
       ).invalidNec
       else group.validNec
     }.getOrElse(group.validNec)
@@ -142,10 +142,10 @@ object BrokerageNotesWorksheetReader:
           case _ ⇒ acc + valueToSummarizeFrom(operation)
         }
       }
-      val actualSummaryValue = summaryCell.asDouble
+      val actualSummaryValue = summaryCell.asDouble.getOrElse(0.0)
 
       if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '$cellName's minus the sum of all 'BuyingOperation's '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '$cellName's minus the sum of all 'BuyingOperation's '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
       ).invalidNec
       else group.validNec
     }.getOrElse(group.validNec)
@@ -157,10 +157,14 @@ object BrokerageNotesWorksheetReader:
     val qtyCell = line.cells(3)
     val priceCell = line.cells(4)
     val volumeCell = line.cells(5)
-    val expectedVolume = qtyCell.asInt.get * priceCell.asDouble
+    val qty = qtyCell.asInt.getOrElse(0)
+    val price = priceCell.asDouble.getOrElse(0.0)
 
-    if volumeCell.asDouble != expectedVolume then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price (${qtyCell.asInt.get} * ${priceCell.asDouble})' but, it actually contained '${volumeCell.asDouble}'."
+    val actualVolume = volumeCell.asDouble.getOrElse(0.0).formatted("%.2f")
+    val expectedVolume = (qty * price).formatted("%.2f")
+
+    if actualVolume != expectedVolume then UnexpectedContentValue(
+      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price ($qty * ${price.formatted("%.2f")})' but, it actually contained '$actualVolume'."
     ).invalidNec
     else group.validNec
 
@@ -168,12 +172,14 @@ object BrokerageNotesWorksheetReader:
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingDate = line.cells.head.asLocalDate
+    val volume = volumeCell.asDouble.getOrElse(0.0)
+    val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
     val settlementFeeRate = SettlementFeeRate.forOperationalMode(Normal).at(tradingDate).value
-    val expectedSettlementFee = volumeCell.asDouble * settlementFeeRate
+    val expectedSettlementFee = (volume * settlementFeeRate).formatted("%.2f")
 
-    if settlementFeeCell.asDouble != expectedSettlementFee then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volumeCell.asDouble} * ${(settlementFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '${settlementFeeCell.asDouble}'."
+    if actualSettlementFee != expectedSettlementFee then UnexpectedContentValue(
+      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volume.formatted("%.2f")} * ${(settlementFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualSettlementFee'."
     ).invalidNec
     else group.validNec
 
@@ -182,32 +188,36 @@ object BrokerageNotesWorksheetReader:
     val negotiationsFeeCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate
     val tradingTime = NegotiationFeesRate.TRADING
+    val volume = volumeCell.asDouble.getOrElse(0.0)
+    val actualNegotiationsFee = negotiationsFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Same challenge here since 'NegotiationFees' is also dependent on the time of order execution which is not part of the brokerage note document.
     val negotiationsFeeRate = NegotiationFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
-    val expectedNegotiationsFee = (volumeCell.asDouble * negotiationsFeeRate).formatted("%.2f")
-    val actualNegotiationsFee = negotiationsFeeCell.asDouble.formatted("%.2f")
+    val expectedNegotiationsFee = (volume * negotiationsFeeRate).formatted("%.2f")
 
     if actualNegotiationsFee != expectedNegotiationsFee then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volumeCell.asDouble} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
+      s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volume.formatted("%.2f")} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
     ).invalidNec
     else group.validNec
 
   private def assertServiceTaxIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
-    val tradingDate = line.cells.head.asLocalDate
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
+    val tradingDate = line.cells.head.asLocalDate
+    val brokerage = brokerageCell.asDouble.getOrElse(0.0)
+    val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
     val serviceTaxRate = ServiceTaxRate.at(tradingDate).value
-    val expectedServiceTax = (brokerageCell.asDouble * serviceTaxRate).formatted("%.2f")
-    val actualServiceTax = serviceTaxCell.asDouble.formatted("%.2f")
+    val expectedServiceTax = (brokerage * serviceTaxRate).formatted("%.2f")
 
     if actualServiceTax != expectedServiceTax then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' $worksheetName. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerageCell.asDouble} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
+      s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerage.formatted("%.2f")} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
     ).invalidNec
     else group.validNec
 
   private def assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val incomeTaxAtSourceCell = line.cells(10)
+    // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
+    val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble.getOrElse(0.0)
 
     line.cells.head.fontColor match
       case BLUE ⇒
@@ -220,28 +230,32 @@ object BrokerageNotesWorksheetReader:
         val serviceTaxCell = line.cells(9)
 
         val tradingDate = line.cells.head.asLocalDate
-        val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
-        val operationNetResult = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
-        val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qtyCell.asInt.get
+        val qty = qtyCell.asInt.getOrElse(0)
+        val volume = volumeCell.asDouble.getOrElse(0.0)
+        val settlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
+        val negotiationFees = negotiationFeesCell.asDouble.getOrElse(0.0)
+        val brokerage = brokerageCell.asDouble.getOrElse(0.0)
+        val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
+        val operationNetResult = volume - settlementFee - negotiationFees - brokerage - serviceTax
+        val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qty
         // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
         val operationProfit = operationNetResult - operationAverageCost
+        val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
         val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
-        // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
-        val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble
 
         if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
       case _ ⇒
         if incomeTaxAtSourceCell.nonEmpty then {
           if !incomeTaxAtSourceCell.isCurrency then UnexpectedContentType(
-            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then actualIncomeTaxAtSource.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
           ).invalidNec
           else group.validNec
         } combine {
-          if incomeTaxAtSourceCell.asDouble > 0.0 then UnexpectedContentValue(
-            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' $worksheetName. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then incomeTaxAtSourceCell.asDouble.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+          if actualIncomeTaxAtSource > 0.0 then UnexpectedContentValue(
+            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then actualIncomeTaxAtSource.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
           ).invalidNec
           else group.validNec
         }
@@ -254,22 +268,26 @@ object BrokerageNotesWorksheetReader:
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
     val totalCell = line.cells(11)
+    val volume = volumeCell.asDouble.getOrElse(0.0)
+    val settlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
+    val negotiationFees = negotiationFeesCell.asDouble.getOrElse(0.0)
+    val brokerage = brokerageCell.asDouble.getOrElse(0.0)
+    val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
+    val actualTotal = totalCell.asDouble.getOrElse(0.0)
 
     line.cells.head.fontColor match
       case BLUE ⇒
-        val expectedTotal = volumeCell.asDouble - settlementFeeCell.asDouble - negotiationFeesCell.asDouble - brokerageCell.asDouble - serviceTaxCell.asDouble
-        val actualTotal = totalCell.asDouble
+        val expectedTotal = volume - settlementFee - negotiationFees - brokerage - serviceTax
 
         if actualTotal !~= expectedTotal then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
       case _ ⇒
-        val expectedTotal = volumeCell.asDouble + settlementFeeCell.asDouble + negotiationFeesCell.asDouble + brokerageCell.asDouble + serviceTaxCell.asDouble
-        val actualTotal = totalCell.asDouble
+        val expectedTotal = volume + settlementFee + negotiationFees + brokerage + serviceTax
 
         if actualTotal !~= expectedTotal then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' $worksheetName. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${negotiationFeesCell.address}:NegotiationFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${negotiationFeesCell.address}:NegotiationFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
 
@@ -278,7 +296,7 @@ object BrokerageNotesWorksheetReader:
     val secondTradingDateCell = second.cells.head
 
     if firstTradingDateCell.value != secondTradingDateCell.value then UnexpectedContentValue(
-      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' $worksheetName. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
+      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' '$worksheetName'. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
     ).invalidNec
     else group.validNec
 
@@ -287,7 +305,7 @@ object BrokerageNotesWorksheetReader:
     val secondNoteNumberCell = second.cells.tail.head
 
     if firstNoteNumberCell.value != secondNoteNumberCell.value then UnexpectedContentValue(
-      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' $worksheetName. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
+      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' '$worksheetName'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
     ).invalidNec
     else group.validNec
 
@@ -296,13 +314,13 @@ object BrokerageNotesWorksheetReader:
     cell.fontColor match
       case "255,0,0" | "68,114,196" | "" ⇒ group.validNec
       case _ ⇒ UnexpectedContentColor(
-        s"An invalid 'Cell' '${cell.address}' was found on 'Worksheet' $worksheetName. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '${cell.fontColor}'."
+        s"An invalid 'Cell' '${cell.address}' was found on 'Worksheet' '$worksheetName'. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '${cell.fontColor}'."
       ).invalidNec
 
   // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells
   private def assertCellsInLineHaveSameFontColor(worksheetName: String): Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group] = group ⇒ (first: Cell, second: Cell) ⇒
     if first.fontColor.nonEmpty && second.fontColor.nonEmpty && first.fontColor != second.fontColor then UnexpectedContentColor(
-      s"An invalid 'Cell' '${second.address}' was found on 'Worksheet' $worksheetName. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${second.fontColor}' in '${second.address}' is different from '${first.fontColor}' in '${first.address}'."
+      s"An invalid 'Cell' '${second.address}' was found on 'Worksheet' '$worksheetName'. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '${second.fontColor}' in '${second.address}' is different from '${first.fontColor}' in '${first.address}'."
     ).invalidNec
     else group.validNec
 
@@ -377,8 +395,6 @@ object BrokerageNotesWorksheetReader:
   extension (cell: Cell)
 
     private def isFormula: Boolean = cell.`type` == FORMULA
-
-    private def asDouble: Double = cell.value.replace(",", ".").toDouble
 
     private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
