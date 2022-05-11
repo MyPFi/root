@@ -55,10 +55,37 @@ class CellTest extends FixtureAnyFreeSpec :
 
           valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
         }
-        "currency." in { poiRow =>
-          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
+        "a currency, in all its formats:" - {
+          "5." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
 
-          valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
+          "6." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_6)
+
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
+          "7." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_7)
+
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
+          "8." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_8)
+
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
+          "42." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_42)
+
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
+          "44." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_44)
+
+            valueOf(Cell.from(poiCell)) should be(CURRENCY_VALUE)
+          }
         }
         "blank." in { poiRow =>
           val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
@@ -160,7 +187,18 @@ class CellTest extends FixtureAnyFreeSpec :
 
         """Cell.from(poiCell).success.value.backgroundColor = "backgroundColor"""" shouldNot compile
       }
-      //    TODO Currency with no decimals, 1 decimal and 2 decimals
+      "be able to tell when it's" - {
+        "a currency." in { poiRow ⇒
+          val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
+
+          assert(Cell.from(poiCellWithCurrency).success.value.isCurrency)
+        }
+        "not a currency." in { poiRow ⇒
+          val poiCellWithDouble = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE)
+
+          assert(Cell.from(poiCellWithDouble).success.value.isNotCurrency)
+        }
+      }
       "always have" - {
         "an address." in { poiRow ⇒
           val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
@@ -234,7 +272,7 @@ class CellTest extends FixtureAnyFreeSpec :
               }
             }
             "a double-shaped string" - {
-              "itself, whether represented with a"  - {
+              "itself, whether represented with a" - {
                 "dot." in { poiRow ⇒
                   val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
 
@@ -256,6 +294,66 @@ class CellTest extends FixtureAnyFreeSpec :
                   val poiCellWithDoubleShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA)
 
                   typeOf(Cell.from(poiCellWithDoubleShapedStringWithCommaFormula)) should be(DOUBLE)
+                }
+              }
+            }
+          }
+          "'CURRENCY'" - {
+            "for the following underlying Excel format ids:" - {
+              "5." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+              "6." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_6)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+              "7." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_7)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+              "8." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_8)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+              "42." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_42)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+              "44." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_44)
+
+                typeOf(Cell.from(poiCell)) should be(CURRENCY)
+              }
+            }
+            "when its underlying Excel value is a currency-shaped string" - {
+              "itself, whether represented with a" - {
+                "dot." in { poiRow ⇒
+                  val poiCellWithCurrencyShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING)
+
+                  typeOf(Cell.from(poiCellWithCurrencyShapedString)) should be(CURRENCY)
+                }
+                "comma." in { poiRow ⇒
+                  val poiCellWithCurrencyShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA)
+
+                  typeOf(Cell.from(poiCellWithCurrencyShapedStringWithComma)) should be(CURRENCY)
+                }
+              }
+              "resulting from a formula, whether represented with a" - {
+                "dot." in { poiRow ⇒
+                  val poiCellWithCurrencyShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_FORMULA)
+
+                  typeOf(Cell.from(poiCellWithCurrencyShapedStringFormula)) should be(CURRENCY)
+                }
+                "comma." in { poiRow ⇒
+                  val poiCellWithCurrencyShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                  typeOf(Cell.from(poiCellWithCurrencyShapedStringWithCommaFormula)) should be(CURRENCY)
                 }
               }
             }
@@ -346,7 +444,7 @@ class CellTest extends FixtureAnyFreeSpec :
             }
           }
           "a double-shaped string" - {
-            "itself, whether represented with a"  - {
+            "itself, whether represented with a" - {
               "dot." in { poiRow ⇒
                 val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
 
@@ -395,10 +493,43 @@ class CellTest extends FixtureAnyFreeSpec :
               asDouble(Cell.from(poiCellWithIntegerShapedStringFormula)) should be(Some(INTEGER_SHAPED_STRING_FORMULA_VALUE.toDouble))
             }
           }
-          "a currency." in { poiRow ⇒
-            val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
+          "a currency" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
 
-            asDouble(Cell.from(poiCellWithCurrency)) should be(Some(CURRENCY_VALUE.replace(",", ".").toDouble))
+              asDouble(Cell.from(poiCellWithCurrency)) should be(Some(CURRENCY_VALUE.toDouble))
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithCurrencyFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMULA)
+
+              asDouble(Cell.from(poiCellWithCurrencyFormula)) should be(Some(CURRENCY_FORMULA_VALUE.toDouble))
+            }
+          }
+          "a currency-shaped string" - {
+            "itself, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING)
+
+                asDouble(Cell.from(poiCellWithCurrencyShapedString)) should be(Some(CURRENCY_SHAPED_STRING_VALUE.toDouble))
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA)
+
+                asDouble(Cell.from(poiCellWithCurrencyShapedStringWithComma)) should be(Some(CURRENCY_SHAPED_STRING_WITH_COMMA_VALUE.toDouble))
+              }
+            }
+            "resulting from a formula, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_FORMULA)
+
+                asDouble(Cell.from(poiCellWithCurrencyShapedStringFormula)) should be(Some(CURRENCY_SHAPED_STRING_FORMULA_VALUE.toDouble))
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                asDouble(Cell.from(poiCellWithCurrencyShapedStringWithCommaFormula)) should be(Some(CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE.toDouble))
+              }
+            }
           }
         }
         "'Int', when its underlying Excel value is" - {
@@ -471,16 +602,30 @@ class CellTest extends FixtureAnyFreeSpec :
               asInt(Cell.from(poiCellWithDoubleFormula)) should be(None)
             }
           }
-          "a double-shaped string." - {
-            "itself." in { poiRow ⇒
-              val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
+          "a double-shaped string" - {
+            "itself, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
 
-              asInt(Cell.from(poiCellWithDoubleShapedString)) should be(None)
+                asInt(Cell.from(poiCellWithDoubleShapedString)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA)
+
+                asInt(Cell.from(poiCellWithDoubleShapedStringWithComma)) should be(None)
+              }
             }
-            "resulting from a formula." in { poiRow ⇒
-              val poiCellWithDoubleShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_FORMULA)
+            "resulting from a formula, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_FORMULA)
 
-              asInt(Cell.from(poiCellWithDoubleShapedStringFormula)) should be(None)
+                asInt(Cell.from(poiCellWithDoubleShapedStringFormula)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                asInt(Cell.from(poiCellWithDoubleShapedStringWithCommaFormula)) should be(None)
+              }
             }
           }
           "an alphanumeric string." - {
@@ -500,10 +645,43 @@ class CellTest extends FixtureAnyFreeSpec :
 
             asInt(Cell.from(poiCellWithDate)) should be(None)
           }
-          "a currency." in { poiRow ⇒
-            val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY)
+          "a currency" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
 
-            asInt(Cell.from(poiCellWithCurrency)) should be(None)
+              asInt(Cell.from(poiCellWithCurrency)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithCurrencyFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMULA)
+
+              asInt(Cell.from(poiCellWithCurrencyFormula)) should be(None)
+            }
+          }
+          "a currency-shaped string" - {
+            "itself, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING)
+
+                asInt(Cell.from(poiCellWithCurrencyShapedString)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA)
+
+                asInt(Cell.from(poiCellWithCurrencyShapedStringWithComma)) should be(None)
+              }
+            }
+            "resulting from a formula, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_FORMULA)
+
+                asInt(Cell.from(poiCellWithCurrencyShapedStringFormula)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                asInt(Cell.from(poiCellWithCurrencyShapedStringWithCommaFormula)) should be(None)
+              }
+            }
           }
         }
       }
@@ -548,16 +726,32 @@ object CellTest:
   private val DOUBLE_SHAPED_STRING_WITH_COMMA_VALUE = "1.1"
   private val INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA = 13
   private val DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE = "1.1"
-  private val INDEX_OF_CELL_WITH_DATE = 14
+  private val CURRENCY = "CURRENCY"
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5 = 14
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_6 = 15
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_7 = 16
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_8 = 17
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_42 = 18
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_44 = 19
+  private val CURRENCY_VALUE = "1.0"
+  private val INDEX_OF_CELL_WITH_CURRENCY_FORMULA = 20
+  private val CURRENCY_FORMULA_VALUE = "2.0"
+  private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING = 21
+  private val CURRENCY_SHAPED_STRING_VALUE = "1.0"
+  private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_FORMULA = 22
+  private val CURRENCY_SHAPED_STRING_FORMULA_VALUE = "1.0"
+  private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA = 23
+  private val CURRENCY_SHAPED_STRING_WITH_COMMA_VALUE = "1.0"
+  private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA = 24
+  private val CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE = "1.0"
+  private val INDEX_OF_CELL_WITH_DATE = 25
   private val DATE_VALUE = "05/11/2008"
   private val MASK = "m/d/yy"
-  private val INDEX_OF_CELL_WITH_CURRENCY = 15
-  private val CURRENCY_VALUE = "1,00"
-  private val INDEX_OF_CELL_WITH_NOTE = 16
+  private val INDEX_OF_CELL_WITH_NOTE = 26
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 17
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 27
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 18
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 28
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   private def valueOf(cell: Try[Cell]): String = cell.success.value.value

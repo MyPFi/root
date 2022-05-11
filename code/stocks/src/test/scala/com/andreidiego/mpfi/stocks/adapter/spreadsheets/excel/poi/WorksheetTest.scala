@@ -140,7 +140,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE :+ ("F1", "Total", "STRING", "", "", "", "0,0,0", ""),
-              STANDARD_LINE_WITH_PRICE :+ ("F2", "3068", "FORMULA", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "D2*E2", "", "255,0,0", "")
+              STANDARD_LINE_WITH_PRICE :+ ("F2", "3068.0", "CURRENCY", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "D2*E2", "", "255,0,0", "")
             )
           }
         }
@@ -494,4 +494,4 @@ object WorksheetTest:
 
   private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
 
-  private def currencyCell(address: String): Cell = (address, "15,34", "NUMERIC", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
+  private def currencyCell(address: String): Cell = (address, "15.34", "CURRENCY", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")

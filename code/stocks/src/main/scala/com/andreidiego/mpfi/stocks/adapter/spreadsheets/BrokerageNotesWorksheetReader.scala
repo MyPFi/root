@@ -250,7 +250,7 @@ object BrokerageNotesWorksheetReader:
       case _ ⇒
         if incomeTaxAtSourceCell.nonEmpty then {
           if !incomeTaxAtSourceCell.isCurrency then UnexpectedContentType(
-            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then actualIncomeTaxAtSource.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+            s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${incomeTaxAtSourceCell.value}'."
           ).invalidNec
           else group.validNec
         } combine {
@@ -394,13 +394,11 @@ object BrokerageNotesWorksheetReader:
 
   extension (cell: Cell)
 
-    private def isFormula: Boolean = cell.`type` == FORMULA
+    private def isFormula: Boolean = cell.formula.nonEmpty
 
     private def asLocalDate: LocalDate = LocalDate.parse(cell.value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
-
-    private def isCurrency: Boolean = cell.`type` == NUMERIC && cell.mask.contains("$")
 
   extension (double: Double)
 

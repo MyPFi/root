@@ -302,7 +302,7 @@ object LineTest:
   private val MASK = "m/d/yy"
   private val INDEX_OF_LINE_WITH_CURRENCY = 4
   private val SIZE_OF_LINE_WITH_CURRENCY = 1
-  private val CURRENCY_VALUE = "25,19"
+  private val CURRENCY_VALUE = "25.19"
   private val INDEX_OF_LINE_WITH_BLANK = 5
   private val SIZE_OF_LINE_WITH_BLANK = 1
   private val BLANK_VALUE = ""

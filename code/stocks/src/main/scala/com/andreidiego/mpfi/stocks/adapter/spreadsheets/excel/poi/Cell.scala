@@ -18,11 +18,15 @@ case class Cell private(address: String, value: String, `type`: String, mask: St
 
   def asInt: Option[Int] = value.toIntOption
 
-  def asDouble: Option[Double] = value.replace(",", ".").toDoubleOption
+  def asDouble: Option[Double] = value.toDoubleOption
+
+  def isCurrency: Boolean = `type` == "CURRENCY"
+
+  def isNotCurrency: Boolean = !isCurrency
 
 // TODO Replace Try + exceptions with Validated
 object Cell:
-  private val CURRENCY_FORMAT_ID = 8
+  private val CURRENCY_FORMAT_IDS = Seq(5, 6, 7, 8, 42, 44, 164, 165)
   private val SHORT_DATE_FORMAT_ID = 14
   private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
 
@@ -55,28 +59,29 @@ object Cell:
       case NUMERIC if poiCell.isDate =>
         formatter.addFormat("m/d/yy", new java.text.SimpleDateFormat(PT_BR_DATE_FORMAT))
         formatter.formatCellValue(poiCell)
-      case NUMERIC if poiCell.isCurrency => f"${poiCell.getNumericCellValue}%1.2f"
-      case NUMERIC if poiCell.isInteger ⇒ poiCell.getNumericCellValue.toInt.toString
+      case NUMERIC if poiCell.isInteger && !poiCell.isCurrency ⇒ poiCell.getNumericCellValue.toInt.toString
       case NUMERIC ⇒ poiCell.getNumericCellValue.toString
-      case FORMULA if poiCell.getCachedFormulaResultType == STRING => poiCell.getStringCellValue
-        .toIntOption
-        .map(_.toString)
-        .orElse(poiCell.getStringCellValue
-          .replace(",", ".")
-          .toDoubleOption.map(_.toString)
-        ).getOrElse(poiCell.getStringCellValue)
+      case FORMULA if poiCell.getCachedFormulaResultType == STRING =>
+        val cellValue = poiCell.getStringCellValue
+        val currencyValue = raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue)
+
+        cellValue.toIntOption.map(_.toString)
+          .orElse(cellValue.replace(",", ".").toDoubleOption.map(_.toString))
+          .orElse(currencyValue.flatMap(_.split(raw"\p{Sc}")(1).trim.replace(",", ".").toDoubleOption.map(_.toString)))
+          .getOrElse(cellValue)
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC =>
-        if poiCell.getNumericCellValue.isValidInt then
+        if poiCell.getNumericCellValue.isValidInt && !poiCell.isCurrency then
           poiCell.getNumericCellValue.toInt.toString
         else
           poiCell.getNumericCellValue.toString
-      case _ ⇒ poiCell.getStringCellValue
-        .toIntOption
-        .map(_.toString)
-        .orElse(poiCell.getStringCellValue
-          .replace(",", ".")
-          .toDoubleOption.map(_.toString)
-        ).getOrElse(poiCell.getStringCellValue)
+      case _ ⇒
+        val cellValue = poiCell.getStringCellValue
+        val currencyValue = raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue)
+
+        cellValue.toIntOption.map(_.toString)
+          .orElse(cellValue.replace(",", ".").toDoubleOption.map(_.toString))
+          .orElse(currencyValue.flatMap(_.split(raw"\p{Sc}")(1).trim.replace(",", ".").toDoubleOption.map(_.toString)))
+          .getOrElse(cellValue)
 
     // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
     private def isDate: Boolean =
@@ -84,30 +89,37 @@ object Cell:
         poiCell.getCellStyle.getDataFormat == SHORT_DATE_FORMAT_ID
 
     // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
-    private def isCurrency: Boolean = {
-      val format = poiCell.getCellStyle.getDataFormat
-      format == CURRENCY_FORMAT_ID &&
+    private def isCurrency: Boolean =
+      CURRENCY_FORMAT_IDS.contains(poiCell.getCellStyle.getDataFormat) &&
         poiCell.getCellStyle.getDataFormatString.contains("$")
-    }
 
     private def isInteger: Boolean = poiCell.getNumericCellValue.isValidInt
 
     private def `type`: String = poiCell.getCellType match
       case BLANK ⇒ "STRING"
-      // This branch assumes Text cells are treated as Text even if they contain only numbers.
-      // This is what Excel advertises but it looks like POI does not respect that and, therefore, this branch is being ignored for that type of column, at least with the current version of POI
-      // As this looks like a bug in POI, in order to be on the safe side and, trying to be future proof, we'll leave this here so, if this is "corrected" in future versions of POI, we're prepared.
-      case STRING ⇒ poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER")
-        .orElse(poiCell.getStringCellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+      /*
+      This branch assumes Text cells are treated as Text even if they contain only numbers.
+      This is what Excel advertises but it looks like POI does not respect that and, therefore, this branch is being ignored for that type of column, at least with the current version of POI.
+      As this looks like a bug in POI, in order to be on the safe side and, trying to be future-proof, we'll leave this here so, if this is eventually "corrected" in future versions of POI, we're prepared.
+      */
+      case STRING ⇒
+        val cellValue = poiCell.getStringCellValue
+        cellValue.toIntOption.map(_ ⇒ "INTEGER")
+        .orElse(cellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+        .orElse(raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue).map(_ ⇒ "CURRENCY"))
         .getOrElse("STRING")
       case FORMULA if poiCell.getCachedFormulaResultType == STRING =>
-        poiCell.getStringCellValue.toIntOption.map(_ ⇒ "INTEGER")
-          .orElse(poiCell.getStringCellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+        val cellValue = poiCell.getStringCellValue
+        cellValue.toIntOption.map(_ ⇒ "INTEGER")
+          .orElse(cellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+          .orElse(raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue).map(_ ⇒ "CURRENCY"))
           .getOrElse("STRING")
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency => "INTEGER"
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && !poiCell.isDate && !poiCell.isCurrency => "DOUBLE"
+      case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && !poiCell.isDate => "CURRENCY"
       case NUMERIC if poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency ⇒ "INTEGER"
       case NUMERIC if !poiCell.isDate && !poiCell.isCurrency ⇒ "DOUBLE"
+      case NUMERIC if !poiCell.isDate ⇒ "CURRENCY"
       case t ⇒ t.toString
 
     private def mask: String =

@@ -81,7 +81,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
               error should have(
                 'class(classOf[UnexpectedContentType]),
-                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:NUMERIC]'.")
+                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:CURRENCY]'.")
               )
             }
           }
@@ -202,7 +202,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
-                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '1'.")
+                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '0'.")
                     )
                   }
                   "or non-zero." in { poiWorkbook ⇒
