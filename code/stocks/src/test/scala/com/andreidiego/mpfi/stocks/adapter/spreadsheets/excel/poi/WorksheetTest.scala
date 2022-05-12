@@ -492,6 +492,6 @@ object WorksheetTest:
 
   private def blankCell(address: String): Cell = (address, "", "STRING", "", "", "", "", "")
 
-  private def dateCell(address: String): Cell = (address, "05/11/2008", "NUMERIC", "m/d/yy", "", "", "255,0,0", "")
+  private def dateCell(address: String): Cell = (address, "05/11/2008", "DATE", "m/d/yy", "", "", "255,0,0", "")
 
   private def currencyCell(address: String): Cell = (address, "15.34", "CURRENCY", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")

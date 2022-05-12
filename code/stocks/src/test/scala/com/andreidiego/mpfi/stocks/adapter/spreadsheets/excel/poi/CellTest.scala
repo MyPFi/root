@@ -1,7 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.apache.poi.openxml4j.opc.OPCPackage
-
 import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.matchers.should.Matchers.*
@@ -9,6 +8,8 @@ import org.scalatest.Outcome
 import org.scalatest.TryValues.*
 
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import language.deprecated.symbolLiterals
 import scala.util.Try
 
@@ -50,10 +51,37 @@ class CellTest extends FixtureAnyFreeSpec :
 
           valueOf(Cell.from(poiCell)) should be(DOUBLE_VALUE)
         }
-        "a date." in { poiRow =>
-          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+        "a date, in all its formats:" - {
+          "14." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
+            assert(poiCell.getCellStyle.getDataFormat == DATE_FORMAT_ID_14)
 
-          valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+            valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+          }
+          "15." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_15)
+            assert(poiCell.getCellStyle.getDataFormat == DATE_FORMAT_ID_15)
+
+            valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+          }
+          "16." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_16)
+            assert(poiCell.getCellStyle.getDataFormat == DATE_FORMAT_ID_16)
+
+            valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+          }
+          "17." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_17)
+            assert(poiCell.getCellStyle.getDataFormat == DATE_FORMAT_ID_17)
+
+            valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+          }
+          "22." in { poiRow =>
+            val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_22)
+            assert(poiCell.getCellStyle.getDataFormat == DATE_FORMAT_ID_22)
+
+            valueOf(Cell.from(poiCell)) should be(DATE_VALUE)
+          }
         }
         "a currency, in all its formats:" - {
           "5." in { poiRow =>
@@ -197,6 +225,16 @@ class CellTest extends FixtureAnyFreeSpec :
           val poiCellWithDouble = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE)
 
           assert(Cell.from(poiCellWithDouble).success.value.isNotCurrency)
+        }
+        "a date." in { poiRow ⇒
+          val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
+
+          assert(Cell.from(poiCellWithDate).success.value.isDate)
+        }
+        "not a date." in { poiRow ⇒
+          val poiCellWithNoDate = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          assert(Cell.from(poiCellWithNoDate).success.value.isNotDate)
         }
       }
       "always have" - {
@@ -358,6 +396,47 @@ class CellTest extends FixtureAnyFreeSpec :
               }
             }
           }
+          "'DATE'" - {
+            "for the following underlying Excel format ids:" - {
+              "14." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
+
+                typeOf(Cell.from(poiCell)) should be(DATE)
+              }
+              "15." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_15)
+
+                typeOf(Cell.from(poiCell)) should be(DATE)
+              }
+              "16." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_16)
+
+                typeOf(Cell.from(poiCell)) should be(DATE)
+              }
+              "17." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_17)
+
+                typeOf(Cell.from(poiCell)) should be(DATE)
+              }
+              "22." in { poiRow =>
+                val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_22)
+
+                typeOf(Cell.from(poiCell)) should be(DATE)
+              }
+            }
+            "when its underlying Excel value is a date-shaped string" - {
+              "itself." in { poiRow ⇒
+                val poiCellWithDateShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING)
+
+                typeOf(Cell.from(poiCellWithDateShapedString)) should be(DATE)
+              }
+              "resulting from a formula." in { poiRow ⇒
+                val poiCellWithDateShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA)
+
+                typeOf(Cell.from(poiCellWithDateShapedStringFormula)) should be(DATE)
+              }
+            }
+          }
         }
       }
     }
@@ -374,7 +453,7 @@ class CellTest extends FixtureAnyFreeSpec :
           noValue should be(empty)
         }
         "a mask." in { poiRow ⇒
-          val poiCellWithMask = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+          val poiCellWithMask = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
           val poiCellWithNoMask = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
           val mask = maskOf(Cell.from(poiCellWithMask))
@@ -558,6 +637,32 @@ class CellTest extends FixtureAnyFreeSpec :
             }
           }
         }
+        "'LocalDate', when its underlying Excel value is" - {
+          "a date" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
+
+              asLocalDate(Cell.from(poiCellWithDate)) should be(Some(DATE_VALUE.toLocalDate))
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithDateFormula)) should be(Some(DATE_FORMULA_VALUE.toLocalDate))
+            }
+          }
+          "a date-shaped string" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDateShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING)
+
+              asLocalDate(Cell.from(poiCellWithDateShapedString)) should be(Some(DATE_SHAPED_STRING_VALUE.toLocalDate))
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithDateShapedStringFormula)) should be(Some(DATE_SHAPED_STRING_FORMULA_VALUE.toLocalDate))
+            }
+          }
+        }
       }
       "not be converted to" - {
         "'Double', for instance, when its underlying Excel value is" - {
@@ -578,10 +683,29 @@ class CellTest extends FixtureAnyFreeSpec :
               asDouble(Cell.from(poiCellWithStringFormula)) should be(None)
             }
           }
-          "a date." in { poiRow ⇒
-            val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+          "a date" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
 
-            asDouble(Cell.from(poiCellWithDate)) should be(None)
+              asDouble(Cell.from(poiCellWithDate)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMULA)
+
+              asDouble(Cell.from(poiCellWithDateFormula)) should be(None)
+            }
+          }
+          "a date-shaped string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDateShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING)
+
+              asDouble(Cell.from(poiCellWithDateShapedString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA)
+
+              asDouble(Cell.from(poiCellWithDateShapedStringFormula)) should be(None)
+            }
           }
         }
         "'Int', for instance, when its underlying Excel value is" - {
@@ -640,10 +764,29 @@ class CellTest extends FixtureAnyFreeSpec :
               asInt(Cell.from(poiCellWithStringFormula)) should be(None)
             }
           }
-          "a date." in { poiRow ⇒
-            val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE)
+          "a date" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDate = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14)
 
-            asInt(Cell.from(poiCellWithDate)) should be(None)
+              asInt(Cell.from(poiCellWithDate)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_FORMULA)
+
+              asInt(Cell.from(poiCellWithDateFormula)) should be(None)
+            }
+          }
+          "a date-shaped string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDateShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING)
+
+              asInt(Cell.from(poiCellWithDateShapedString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDateShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA)
+
+              asInt(Cell.from(poiCellWithDateShapedStringFormula)) should be(None)
+            }
           }
           "a currency" - {
             "itself." in { poiRow ⇒
@@ -680,6 +823,125 @@ class CellTest extends FixtureAnyFreeSpec :
                 val poiCellWithCurrencyShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA)
 
                 asInt(Cell.from(poiCellWithCurrencyShapedStringWithCommaFormula)) should be(None)
+              }
+            }
+          }
+        }
+        "'LocalDate', for instance, when its value is" - {
+          "empty." in { poiRow ⇒
+            val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
+
+            asLocalDate(Cell.from(emptyPOICell)) should be(None)
+          }
+          "a double." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithDouble = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE)
+
+              asLocalDate(Cell.from(poiCellWithDouble)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithDoubleFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithDoubleFormula)) should be(None)
+            }
+          }
+          "a double-shaped string" - {
+            "itself, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithDoubleShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING)
+
+                asLocalDate(Cell.from(poiCellWithDoubleShapedString)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA)
+
+                asLocalDate(Cell.from(poiCellWithDoubleShapedStringWithComma)) should be(None)
+              }
+            }
+            "resulting from a formula, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_FORMULA)
+
+                asLocalDate(Cell.from(poiCellWithDoubleShapedStringFormula)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithDoubleShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                asLocalDate(Cell.from(poiCellWithDoubleShapedStringWithCommaFormula)) should be(None)
+              }
+            }
+          }
+          "an alphanumeric string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithString = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+              asLocalDate(Cell.from(poiCellWithString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithStringFormula)) should be(None)
+            }
+          }
+          "a integer." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithInteger = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER)
+
+              asLocalDate(Cell.from(poiCellWithInteger)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithIntegerFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithIntegerFormula)) should be(None)
+            }
+          }
+          "a integer-shaped string." - {
+            "itself." in { poiRow ⇒
+              val poiCellWithIntegerShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING)
+
+              asLocalDate(Cell.from(poiCellWithIntegerShapedString)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithIntegerShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithIntegerShapedStringFormula)) should be(None)
+            }
+          }
+          "a currency" - {
+            "itself." in { poiRow ⇒
+              val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
+
+              asLocalDate(Cell.from(poiCellWithCurrency)) should be(None)
+            }
+            "resulting from a formula." in { poiRow ⇒
+              val poiCellWithCurrencyFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMULA)
+
+              asLocalDate(Cell.from(poiCellWithCurrencyFormula)) should be(None)
+            }
+          }
+          "a currency-shaped string" - {
+            "itself, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedString = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING)
+
+                asLocalDate(Cell.from(poiCellWithCurrencyShapedString)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithComma = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA)
+
+                asLocalDate(Cell.from(poiCellWithCurrencyShapedStringWithComma)) should be(None)
+              }
+            }
+            "resulting from a formula, whether represented with a" - {
+              "dot." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_FORMULA)
+
+                asLocalDate(Cell.from(poiCellWithCurrencyShapedStringFormula)) should be(None)
+              }
+              "comma." in { poiRow ⇒
+                val poiCellWithCurrencyShapedStringWithCommaFormula = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA)
+
+                asLocalDate(Cell.from(poiCellWithCurrencyShapedStringWithCommaFormula)) should be(None)
               }
             }
           }
@@ -744,14 +1006,30 @@ object CellTest:
   private val CURRENCY_SHAPED_STRING_WITH_COMMA_VALUE = "1.0"
   private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA = 24
   private val CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE = "1.0"
-  private val INDEX_OF_CELL_WITH_DATE = 25
+  private val DATE = "DATE"
+  private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14 = 25
+  private val DATE_FORMAT_ID_14 = 14
+  private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_15 = 26
+  private val DATE_FORMAT_ID_15 = 15
+  private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_16 = 27
+  private val DATE_FORMAT_ID_16 = 16
+  private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_17 = 28
+  private val DATE_FORMAT_ID_17 = 17
+  private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_22 = 29
+  private val DATE_FORMAT_ID_22 = 22
   private val DATE_VALUE = "05/11/2008"
   private val MASK = "m/d/yy"
-  private val INDEX_OF_CELL_WITH_NOTE = 26
+  private val INDEX_OF_CELL_WITH_DATE_FORMULA = 30
+  private val DATE_FORMULA_VALUE = "06/11/2008"
+  private val INDEX_OF_CELL_WITH_DATE_SHAPED_STRING = 31
+  private val DATE_SHAPED_STRING_VALUE = "05/11/2008"
+  private val INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA = 32
+  private val DATE_SHAPED_STRING_FORMULA_VALUE = "05/11/2008"
+  private val INDEX_OF_CELL_WITH_NOTE = 33
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 27
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 34
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 28
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 35
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   private def valueOf(cell: Try[Cell]): String = cell.success.value.value
@@ -773,3 +1051,8 @@ object CellTest:
   private def asInt(cell: Try[Cell]): Option[Int] = cell.success.value.asInt
 
   private def asDouble(cell: Try[Cell]): Option[Double] = cell.success.value.asDouble
+
+  private def asLocalDate(cell: Try[Cell]): Option[LocalDate] = cell.success.value.asLocalDate
+
+  extension (string: String)
+    private def toLocalDate: LocalDate = LocalDate.parse(string, DateTimeFormatter.ofPattern("dd/MM/yyyy"))

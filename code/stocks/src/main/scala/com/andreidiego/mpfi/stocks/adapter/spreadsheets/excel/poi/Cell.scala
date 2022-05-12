@@ -1,10 +1,11 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import org.apache.poi.ss.usermodel.{DataFormatter, DateUtil, Row}
+import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
-import org.apache.poi.util.LocaleUtil
 import org.apache.poi.xssf.usermodel.XSSFCell
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import scala.util.{Failure, Try}
 
 // TODO address can be a regex
@@ -24,13 +25,17 @@ case class Cell private(address: String, value: String, `type`: String, mask: St
 
   def isNotCurrency: Boolean = !isCurrency
 
-// TODO Replace Try + exceptions with Validated
-object Cell:
-  private val CURRENCY_FORMAT_IDS = Seq(5, 6, 7, 8, 42, 44, 164, 165)
-  private val SHORT_DATE_FORMAT_ID = 14
-  private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
+  def isDate: Boolean = `type` == "DATE"
 
-  private val formatter = new DataFormatter(LocaleUtil.getUserLocale)
+  def isNotDate: Boolean = !isDate
+
+  def asLocalDate: Option[LocalDate] = Try(LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))).toOption
+
+// TODO Replace Try + exceptions with Validated``
+object Cell:
+  private val CURRENCY_FORMAT_IDS = Seq(5, 6, 7, 8, 42, 44)
+  private val SHORT_DATE_FORMAT_IDS = Seq(14, 15, 16, 17, 22)
+  private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
 
   def from(poiCell: XSSFCell): Try[Cell] = for {
     validatedPOICell ← poiCell.validated
@@ -57,8 +62,7 @@ object Cell:
 
     private def value: String = poiCell.getCellType match
       case NUMERIC if poiCell.isDate =>
-        formatter.addFormat("m/d/yy", new java.text.SimpleDateFormat(PT_BR_DATE_FORMAT))
-        formatter.formatCellValue(poiCell)
+        DateTimeFormatter.ofPattern(PT_BR_DATE_FORMAT).format(poiCell.getLocalDateTimeCellValue)
       case NUMERIC if poiCell.isInteger && !poiCell.isCurrency ⇒ poiCell.getNumericCellValue.toInt.toString
       case NUMERIC ⇒ poiCell.getNumericCellValue.toString
       case FORMULA if poiCell.getCachedFormulaResultType == STRING =>
@@ -70,7 +74,9 @@ object Cell:
           .orElse(currencyValue.flatMap(_.split(raw"\p{Sc}")(1).trim.replace(",", ".").toDoubleOption.map(_.toString)))
           .getOrElse(cellValue)
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC =>
-        if poiCell.getNumericCellValue.isValidInt && !poiCell.isCurrency then
+        if poiCell.isDate then
+          DateTimeFormatter.ofPattern("dd/MM/yyyy").format(poiCell.getLocalDateTimeCellValue)
+        else if poiCell.getNumericCellValue.isValidInt && !poiCell.isCurrency then
           poiCell.getNumericCellValue.toInt.toString
         else
           poiCell.getNumericCellValue.toString
@@ -83,10 +89,7 @@ object Cell:
           .orElse(currencyValue.flatMap(_.split(raw"\p{Sc}")(1).trim.replace(",", ".").toDoubleOption.map(_.toString)))
           .getOrElse(cellValue)
 
-    // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
-    private def isDate: Boolean =
-      DateUtil.isCellDateFormatted(poiCell) &&
-        poiCell.getCellStyle.getDataFormat == SHORT_DATE_FORMAT_ID
+    private def isDate: Boolean = SHORT_DATE_FORMAT_IDS.contains(poiCell.getCellStyle.getDataFormat)
 
     // TODO Do we actually need two conditions? Case affirmative, are we missing tests for the combination of possible results for bothof them ?
     private def isCurrency: Boolean =
@@ -105,14 +108,16 @@ object Cell:
       case STRING ⇒
         val cellValue = poiCell.getStringCellValue
         cellValue.toIntOption.map(_ ⇒ "INTEGER")
-        .orElse(cellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
-        .orElse(raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue).map(_ ⇒ "CURRENCY"))
-        .getOrElse("STRING")
+          .orElse(cellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
+          .orElse(raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue).map(_ ⇒ "CURRENCY"))
+          .orElse(raw"(\d{2}/\d{2}/\d{4})".r.findFirstIn(cellValue).map(_ ⇒ "DATE"))
+          .getOrElse("STRING")
       case FORMULA if poiCell.getCachedFormulaResultType == STRING =>
         val cellValue = poiCell.getStringCellValue
         cellValue.toIntOption.map(_ ⇒ "INTEGER")
           .orElse(cellValue.replace(",", ".").toDoubleOption.map(_ ⇒ "DOUBLE"))
           .orElse(raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r.findFirstIn(cellValue).map(_ ⇒ "CURRENCY"))
+          .orElse(raw"(\d{2}/\d{2}/\d{4})".r.findFirstIn(cellValue).map(_ ⇒ "DATE"))
           .getOrElse("STRING")
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency => "INTEGER"
       case FORMULA if poiCell.getCachedFormulaResultType == NUMERIC && !poiCell.isDate && !poiCell.isCurrency => "DOUBLE"
@@ -120,6 +125,7 @@ object Cell:
       case NUMERIC if poiCell.isInteger && !poiCell.isDate && !poiCell.isCurrency ⇒ "INTEGER"
       case NUMERIC if !poiCell.isDate && !poiCell.isCurrency ⇒ "DOUBLE"
       case NUMERIC if !poiCell.isDate ⇒ "CURRENCY"
+      case NUMERIC ⇒ "DATE"
       case t ⇒ t.toString
 
     private def mask: String =
