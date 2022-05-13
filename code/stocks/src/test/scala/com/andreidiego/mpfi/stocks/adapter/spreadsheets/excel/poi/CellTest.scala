@@ -17,6 +17,7 @@ import scala.util.Try
 class CellTest extends FixtureAnyFreeSpec :
 
   import CellTest.*
+  import CellType.{valueOf ⇒ _, *}
 
   override protected type FixtureParam = XSSFRow
 
@@ -954,7 +955,6 @@ object CellTest:
   private val TEST_SPREADSHEET = "Cell.xlsx"
   private val CELL_WORKSHEET = "CellWorksheet"
 
-  private val STRING = "STRING"
   private val INDEX_OF_CELL_WITH_BLANK = 0
   private val BLANK_VALUE = ""
   private val INDEX_OF_CELL_WITH_SEPARATOR = 1
@@ -966,7 +966,6 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_STRING_FORMULA = 3
   private val STRING_FORMULA = "_xlfn.CONCAT(C1,C1)"
   private val STRING_FORMULA_VALUE = "StringString"
-  private val INTEGER = "INTEGER"
   private val INDEX_OF_CELL_WITH_INTEGER = 4
   private val INTEGER_VALUE = "1"
   private val INDEX_OF_CELL_WITH_INTEGER_FORMULA = 5
@@ -975,7 +974,6 @@ object CellTest:
   private val INTEGER_SHAPED_STRING_VALUE = "1"
   private val INDEX_OF_CELL_WITH_INTEGER_SHAPED_STRING_FORMULA = 7
   private val INTEGER_SHAPED_STRING_FORMULA_VALUE = "11"
-  private val DOUBLE = "DOUBLE"
   private val INDEX_OF_CELL_WITH_DOUBLE = 8
   private val DOUBLE_VALUE = "1.1"
   private val INDEX_OF_CELL_WITH_DOUBLE_FORMULA = 9
@@ -988,7 +986,6 @@ object CellTest:
   private val DOUBLE_SHAPED_STRING_WITH_COMMA_VALUE = "1.1"
   private val INDEX_OF_CELL_WITH_DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA = 13
   private val DOUBLE_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE = "1.1"
-  private val CURRENCY = "CURRENCY"
   private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5 = 14
   private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_6 = 15
   private val INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_7 = 16
@@ -1006,7 +1003,6 @@ object CellTest:
   private val CURRENCY_SHAPED_STRING_WITH_COMMA_VALUE = "1.0"
   private val INDEX_OF_CELL_WITH_CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA = 24
   private val CURRENCY_SHAPED_STRING_WITH_COMMA_FORMULA_VALUE = "1.0"
-  private val DATE = "DATE"
   private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_14 = 25
   private val DATE_FORMAT_ID_14 = 14
   private val INDEX_OF_CELL_WITH_DATE_FORMAT_ID_15 = 26
@@ -1036,7 +1032,7 @@ object CellTest:
 
   private def addressOf(cell: Try[Cell]): String = cell.success.value.address
 
-  private def typeOf(cell: Try[Cell]): String = cell.success.value.`type`
+  private def typeOf(cell: Try[Cell]): CellType = cell.success.value.`type`
 
   private def maskOf(cell: Try[Cell]): String = cell.success.value.mask
 

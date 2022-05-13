@@ -1,6 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
+import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING as POI_STRING}
 import org.apache.poi.xssf.usermodel.XSSFCell
 
 import java.time.LocalDate
@@ -8,36 +8,44 @@ import java.time.format.DateTimeFormatter
 import scala.annotation.targetName
 import scala.util.Try
 
+enum CellType:
+  case INTEGER, DOUBLE, CURRENCY, DATE, STRING
+
 // TODO address can be a regex
-// TODO `type` can be an enum
 // TODO fontColor can be a RGB array ("0,0,0")
 // TODO backgroundColor can be a RGB array ("0,0,0")
-case class Cell private(address: String, value: String, `type`: String, mask: String, formula: String, note: String, fontColor: String, backgroundColor: String):
+case class Cell private(address: String, value: String, `type`: CellType, mask: String, formula: String, note: String, fontColor: String, backgroundColor: String):
+
+  import CellType.*
+
   def isEmpty: Boolean = value.isBlank
 
   def isNotEmpty: Boolean = !isEmpty
 
-  def asInt: Option[Int] = if `type` == "INTEGER" then Some(value.toInt) else None
+  def asInt: Option[Int] = if `type` == INTEGER then Some(value.toInt) else None
 
   def asDouble: Option[Double] =
-    if `type` == "DOUBLE" || `type` == "INTEGER" || `type` == "CURRENCY" then Some(value.toDouble)
+    if Seq(DOUBLE, INTEGER, CURRENCY) contains `type` then Some(value.toDouble)
     else None
 
-  def isCurrency: Boolean = `type` == "CURRENCY"
+  def isCurrency: Boolean = `type` == CURRENCY
 
   def isNotCurrency: Boolean = !isCurrency
 
-  def isDate: Boolean = `type` == "DATE"
+  def isDate: Boolean = `type` == DATE
 
   def isNotDate: Boolean = !isDate
 
   // TODO Add test for invalid date
   def asLocalDate: Option[LocalDate] =
-    if `type` == "DATE" then Try(LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))).toOption
+    if `type` == DATE then Try(LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))).toOption
     else None
 
 // TODO Replace Try + exceptions with Validated``
 object Cell:
+
+  import CellType.*
+
   private val CURRENCY_FORMAT_IDS = Seq(5, 6, 7, 8, 42, 44)
   private val SHORT_DATE_FORMAT_IDS = Seq(14, 15, 16, 17, 22)
   private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
@@ -77,7 +85,7 @@ object Cell:
         .getOrElse("0.0")
       else poiCell.getStringCellValue
 
-    private def `type`: String = (isInteger || isDouble || isCurrency || isDate || isString).get
+    private def `type`: CellType = (isInteger || isDouble || isCurrency || isDate || isString).get
 
     private def mask: String =
       val mask = poiCell.getCellStyle.getDataFormatString
@@ -98,24 +106,24 @@ object Cell:
       .map(_.getRGBWithTint.map(b => b & 0xFF).mkString(","))
       .getOrElse("")
 
-    private def isInteger: Option[String] =
-      if numericInteger || stringInteger then Some("INTEGER")
+    private def isInteger: Option[CellType] =
+      if numericInteger || stringInteger then Some(INTEGER)
       else None
 
-    private def isDouble: Option[String] =
-      if numericDouble || stringDouble then Some("DOUBLE")
+    private def isDouble: Option[CellType] =
+      if numericDouble || stringDouble then Some(DOUBLE)
       else None
 
-    private def isCurrency: Option[String] =
-      if numericCurrency || stringCurrency then Some("CURRENCY")
+    private def isCurrency: Option[CellType] =
+      if numericCurrency || stringCurrency then Some(CURRENCY)
       else None
 
-    private def isDate: Option[String] =
-      if numericDate || stringDate then Some("DATE")
+    private def isDate: Option[CellType] =
+      if numericDate || stringDate then Some(DATE)
       else None
 
-    private def isString: Option[String] =
-      if ofBlankType || !(isInteger || isDouble || isCurrency || isDate) then Some("STRING")
+    private def isString: Option[CellType] =
+      if ofBlankType || !(isInteger || isDouble || isCurrency || isDate) then Some(STRING)
       else None
 
     private def numericInteger: Boolean = numericCellWithAnInteger || numericFormulaCellWithAnInteger
@@ -136,7 +144,7 @@ object Cell:
 
     private def ofBlankType: Boolean = poiCell.getCellType == BLANK
 
-    private def ofStringType: Boolean = poiCell.getCellType == STRING
+    private def ofStringType: Boolean = poiCell.getCellType == POI_STRING
 
     private def stringCellWithAnInteger: Boolean =
       ofStringType && poiCell.getStringCellValue.toIntOption.isDefined
@@ -174,7 +182,7 @@ object Cell:
     private def ofFormulaType: Boolean = poiCell.getCellType == FORMULA
 
     private def stringFormula: Boolean =
-      ofFormulaType && poiCell.getCachedFormulaResultType == STRING
+      ofFormulaType && poiCell.getCachedFormulaResultType == POI_STRING
 
     private def stringFormulaCellWithAnInteger: Boolean =
       stringFormula && poiCell.getStringCellValue.toIntOption.isDefined
@@ -213,8 +221,8 @@ object Cell:
 
     private def dateRegex = raw"(\d{2}/\d{2}/\d{4})".r
 
-  extension (thisOption: Option[String])
+  extension (thisOption: Option[CellType])
     @targetName("or")
-    private def ||(thatOption: Option[String]): Option[String] = thisOption.orElse(thatOption)
+    private def ||(thatOption: Option[CellType]): Option[CellType] = thisOption.orElse(thatOption)
     @targetName("not")
     private def unary_! = thisOption.isEmpty

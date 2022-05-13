@@ -16,6 +16,7 @@ import scala.util.Try
 class WorksheetTest extends FixtureAnyFreeSpec :
 
   import WorksheetTest.*
+  import CellType.*
 
   override protected type FixtureParam = XSSFWorkbook
 
@@ -132,15 +133,15 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
               HEADER_WITH_PRICE,
-              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", "STRING", "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), integerCell("D2", "200"), currencyCell("E2"))
+              Seq(dateCell("A2"), stringCell("B2"), ("C2", "VALE3VALE3", STRING, "", "_xlfn.CONCAT(B2,B2)", "", "255,0,0", ""), integerCell("D2", "200"), currencyCell("E2"))
             )
           }
           "numeric formulas." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("LinesWithNumericFormulas")
 
             linesFrom(Worksheet.from(TEST_SHEET)) should contain theSameElementsInOrderAs Seq(
-              HEADER_WITH_PRICE :+ ("F1", "Total", "STRING", "", "", "", "0,0,0", ""),
-              STANDARD_LINE_WITH_PRICE :+ ("F2", "3068.0", "CURRENCY", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "D2*E2", "", "255,0,0", "")
+              HEADER_WITH_PRICE :+ ("F1", "Total", STRING, "", "", "", "0,0,0", ""),
+              STANDARD_LINE_WITH_PRICE :+ ("F2", "3068.0", CURRENCY, """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "D2*E2", "", "255,0,0", "")
             )
           }
         }
@@ -155,7 +156,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
       "given a POI Worksheet" - {
         "that" - {
           "is" - {
-            "null." in { poiWorkbook =>
+            "null." in { _ =>
               val exception = Worksheet.from(null).failure.exception
 
               exception should have(
@@ -446,14 +447,17 @@ class WorksheetTest extends FixtureAnyFreeSpec :
   }
 
 object WorksheetTest:
-  private type Cell = (String, String, String, String, String, String, String, String)
+
+  import CellType.*
+
+  private type Cell = (String, String, CellType, String, String, String, String, String)
   private val TEST_SPREADSHEET = "Worksheet.xlsx"
 
-  private val TRADING_DATE_HEADER = ("A1", "Data Pregão", "STRING", "", "", "", "0,0,0", "")
-  private val BROKERAGE_NOTE_HEADER = ("B1", "Nota", "STRING", "", "", "", "0,0,0", "")
-  private val TICKER_HEADER = ("C1", "Papel", "STRING", "", "", "", "0,0,0", "")
-  private val QTY_HEADER = ("D1", "Qtde", "STRING", "", "", "", "0,0,0", "")
-  private val PRICE_HEADER = ("E1", "Preço", "STRING", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "0,0,0", "")
+  private val TRADING_DATE_HEADER = ("A1", "Data Pregão", STRING, "", "", "", "0,0,0", "")
+  private val BROKERAGE_NOTE_HEADER = ("B1", "Nota", STRING, "", "", "", "0,0,0", "")
+  private val TICKER_HEADER = ("C1", "Papel", STRING, "", "", "", "0,0,0", "")
+  private val QTY_HEADER = ("D1", "Qtde", STRING, "", "", "", "0,0,0", "")
+  private val PRICE_HEADER = ("E1", "Preço", STRING, """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "0,0,0", "")
   private val HEADER = Seq(TRADING_DATE_HEADER, BROKERAGE_NOTE_HEADER, TICKER_HEADER, QTY_HEADER)
   private val HEADER_WITH_PRICE = HEADER :+ PRICE_HEADER
 
@@ -486,12 +490,12 @@ object WorksheetTest:
   private def blankLine(lineNumber: String): Seq[Cell] =
     Seq(blankCell(s"A$lineNumber"), blankCell(s"B$lineNumber"), blankCell(s"C$lineNumber"), blankCell(s"D$lineNumber"))
 
-  private def stringCell(address: String): Cell = (address, "VALE3", "STRING", "", "", "", "255,0,0", "")
+  private def stringCell(address: String): Cell = (address, "VALE3", STRING, "", "", "", "255,0,0", "")
 
-  private def integerCell(address: String, number: String): Cell = (address, number, "INTEGER", "", "", "", "255,0,0", "")
+  private def integerCell(address: String, number: String): Cell = (address, number, INTEGER, "", "", "", "255,0,0", "")
 
-  private def blankCell(address: String): Cell = (address, "", "STRING", "", "", "", "", "")
+  private def blankCell(address: String): Cell = (address, "", STRING, "", "", "", "", "")
 
-  private def dateCell(address: String): Cell = (address, "05/11/2008", "DATE", "m/d/yy", "", "", "255,0,0", "")
+  private def dateCell(address: String): Cell = (address, "05/11/2008", DATE, "m/d/yy", "", "", "255,0,0", "")
 
-  private def currencyCell(address: String): Cell = (address, "15.34", "CURRENCY", """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
+  private def currencyCell(address: String): Cell = (address, "15.34", CURRENCY, """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")

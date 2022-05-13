@@ -450,7 +450,7 @@ object BrokerageNotesWorksheetReaderTest:
 
   extension (cell: Cell)
 
-    private def isFormula: Boolean = cell.`type` == FORMULA
+    private def isFormula: Boolean = cell.formula.nonEmpty
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
 
