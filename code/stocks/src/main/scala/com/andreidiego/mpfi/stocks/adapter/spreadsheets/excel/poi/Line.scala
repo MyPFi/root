@@ -33,4 +33,4 @@ object Line:
 
     private def cells(qty: Int): Seq[Cell] =
       (0 until qty)
-        .map(index ⇒ Cell.from(poiRow.getCell(index, CREATE_NULL_AS_BLANK)).get)
+        .map(index ⇒ Cell.from(poiRow.getCell(index, CREATE_NULL_AS_BLANK)).toEither.right.get)

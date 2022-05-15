@@ -1,5 +1,7 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
+import cats.data.ValidatedNec
+import cats.syntax.validated.*
 import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING as POI_STRING}
 import org.apache.poi.xssf.usermodel.XSSFCell
 
@@ -41,37 +43,40 @@ case class Cell private(address: String, value: String, `type`: CellType, mask: 
     if `type` == DATE then Try(LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))).toOption
     else None
 
-// TODO Replace Try + exceptions with Validated``
 object Cell:
+  enum CellError(message: String):
+    case IllegalArgument(message: String) extends CellError(message)
 
   import CellType.*
+  import CellError.*
 
+  type Error = CellError
+  type ErrorsOr[A] = ValidatedNec[Error, A]
   private val CURRENCY_FORMAT_IDS = Seq(5, 6, 7, 8, 42, 44)
   private val SHORT_DATE_FORMAT_IDS = Seq(14, 15, 16, 17, 22)
   private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
 
   given Conversion[Option[String], Boolean] = _.isDefined
 
-  def from(poiCell: XSSFCell): Try[Cell] = for {
-    validatedPOICell ← poiCell.validated
-  } yield Cell(
-    validatedPOICell.address,
-    validatedPOICell.value,
-    validatedPOICell.`type`,
-    validatedPOICell.mask,
-    validatedPOICell.formula,
-    validatedPOICell.note,
-    validatedPOICell.fontColor,
-    validatedPOICell.backgroundColor
-  )
+  def from(poiCell: XSSFCell): ErrorsOr[Cell] =
+    poiCell.validated
+      .map(validatedPOICell ⇒ Cell(
+        validatedPOICell.address,
+        validatedPOICell.value,
+        validatedPOICell.`type`,
+        validatedPOICell.mask,
+        validatedPOICell.formula,
+        validatedPOICell.note,
+        validatedPOICell.fontColor,
+        validatedPOICell.backgroundColor
+      ))
 
   extension (poiCell: XSSFCell)
 
-    private def validated: Try[XSSFCell] = Try {
+    private def validated: ErrorsOr[XSSFCell] =
       if poiCell == null then
-        throw new IllegalArgumentException(s"Invalid cell found: $poiCell")
-      else poiCell
-    }
+        IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
+      else poiCell.validNec
 
     private def address: String = poiCell.getAddress.toString
 
