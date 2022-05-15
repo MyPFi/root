@@ -5,17 +5,17 @@ import org.apache.poi.xssf.usermodel.{XSSFSheet, XSSFWorkbook, XSSFWorkbookFacto
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.Outcome
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.TryValues.*
+import org.scalatest.EitherValues.*
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
 import scala.util.Try
 
-// TODO Replace Try + exceptions with Validated
 class LineTest extends FixtureAnyFreeSpec :
 
-  import LineTest.*
   import CellType.*
+  import Line.LineError.IllegalArgument
+  import LineTest.{*, given}
 
   override protected type FixtureParam = XSSFSheet
 
@@ -111,31 +111,21 @@ class LineTest extends FixtureAnyFreeSpec :
         "that" - {
           "is" - {
             "null." in { _ =>
-              val exception = Line.from(null, ZERO).failure.exception
+              val error = Line.from(null, ZERO).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Invalid line found.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[NullPointerException]),
-                'message("""Cannot invoke "org.apache.poi.xssf.usermodel.XSSFRow.getRowNum()" because "poiRow$1" is null""")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Invalid line found: 'null'")
               )
             }
             "empty (no cells)." in { _ =>
               val poiRegularRow = new XSSFWorkbook().createSheet("1").createRow(0)
 
-              val exception = Line.from(poiRegularRow, ZERO).failure.exception
+              val error = Line.from(poiRegularRow, ZERO).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Invalid line found.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Line ${poiRegularRow.getRowNum} does not seem to have any cells.")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Invalid line found: line '${poiRegularRow.getRowNum}' does not seem to have any cells.")
               )
             }
           }
@@ -245,23 +235,23 @@ class LineTest extends FixtureAnyFreeSpec :
       "a number." in { poiWorksheet ⇒
         val poiRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
 
-        numberOf(Line.from(poiRow, SIZE_OF_LINE_WITH_STRING)) should be(INDEX_OF_LINE_WITH_STRING + 1)
+        Line.from(poiRow, SIZE_OF_LINE_WITH_STRING).number should be(INDEX_OF_LINE_WITH_STRING + 1)
       }
     }
     "be empty if all its cells are empty." in { poiWorksheet ⇒
       val emptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_BLANKS)
 
-      Line.from(emptyPOIRow, SIZE_OF_LINE_WITH_MULTIPLE_BLANKS).success.value shouldBe empty
+      Line.from(emptyPOIRow, SIZE_OF_LINE_WITH_MULTIPLE_BLANKS).toEither.value shouldBe empty
     }
     "not be empty if not all its cells are empty." in { poiWorksheet ⇒
       val nonEmptyPOIRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL)
 
-      assert(Line.from(nonEmptyPOIRow, SIZE_OF_LINE_WITH_TRAILING_EMPTY_CELL).success.value.isNotEmpty)
+      assert(Line.from(nonEmptyPOIRow, SIZE_OF_LINE_WITH_TRAILING_EMPTY_CELL).toEither.value.isNotEmpty)
     }
     "provide access to its non-empty cells." in { poiWorksheet ⇒
       val poiRowWithOneEmptyCell = poiWorksheet.getRow(INDEX_OF_LINE_WITH_MULTIPLE_CELLS)
 
-      valuesOf(nonEmptyCellsOf(Line.from(poiRowWithOneEmptyCell, SIZE_OF_LINE_WITH_MULTIPLE_CELLS))) should contain theSameElementsInOrderAs Seq(INTEGER_VALUE, STRING_VALUE, "156348")
+      valuesOf(Line.from(poiRowWithOneEmptyCell, SIZE_OF_LINE_WITH_MULTIPLE_CELLS).nonEmptyCells) should contain theSameElementsInOrderAs Seq(INTEGER_VALUE, STRING_VALUE, "156348")
     }
     "equal another Line with the same configuration." in { poiWorksheet ⇒
       val poiRegularRow = poiWorksheet.getRow(INDEX_OF_LINE_WITH_STRING)
@@ -277,11 +267,14 @@ class LineTest extends FixtureAnyFreeSpec :
     "forbid manipulation of its internal cells." in { poiWorksheet ⇒
       val poiRegularRow = poiWorksheet.getRow(0)
 
-      """Line.from(poiRegularRow).success.value.cells = Seq("", "")""" shouldNot compile
+      """Line.from(poiRegularRow).toEither.value.cells = Seq("", "")""" shouldNot compile
     }
   }
 
 object LineTest:
+
+  import Line.ErrorsOr
+
   private val TEST_SPREADSHEET = "Line.xlsx"
   private val VALID_TINY_WORKSHEET = "ValidTinyWorksheet"
 
@@ -337,7 +330,14 @@ object LineTest:
   private val INDEX_OF_LINE_WITH_TRAILING_EMPTY_CELL = 15
   private val SIZE_OF_LINE_WITH_TRAILING_EMPTY_CELL = 3
 
-  private def cellsOf(line: Try[Line]): Seq[Cell] = line.success.value.cells
+  given Conversion[ErrorsOr[Line], Line] = _.toEither.value
+
+  extension (errorsOrLine: ErrorsOr[Line])
+
+    private def error: Line.Error =
+      errorsOrLine.toEither.left.value.head
+
+  private def cellsOf(line: ErrorsOr[Line]): Seq[Cell] = line.toEither.value.cells
 
   private def valuesOf(cells: Seq[Cell]): Seq[String] = cells.map(_.value)
 
@@ -345,18 +345,14 @@ object LineTest:
 
   private def typesOf(cells: Seq[Cell]): Seq[CellType] = cells.map(_.`type`)
 
-  private def valueOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.value
+  private def valueOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.value
 
-  private def maskOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.mask
+  private def maskOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.mask
 
-  private def formulaOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.formula
+  private def formulaOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.formula
 
-  private def noteOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.note
+  private def noteOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.note
 
-  private def fontColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.fontColor
+  private def fontColorOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.fontColor
 
-  private def backgroundColorOfFirstCellOf(line: Try[Line]): String = cellsOf(line).head.backgroundColor
-
-  private def numberOf(line: Try[Line]): Int = line.success.value.number
-
-  private def nonEmptyCellsOf(line: Try[Line]): Seq[Cell] = line.success.value.nonEmptyCells
+  private def backgroundColorOfFirstCellOf(line: ErrorsOr[Line]): String = cellsOf(line).head.backgroundColor

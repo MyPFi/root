@@ -25,7 +25,7 @@ object Worksheet:
   }
 
   private def linesFrom(rows: Seq[XSSFRow])(headerSize: Int): Try[Seq[Line]] = Try {
-    rows.map(row ⇒ Line.from(row, headerSize).get)
+    rows.map(row ⇒ Line.from(row, headerSize).toEither.right.get)
       .reverse
       .dropWhile(_.isEmpty)
       .reverse
