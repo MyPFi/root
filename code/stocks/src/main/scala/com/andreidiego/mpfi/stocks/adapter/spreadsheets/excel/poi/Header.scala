@@ -1,46 +1,54 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
+import cats.data.ValidatedNec
+import cats.syntax.validated.*
+import org.apache.poi.ss.usermodel.CellType.{BLANK, BOOLEAN, FORMULA, NUMERIC, STRING}
+import org.apache.poi.ss.usermodel.DateUtil
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy.CREATE_NULL_AS_BLANK
 import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow}
 
-import scala.util.{Failure, Try}
-
 case class Header private(columnNames: Seq[String])
 
-// TODO Replace Try + exceptions with Either
 object Header:
+  // TODO Remove the val when 'Worksheet' is migrated to Validated
+  enum HeaderError(val message: String):
+    case IllegalArgument(override val message: String) extends HeaderError(message)
 
-  def from(poiHeaderRow: XSSFRow): Try[Header] = for {
-    validatedPOIHeaderRow ← poiHeaderRow.validated
-  } yield Header(validatedPOIHeaderRow.nonBlankCells)
+  import HeaderError.*
+
+  type Error = HeaderError
+  type ErrorsOr[A] = ValidatedNec[Error, A]
+
+  def from(poiHeaderRow: XSSFRow): ErrorsOr[Header] =
+    poiHeaderRow.validated
+      .map(validatedPOIHeaderRow ⇒ Header(validatedPOIHeaderRow.nonBlankCells))
 
   extension (poiHeaderRow: XSSFRow)
 
-    private def validated: Try[XSSFRow] = Try {
-      if isEmpty then
-        throw new IllegalArgumentException("Header is empty.")
-      else if hasBlankCells then
-        throw new IllegalArgumentException("An illegal blank cell was found in the header.")
-      else if startsWithSeparator then
-        throw new IllegalArgumentException("Separators not allowed at the beggining of the header.")
-      else if hasMultipleContiguousSeparators then
-        throw new IllegalArgumentException("Multiple contiguous separators not allowed.")
-      else poiHeaderRow
+    private def validated: ErrorsOr[XSSFRow] =
+      val INVALID_HEADER = "Worksheet does not seem to have a valid header"
+      val reason = (cellType: String) ⇒ s"An illegal $cellType cell was found in the header."
 
-    } recoverWith {
-      case e ⇒ Failure {
-        new IllegalArgumentException(s"Worksheet does not seem to have a valid header.", e)
-      }
-    }
+      if isNull then IllegalArgument(s"$INVALID_HEADER: '$poiHeaderRow'.").invalidNec
+      else if isEmpty then IllegalArgument(s"$INVALID_HEADER. Header is empty.").invalidNec
+      else if hasBlankCells then IllegalArgument(s"$INVALID_HEADER. ${reason("blank")}").invalidNec
+      else if hasNumericCells then IllegalArgument(s"$INVALID_HEADER. ${reason("numeric")}").invalidNec
+      else if hasBooleanCells then IllegalArgument(s"$INVALID_HEADER. ${reason("boolean")}").invalidNec
+      else if hasDateCells then IllegalArgument(s"$INVALID_HEADER. ${reason("date")}").invalidNec
+      else if hasNumericFormulaCells then IllegalArgument(s"$INVALID_HEADER. ${reason("numeric formula")}").invalidNec
+      else if startsWithSeparator then IllegalArgument(s"$INVALID_HEADER. Separators not allowed at the beggining of the header.").invalidNec
+      else if hasMultipleContiguousSeparators then IllegalArgument(s"$INVALID_HEADER. Multiple contiguous separators not allowed.").invalidNec
+      else poiHeaderRow.validNec
 
-    private def isEmpty: Boolean =
-      logicalCells.forall(_.isEmpty)
+    private def isNull: Boolean = poiHeaderRow == null
+
+    private def isEmpty: Boolean = logicalCells.forall(_.isEmpty)
 
     private def logicalCells: Seq[XSSFCell] =
       (0 until poiHeaderRow.getLastCellNum)
         .map(index ⇒ poiHeaderRow.getCell(index, CREATE_NULL_AS_BLANK))
 
-    private def hasBlankCells: Boolean = {
+    private def hasBlankCells: Boolean =
       logicalCells.sliding(2)
         .foreach {
           case IndexedSeq(first: XSSFCell, last: XSSFCell) ⇒
@@ -48,10 +56,20 @@ object Header:
               return true
         }
       false
-    }
 
-    private def startsWithSeparator: Boolean =
-      logicalCells.head.isSeparator
+    private def hasNumericCells: Boolean =
+      logicalCells.exists(cell ⇒ cell.getCellType == NUMERIC && !DateUtil.isCellDateFormatted(cell))
+
+    private def hasBooleanCells: Boolean =
+      logicalCells.exists(_.getCellType == BOOLEAN)
+
+    private def hasDateCells: Boolean =
+      logicalCells.exists(cell ⇒ cell.getCellType == NUMERIC && DateUtil.isCellDateFormatted(cell))
+
+    private def hasNumericFormulaCells: Boolean =
+      logicalCells.exists(cell ⇒ cell.getCellType == FORMULA && cell.getCachedFormulaResultType == NUMERIC)
+
+    private def startsWithSeparator: Boolean = logicalCells.head.isSeparator
 
     private def hasMultipleContiguousSeparators: Boolean = {
       logicalCells.sliding(2)
@@ -69,9 +87,12 @@ object Header:
 
   extension (cell: XSSFCell)
 
-  // TODO What about numeric / numeric formula cells?
     private def isEmpty: Boolean =
-      cell.getStringCellValue.isBlank
+      cell.getCellType match
+        case BLANK ⇒ true
+        case STRING ⇒ cell.getStringCellValue.isBlank
+        case FORMULA if cell.getCachedFormulaResultType == STRING ⇒ cell.getStringCellValue.isBlank
+        case _ ⇒ false
 
     private def isBlank: Boolean =
       isEmpty && isNotSeparator

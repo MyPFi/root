@@ -1,8 +1,8 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFRow, XSSFSheet}
+import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFSheet}
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 // TODO Header and Groups does not seem to fit at this level in the architecture. They are higher level concepts and seem to be closer the domain in the sense that they reflect a specific/constrained way of organizing spreadsheets
 case class Worksheet private(name: String, header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
@@ -10,13 +10,20 @@ case class Worksheet private(name: String, header: Header, lines: Seq[Line], gro
 // TODO Replace Try + exceptions with Validated
 object Worksheet:
 
-  def from(poiWorksheet: XSSFSheet): Try[Worksheet] = for {
-    poiHeaderRow ← rowZeroFrom(poiWorksheet)
-    header ← Header.from(poiHeaderRow)
-    numberOfColumns = header.columnNames.size
-    lines ← linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns)
-    validatedLines ← validated(lines)(poiWorksheet.getSheetName)
-  } yield Worksheet(poiWorksheet.getSheetName, header, validatedLines, grouped(validatedLines))
+  def from(poiWorksheet: XSSFSheet): Try[Worksheet] =
+    rowZeroFrom(poiWorksheet).flatMap { poiHeaderRow =>
+      Header.from(poiHeaderRow).fold(
+        errors ⇒ Failure(new IllegalArgumentException(errors.head.message)),
+        header ⇒ {
+          val numberOfColumns = header.columnNames.size
+          linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns).flatMap {
+            validated(_)(poiWorksheet.getSheetName).map { validatedLines =>
+              Worksheet(poiWorksheet.getSheetName, header, validatedLines, grouped(validatedLines))
+            }
+          }
+        }
+      )
+    }
 
   private def rowZeroFrom(poiWorksheet: XSSFSheet) = Try {
     if poiWorksheet.isEmpty then

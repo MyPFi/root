@@ -220,12 +220,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalArgumentException]),
-              'message("Header is empty.")
+              'message(s"Worksheet does not seem to have a valid header. Header is empty.")
             )
           }
           "has only separator (empty but not blank) cells." in { poiWorkbook =>
@@ -235,12 +230,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalArgumentException]),
-              'message("Header is empty.")
+              'message(s"Worksheet does not seem to have a valid header. Header is empty.")
             )
           }
           "has more than one contiguous separator." in { poiWorkbook =>
@@ -250,12 +240,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalArgumentException]),
-              'message("Multiple contiguous separators not allowed.")
+              'message(s"Worksheet does not seem to have a valid header. Multiple contiguous separators not allowed.")
             )
           }
           "'s first cell is a separator." in { poiWorkbook =>
@@ -265,12 +250,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalArgumentException]),
-              'message("Separators not allowed at the beggining of the header.")
+              'message(s"Worksheet does not seem to have a valid header. Separators not allowed at the beggining of the header.")
             )
           }
           "has a blank (empty but not a separator) cell." in { poiWorkbook =>
@@ -280,12 +260,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalArgumentException]),
-              'message("An illegal blank cell was found in the header.")
+              'message(s"Worksheet does not seem to have a valid header. An illegal blank cell was found in the header.")
             )
           }
           "has a numeric cell." in { poiWorkbook =>
@@ -295,12 +270,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalStateException]),
-              'message("Cannot get a STRING value from a NUMERIC cell")
+              'message(s"Worksheet does not seem to have a valid header. An illegal numeric cell was found in the header.")
             )
           }
           "has a boolean cell." in { poiWorkbook =>
@@ -310,12 +280,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalStateException]),
-              'message("Cannot get a STRING value from a BOOLEAN cell")
+              'message(s"Worksheet does not seem to have a valid header. An illegal boolean cell was found in the header.")
             )
           }
           "has a date cell." in { poiWorkbook =>
@@ -325,12 +290,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalStateException]),
-              'message("Cannot get a STRING value from a NUMERIC cell")
+              'message(s"Worksheet does not seem to have a valid header. An illegal date cell was found in the header.")
             )
           }
           "has a numeric formula cell." in { poiWorkbook =>
@@ -340,12 +300,7 @@ class WorksheetTest extends FixtureAnyFreeSpec :
 
             exception should have(
               'class(classOf[IllegalArgumentException]),
-              'message(s"Worksheet does not seem to have a valid header.")
-            )
-
-            exception.getCause should have(
-              'class(classOf[IllegalStateException]),
-              'message("Cannot get a STRING value from a NUMERIC formula cell")
+              'message(s"Worksheet does not seem to have a valid header. An illegal numeric formula cell was found in the header.")
             )
           }
         }

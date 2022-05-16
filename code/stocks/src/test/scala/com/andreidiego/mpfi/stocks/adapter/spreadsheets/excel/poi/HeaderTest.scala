@@ -5,13 +5,17 @@ import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.Outcome
 import org.scalatest.freespec.FixtureAnyFreeSpec
-import org.scalatest.TryValues.*
+import org.scalatest.EitherValues.*
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
 import scala.util.Failure
 
 class HeaderTest extends FixtureAnyFreeSpec :
+
+  import Header.HeaderError.IllegalArgument
+  import HeaderTest.{*, given}
+
   override protected type FixtureParam = XSSFWorkbook
 
   private val TEST_SPREADSHEET = "Header.xlsx"
@@ -25,7 +29,6 @@ class HeaderTest extends FixtureAnyFreeSpec :
     finally testWorkbook.close()
 
   // TODO A Header is a line
-  // TODO Replace Try + exceptions with Either
   "A Header should" - {
     "be built from a POI Row." in { poiWorkbook ⇒
       val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
@@ -37,17 +40,17 @@ class HeaderTest extends FixtureAnyFreeSpec :
         "non-empty cells." in { poiWorkbook =>
           val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
 
-          Header.from(poiHeaderRow).success.value.columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
+          Header.from(poiHeaderRow).columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
         }
         "non-blank (non-empty and separators) cells." in { poiWorkbook =>
           val poiHeaderRow = poiWorkbook.getSheet("HeaderNonEmptyCellsAndSeparator").getRow(0)
 
-          Header.from(poiHeaderRow).success.value.columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "")
+          Header.from(poiHeaderRow).columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "")
         }
         "non-empty and string-formula cells." in { poiWorkbook =>
           val poiHeaderRow = poiWorkbook.getSheet("StringFormulaInHeader").getRow(0)
 
-          Header.from(poiHeaderRow).success.value.columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
+          Header.from(poiHeaderRow).columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Data PregãoPapel", "Nota", "Papel")
         }
       }
     }
@@ -59,31 +62,21 @@ class HeaderTest extends FixtureAnyFreeSpec :
         "that" - {
           "is" - {
             "null." in { poiWorkbook =>
-              val exception = Header.from(null).failure.exception
+              val error = Header.from(null).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[NullPointerException]),
-                'message("""Cannot invoke "org.apache.poi.xssf.usermodel.XSSFRow.getLastCellNum()" because "poiHeaderRow" is null""")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header: 'null'.")
               )
             }
             "empty (no cells)." in { poiWorkbook =>
               val poiHeaderRow = new XSSFWorkbook().createSheet("1").createRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalArgumentException]),
-                'message("Header is empty.")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. Header is empty.")
               )
             }
           }
@@ -91,106 +84,71 @@ class HeaderTest extends FixtureAnyFreeSpec :
             "only separator (empty but not blank) cells." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("OnlySeparatorsInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalArgumentException]),
-                'message("Header is empty.")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. Header is empty.")
               )
             }
             "more than one contiguous separator." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("ContiguousSeparatorsInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalArgumentException]),
-                'message("Multiple contiguous separators not allowed.")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. Multiple contiguous separators not allowed.")
               )
             }
             "a blank (empty but not a separator) cell." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("EmptyCellInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalArgumentException]),
-                'message("An illegal blank cell was found in the header.")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. An illegal blank cell was found in the header.")
               )
             }
             "a numeric cell." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("NumberInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalStateException]),
-                'message("Cannot get a STRING value from a NUMERIC cell")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. An illegal numeric cell was found in the header.")
               )
             }
             "a boolean cell." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("BooleanInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalStateException]),
-                'message("Cannot get a STRING value from a BOOLEAN cell")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. An illegal boolean cell was found in the header.")
               )
             }
             "a date cell." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("DateInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalStateException]),
-                'message("Cannot get a STRING value from a NUMERIC cell")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. An illegal date cell was found in the header.")
               )
             }
             "a numeric formula cell." in { poiWorkbook =>
               val poiHeaderRow = poiWorkbook.getSheet("NumericFormulaInHeader").getRow(0)
 
-              val exception = Header.from(poiHeaderRow).failure.exception
+              val error = Header.from(poiHeaderRow).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
-                'message(s"Worksheet does not seem to have a valid header.")
-              )
-
-              exception.getCause should have(
-                'class(classOf[IllegalStateException]),
-                'message("Cannot get a STRING value from a NUMERIC formula cell")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Worksheet does not seem to have a valid header. An illegal numeric formula cell was found in the header.")
               )
             }
           }
@@ -198,16 +156,11 @@ class HeaderTest extends FixtureAnyFreeSpec :
         "whose first cell is a separator." in { poiWorkbook =>
           val poiHeaderRow = poiWorkbook.getSheet("SeparatorFirstInHeader").getRow(0)
 
-          val exception = Header.from(poiHeaderRow).failure.exception
+          val error = Header.from(poiHeaderRow).error
 
-          exception should have(
-            'class(classOf[IllegalArgumentException]),
-            'message(s"Worksheet does not seem to have a valid header.")
-          )
-
-          exception.getCause should have(
-            'class(classOf[IllegalArgumentException]),
-            'message("Separators not allowed at the beggining of the header.")
+          error should have(
+            'class(classOf[IllegalArgument]),
+            'message(s"Worksheet does not seem to have a valid header. Separators not allowed at the beggining of the header.")
           )
         }
       }
@@ -227,12 +180,23 @@ class HeaderTest extends FixtureAnyFreeSpec :
       "columnNames." in { poiWorkbook =>
         val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
 
-        Header.from(poiHeaderRow).success.value.columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
+        Header.from(poiHeaderRow).columnNames should contain theSameElementsInOrderAs Seq("Data Pregão", "Nota", "Papel", "Qtde")
       }
     }
     "forbid manipulation of its internal columnNames." in { poiWorkbook ⇒
       val poiHeaderRow = poiWorkbook.getSheet("ValidTinyWorksheet").getRow(0)
 
-      """Header.from(poiHeaderRow).success.value.columnNames = Seq("", "")""" shouldNot compile
+      """Header.from(poiHeaderRow).columnNames = Seq("", "")""" shouldNot compile
     }
   }
+
+object HeaderTest:
+
+  import Header.ErrorsOr
+
+  given Conversion[ErrorsOr[Header], Header] = _.toEither.value
+
+  extension (errorsOrHeader: ErrorsOr[Header])
+
+    private def error: Header.Error =
+      errorsOrHeader.toEither.left.value.head
