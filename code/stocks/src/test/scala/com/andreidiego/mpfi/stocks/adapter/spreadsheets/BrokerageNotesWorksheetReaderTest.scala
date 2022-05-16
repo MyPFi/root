@@ -1,8 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import BrokerageNotesWorksheetReader.BrokerageNoteReaderError
 import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.{RequiredValueMissing, UnexpectedContentColor, UnexpectedContentType, UnexpectedContentValue}
-import cats.data.ValidatedNec
 import excel.poi.{Cell, Line, Worksheet}
 import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
@@ -399,25 +397,32 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
   }
 
 object BrokerageNotesWorksheetReaderTest:
+
+  import BrokerageNotesWorksheetReader.ErrorsOr
+
   private val TEST_SPREADSHEET = "BrokerageNotes.xlsx"
 
-  private val FORMULA = "FORMULA"
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
-  extension (brokerageNotesWorksheetReaderValidated: ValidatedNec[BrokerageNoteReaderError, BrokerageNotesWorksheetReader])
+  extension (errorsOrBrokerageNotesWorksheetReader: ErrorsOr[BrokerageNotesWorksheetReader])
 
     private def brokerageNotes: Seq[BrokerageNote] =
-      brokerageNotesWorksheetReaderValidated.toEither.value.brokerageNotes
+      errorsOrBrokerageNotesWorksheetReader.toEither.value.brokerageNotes
 
-    private def error: BrokerageNoteReaderError =
-      brokerageNotesWorksheetReaderValidated.toEither.left.value.head
+    private def error: BrokerageNotesWorksheetReader.Error =
+      errorsOrBrokerageNotesWorksheetReader.toEither.left.value.head
 
     private def operations: Seq[Operation] =
       brokerageNotes.flatMap(_.operations)
 
     private def financialSummaries: Seq[FinancialSummary] =
       brokerageNotes.map(_.financialSummary)
+
+  extension (errorsOrWorksheet: ErrorsOr[Worksheet])
+
+    private def get: Worksheet =
+      errorsOrWorksheet.toEither.value
 
   extension (worksheet: Worksheet)
 
@@ -432,9 +437,6 @@ object BrokerageNotesWorksheetReaderTest:
 
     private def blueNonSummaryLines: Seq[Line] =
       nonSummaryLines.filter(allNonEmptyCellsBlue)
-
-    // TODO This property should be added to the actual 'Worksheet' class
-    private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
 
   extension (line: Line)
 

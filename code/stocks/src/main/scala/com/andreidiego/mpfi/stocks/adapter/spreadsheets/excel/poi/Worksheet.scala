@@ -1,64 +1,69 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
+import cats.data.ValidatedNec
+import cats.kernel.Semigroup
+import cats.syntax.validated.*
 import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFSheet}
-
-import scala.util.{Failure, Try}
 
 // TODO Header and Groups does not seem to fit at this level in the architecture. They are higher level concepts and seem to be closer the domain in the sense that they reflect a specific/constrained way of organizing spreadsheets
 case class Worksheet private(name: String, header: Header, lines: Seq[Line], groups: Seq[Seq[Line]])
 
-// TODO Replace Try + exceptions with Validated
 object Worksheet:
+  enum WorksheetError(message: String):
+    case IllegalArgument(message: String) extends WorksheetError(message)
 
-  def from(poiWorksheet: XSSFSheet): Try[Worksheet] =
-    rowZeroFrom(poiWorksheet).flatMap { poiHeaderRow =>
-      Header.from(poiHeaderRow).fold(
-        errors ⇒ Failure(new IllegalArgumentException(errors.head.message)),
-        header ⇒ {
-          val numberOfColumns = header.columnNames.size
-          linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns).flatMap {
-            validated(_)(poiWorksheet.getSheetName).map { validatedLines =>
-              Worksheet(poiWorksheet.getSheetName, header, validatedLines, grouped(validatedLines))
-            }
-          }
-        }
-      )
-    }
+  import WorksheetError.*
 
-  private def rowZeroFrom(poiWorksheet: XSSFSheet) = Try {
+  type Error = WorksheetError | Header.Error | Line.Error
+  type ErrorsOr[A] = ValidatedNec[Error, A]
+
+  given Semigroup[Seq[Line]] = (x, y) => if x == y then x else x ++: y
+
+  def from(poiWorksheet: XSSFSheet): ErrorsOr[Worksheet] = if poiWorksheet == null then
+    IllegalArgument(s"Invalid worksheet found: '$poiWorksheet'").invalidNec
+  else rowZeroFrom(poiWorksheet).andThen(poiHeaderRow ⇒ {
+    Header.from(poiHeaderRow).andThen(header ⇒ {
+      val numberOfColumns: Int = header.columnNames.size
+
+      linesFrom(poiWorksheet.withEmptyRows(numberOfColumns))(numberOfColumns)
+        .andThen(validated(_)(poiWorksheet.getSheetName))
+        .map(validatedLines ⇒ Worksheet(poiWorksheet.getSheetName, header, validatedLines, grouped(validatedLines)))
+    })
+  })
+
+  private def rowZeroFrom(poiWorksheet: XSSFSheet): ErrorsOr[XSSFRow] =
     if poiWorksheet.isEmpty then
-      throw new IllegalArgumentException(s"It looks like ${poiWorksheet.getSheetName} is completely empty.")
-    else poiWorksheet.getRowOrCreateEmpty(0)
-  }
+      IllegalArgument(s"It looks like ${poiWorksheet.getSheetName} is completely empty.").invalidNec
+    else poiWorksheet.getRowOrCreateEmpty(0).validNec
 
-  private def linesFrom(rows: Seq[XSSFRow])(headerSize: Int): Try[Seq[Line]] = Try {
-    rows.map(row ⇒ Line.from(row, headerSize).toEither.right.get)
-      .reverse
-      .dropWhile(_.isEmpty)
-      .reverse
-  }
+  // TODO This looks like sequencing so maybe, cats 'Traverse' has something simpler for us
+  private def linesFrom(rows: Seq[XSSFRow])(headerSize: Int): ErrorsOr[Seq[Line]] =
+    rows.map(Line.from(_, headerSize))
+      .map(_.map(Seq(_)))
+      .reduce(_ combine _)
+      .map {
+        _.reverse
+          .dropWhile(_.isEmpty)
+          .reverse
+      }
 
-  private def validated(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = for {
-    a ← assertRegularLinesFoundIn(lines)(sheetName)
-    b ← assertNoMoreThanOneEmptyLineRightAfterHeaderIn(a)(sheetName)
-    c ← assertNoThreeEmptyLinesBetweenRegularLinesOf(b)(sheetName)
-  } yield c
+  private def validated(lines: Seq[Line])(sheetName: String): ErrorsOr[Seq[Line]] =
+    assertRegularLinesFoundIn(lines)(sheetName)
+      .andThen {
+        assertNoMoreThanOneEmptyLineRightAfterHeaderIn(_)(sheetName) combine assertNoThreeEmptyLinesBetweenRegularLinesOf(lines)(sheetName)
+      }
 
-  private def assertRegularLinesFoundIn(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = Try {
+  private def assertRegularLinesFoundIn(lines: Seq[Line])(sheetName: String): ErrorsOr[Seq[Line]] =
     if lines.tail.isEmpty then
-      throw new IllegalArgumentException(s"$sheetName does not seem to have lines other than the header.")
+      IllegalArgument(s"$sheetName does not seem to have lines other than the header.").invalidNec
+    else lines.validNec
 
-    lines
-  }
-
-  private def assertNoMoreThanOneEmptyLineRightAfterHeaderIn(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = Try {
+  private def assertNoMoreThanOneEmptyLineRightAfterHeaderIn(lines: Seq[Line])(sheetName: String): ErrorsOr[Seq[Line]] =
     if lines.tail.take(2).forall(_.isEmpty) then
-      throw new IllegalArgumentException(s"Irregular empty line interval found right after the header of $sheetName. Only one empty line is allowed in this position.")
+      IllegalArgument(s"Irregular empty line interval found right after the header of $sheetName. Only one empty line is allowed in this position.").invalidNec
+    else lines.validNec
 
-    lines
-  }
-
-  private def assertNoThreeEmptyLinesBetweenRegularLinesOf(lines: Seq[Line])(sheetName: String): Try[Seq[Line]] = Try {
+  private def assertNoThreeEmptyLinesBetweenRegularLinesOf(lines: Seq[Line])(sheetName: String): ErrorsOr[Seq[Line]] =
     lines.sliding(4)
       .foldLeft(false) { (_, value) ⇒
         value match
@@ -66,12 +71,10 @@ object Worksheet:
           case Seq(_, _, _) ⇒ false
           case Seq(first, second, third, fourth) ⇒
             if first.isEmpty && second.isEmpty && third.isEmpty && fourth.isNotEmpty then
-              throw new IllegalArgumentException(s"Irregular empty line interval (${first.number}:${third.number}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.")
+              return IllegalArgument(s"Irregular empty line interval (${first.number}:${third.number}) found between the regular lines of $sheetName. No more than two empty lines are allowed in this position.").invalidNec
             else false
       }
-
-    lines
-  }
+    lines.validNec
 
   private def grouped(lines: Seq[Line]): Seq[Seq[Line]] = lines
     .drop(1)

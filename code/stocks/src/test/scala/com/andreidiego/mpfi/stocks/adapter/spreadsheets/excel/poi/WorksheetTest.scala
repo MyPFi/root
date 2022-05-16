@@ -4,19 +4,18 @@ import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.Outcome
 import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.TryValues.*
+import org.scalatest.EitherValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.Inspectors.forAll
 
 import java.io.File
 import scala.language.deprecated.symbolLiterals
-import scala.util.Try
 
-// TODO Replace Try + exceptions with Either
 class WorksheetTest extends FixtureAnyFreeSpec :
 
-  import WorksheetTest.*
   import CellType.*
+  import Worksheet.WorksheetError.IllegalArgument
+  import WorksheetTest.*
 
   override protected type FixtureParam = XSSFWorkbook
 
@@ -157,21 +156,21 @@ class WorksheetTest extends FixtureAnyFreeSpec :
         "that" - {
           "is" - {
             "null." in { _ =>
-              val exception = Worksheet.from(null).failure.exception
+              val error = Worksheet.from(null).error
 
-              exception should have(
-                'class(classOf[NullPointerException]),
-                'message("""Cannot invoke "org.apache.poi.xssf.usermodel.XSSFSheet.getLastRowNum()" because "poiWorksheet" is null""")
+              error should have(
+                'class(classOf[IllegalArgument]),
+                'message(s"Invalid worksheet found: 'null'")
               )
             }
             "empty." in { poiWorkbook =>
               val TEST_SHEET_NAME = "EmptySheet"
               val TEST_SHEET = poiWorkbook.getSheet(TEST_SHEET_NAME)
 
-              val exception = Worksheet.from(TEST_SHEET).failure.exception
+              val error = Worksheet.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[IllegalArgument]),
                 'message(s"It looks like $TEST_SHEET_NAME is completely empty.")
               )
             }
@@ -181,10 +180,10 @@ class WorksheetTest extends FixtureAnyFreeSpec :
               val TEST_SHEET_NAME = "OnlyHeader"
               val TEST_SHEET = poiWorkbook.getSheet(TEST_SHEET_NAME)
 
-              val exception = Worksheet.from(TEST_SHEET).failure.exception
+              val error = Worksheet.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[IllegalArgument]),
                 'message(s"$TEST_SHEET_NAME does not seem to have lines other than the header.")
               )
             }
@@ -192,10 +191,10 @@ class WorksheetTest extends FixtureAnyFreeSpec :
               val TEST_SHEET_NAME = "IrregularEmptyLinesAtTheTop"
               val TEST_SHEET = poiWorkbook.getSheet(TEST_SHEET_NAME)
 
-              val exception = Worksheet.from(TEST_SHEET).failure.exception
+              val error = Worksheet.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[IllegalArgument]),
                 'message(s"Irregular empty line interval found right after the header of $TEST_SHEET_NAME. Only one empty line is allowed in this position.")
               )
             }
@@ -203,10 +202,10 @@ class WorksheetTest extends FixtureAnyFreeSpec :
               val TEST_SHEET_NAME = "IrregularEmptyLineInterval"
               val TEST_SHEET = poiWorkbook.getSheet(TEST_SHEET_NAME)
 
-              val exception = Worksheet.from(TEST_SHEET).failure.exception
+              val error = Worksheet.from(TEST_SHEET).error
 
-              exception should have(
-                'class(classOf[IllegalArgumentException]),
+              error should have(
+                'class(classOf[IllegalArgument]),
                 'message(s"Irregular empty line interval (5:7) found between the regular lines of $TEST_SHEET_NAME. No more than two empty lines are allowed in this position.")
               )
             }
@@ -216,90 +215,90 @@ class WorksheetTest extends FixtureAnyFreeSpec :
           "is not in the first line." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("HeaderOutOfPlace")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. Header is empty.")
             )
           }
           "has only separator (empty but not blank) cells." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("OnlySeparatorsInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. Header is empty.")
             )
           }
           "has more than one contiguous separator." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("ContiguousSeparatorsInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. Multiple contiguous separators not allowed.")
             )
           }
           "'s first cell is a separator." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("SeparatorFirstInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. Separators not allowed at the beggining of the header.")
             )
           }
           "has a blank (empty but not a separator) cell." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("EmptyCellInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. An illegal blank cell was found in the header.")
             )
           }
           "has a numeric cell." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("NumberInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. An illegal numeric cell was found in the header.")
             )
           }
           "has a boolean cell." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("BooleanInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. An illegal boolean cell was found in the header.")
             )
           }
           "has a date cell." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("DateInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. An illegal date cell was found in the header.")
             )
           }
           "has a numeric formula cell." in { poiWorkbook =>
             val TEST_SHEET = poiWorkbook.getSheet("NumericFormulaInHeader")
 
-            val exception = Worksheet.from(TEST_SHEET).failure.exception
+            val error = Worksheet.from(TEST_SHEET).error
 
-            exception should have(
-              'class(classOf[IllegalArgumentException]),
+            error should have(
+              'class(classOf[Header.HeaderError.IllegalArgument]),
               'message(s"Worksheet does not seem to have a valid header. An illegal numeric formula cell was found in the header.")
             )
           }
@@ -384,26 +383,27 @@ class WorksheetTest extends FixtureAnyFreeSpec :
     "forbid manipulation of its internal header." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-      "val header: Header = Worksheet.from(TEST_SHEET).success.value.header" should compile
-      "Worksheet.from(TEST_SHEET).success.value.header = header" shouldNot compile
+      "val header: Header = Worksheet.from(TEST_SHEET).toEither.value.header" should compile
+      "Worksheet.from(TEST_SHEET).toEither.value.header = header" shouldNot compile
     }
     "forbid manipulation of its internal lines." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-      "val lines: Seq[Line] = Worksheet.from(TEST_SHEET).success.value.lines" should compile
-      "Worksheet.from(TEST_SHEET).success.value.lines = lines" shouldNot compile
+      "val lines: Seq[Line] = Worksheet.from(TEST_SHEET).toEither.value.lines" should compile
+      "Worksheet.from(TEST_SHEET).toEither.value.lines = lines" shouldNot compile
     }
     "forbid manipulation of its internal groups." in { poiWorkbook ⇒
       val TEST_SHEET = poiWorkbook.getSheet(VALID_TINY_WORKSHEET)
 
-      "val groups: Seq[Seq[Line]] = Worksheet.from(TEST_SHEET).success.value.groups" should compile
-      "Worksheet.from(TEST_SHEET).success.value.groups = groups" shouldNot compile
+      "val groups: Seq[Seq[Line]] = Worksheet.from(TEST_SHEET).toEither.value.groups" should compile
+      "Worksheet.from(TEST_SHEET).toEither.value.groups = groups" shouldNot compile
     }
   }
 
 object WorksheetTest:
 
   import CellType.*
+  import Worksheet.ErrorsOr
 
   private type Cell = (String, String, CellType, String, String, String, String, String)
   private val TEST_SPREADSHEET = "Worksheet.xlsx"
@@ -422,22 +422,25 @@ object WorksheetTest:
   private val VALID_TINY_WORKSHEET = "ValidTinyWorksheet"
   private val VALID_TINY_WORKSHEET_CONTENTS = Seq(HEADER, blankLine("2"), stringLine("3"), stringLine("4"))
 
-  private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), integerCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), integerCell(s"D$lineNumber", "200"))
+  extension (errorsOrWorksheet: ErrorsOr[Worksheet])
 
-  private def nameFrom(worksheet: Try[Worksheet]): String = worksheet.success.value.name
+    private def error: Worksheet.Error =
+      errorsOrWorksheet.toEither.left.value.head
 
-  private def headerFrom(worksheet: Try[Worksheet]): Seq[String] = worksheet.success.value.header.columnNames
+  private def headerFrom(errorsOrWorksheet: ErrorsOr[Worksheet]): Seq[String] = errorsOrWorksheet.toEither.value.header.columnNames
 
-  private def linesFrom(worksheet: Try[Worksheet]): Seq[Seq[Cell]] = worksheet.success.value.lines
+  private def linesFrom(errorsOrWorksheet: ErrorsOr[Worksheet]): Seq[Seq[Cell]] = errorsOrWorksheet.toEither.value.lines
     .map(_.cells)
     .map(cells ⇒ cells.map(cell ⇒ (cell.address, cell.value, cell.`type`, cell.mask, cell.formula, cell.note, cell.fontColor, cell.backgroundColor)))
 
-  private def groupsFrom(worksheet: Try[Worksheet]): Seq[Seq[Seq[Cell]]] = worksheet.success.value.groups
+  private def groupsFrom(errorsOrWorksheet: ErrorsOr[Worksheet]): Seq[Seq[Seq[Cell]]] = errorsOrWorksheet.toEither.value.groups
     .map(group ⇒ group
       .map(line ⇒ line.cells
         .map(cell ⇒ (cell.address, cell.value, cell.`type`, cell.mask, cell.formula, cell.note, cell.fontColor, cell.backgroundColor))
       )
     )
+
+  private def nameFrom(errorsOrWorksheet: ErrorsOr[Worksheet]): String = errorsOrWorksheet.toEither.value.name
 
   private def stringLine(lineNumber: String): Seq[Cell] =
     Seq(stringCell(s"A$lineNumber"), stringCell(s"B$lineNumber"), stringCell(s"C$lineNumber"), stringCell(s"D$lineNumber"))
@@ -454,3 +457,5 @@ object WorksheetTest:
   private def dateCell(address: String): Cell = (address, "05/11/2008", DATE, "m/d/yy", "", "", "255,0,0", "")
 
   private def currencyCell(address: String): Cell = (address, "15.34", CURRENCY, """"R$"\ #,##0.00;[Red]\-"R$"\ #,##0.00""", "", "", "255,0,0", "")
+
+  private def standardLine(lineNumber: String): Seq[Cell] = Seq(dateCell(s"A$lineNumber"), integerCell(s"B$lineNumber", "78174"), stringCell(s"C$lineNumber"), integerCell(s"D$lineNumber", "200"))

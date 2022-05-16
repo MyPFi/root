@@ -8,8 +8,7 @@ import com.andreidiego.mpfi.stocks.adapter.services.*
 import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
-import java.time.{LocalDate, LocalDateTime}
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 import java.util.Locale
 import scala.annotation.targetName
 import scala.math.Ordering.Implicits.*
@@ -40,12 +39,10 @@ object BrokerageNotesWorksheetReader:
 
   import BrokerageNoteReaderError.*
 
-  type ErrorsOr[A] = ValidatedNec[BrokerageNoteReaderError, A]
-
+  type Error = BrokerageNoteReaderError | Worksheet.Error
+  type ErrorsOr[A] = ValidatedNec[Error, A]
   private type Group = Seq[Line]
 
-  private val FORMULA = "FORMULA"
-  private val NUMERIC = "NUMERIC"
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
 
