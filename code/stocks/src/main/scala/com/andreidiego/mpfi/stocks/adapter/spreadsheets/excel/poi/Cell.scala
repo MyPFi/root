@@ -38,6 +38,10 @@ case class Cell private(address: String, value: String, `type`: CellType, mask: 
 
   def isNotDate: Boolean = !isDate
 
+  def isFormula: Boolean = !formula.isBlank
+
+  def isNotFormula: Boolean = !isFormula
+
   // TODO Add test for invalid date
   def asLocalDate: Option[LocalDate] =
     if `type` == DATE then Try(LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"))).toOption

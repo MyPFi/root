@@ -237,6 +237,16 @@ class CellTest extends FixtureAnyFreeSpec :
 
           assert(Cell.from(poiCellWithNoDate).isNotDate)
         }
+        "a formula" in { poiRow ⇒
+          val poiCellWithFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
+
+          assert(Cell.from(poiCellWithFormula).isFormula)
+        }
+        "not a formula" in { poiRow ⇒
+          val poiCellWithNoFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          assert(Cell.from(poiCellWithNoFormula).isNotFormula)
+        }
       }
       "always have" - {
         "an address." in { poiRow ⇒
