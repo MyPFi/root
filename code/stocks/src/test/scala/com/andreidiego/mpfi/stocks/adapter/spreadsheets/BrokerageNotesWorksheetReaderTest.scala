@@ -440,21 +440,13 @@ object BrokerageNotesWorksheetReaderTest:
 
   extension (line: Line)
 
-    private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
+    private def isSummary: Boolean = line.nonEmptyCells.forall(_.isFormula)
 
-    private def nonEmptyCells: Seq[Cell] = cells.filter(nonEmpty)
+    private def allNonEmptyCellsRed: Boolean = line.nonEmptyCells.forall(redFont)
 
-    private def cells: Seq[Cell] = line.cells
-
-    private def allNonEmptyCellsRed: Boolean = nonEmptyCells.forall(redFont)
-
-    private def allNonEmptyCellsBlue: Boolean = nonEmptyCells.forall(blueFont)
+    private def allNonEmptyCellsBlue: Boolean = line.nonEmptyCells.forall(blueFont)
 
   extension (cell: Cell)
-
-    private def isFormula: Boolean = cell.formula.nonEmpty
-
-    private def nonEmpty: Boolean = cell.value.nonEmpty
 
     private def redFont: Boolean = cell.fontColor == RED
 
