@@ -40,7 +40,7 @@ object ServiceTaxRate:
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   private val ratesHistory: SortedMap[LocalDate, Map[City, Double]] = SortedMap(
-    LocalDate.parse("01/01/0001", dateFormatter) -> Map(RioDeJaneiro -> 0.05, SaoPaulo -> 0.05),
+    LocalDate.MIN -> Map(RioDeJaneiro -> 0.05, SaoPaulo -> 0.05),
     LocalDate.parse("30/05/2017", dateFormatter) -> Map(RioDeJaneiro -> 0.05, SaoPaulo -> 0.05),
     LocalDate.parse("18/08/2019", dateFormatter) -> Map(RioDeJaneiro -> 0.065, SaoPaulo -> 0.065)
   )

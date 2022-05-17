@@ -13,7 +13,7 @@ object NegotiationFeesRate:
   val CLOSING_CALL: LocalTime = LocalTime.parse("16:55")
 
   private val ratesHistory: SortedMap[LocalDate, SortedMap[LocalTime, Double]] = SortedMap(
-    LocalDate.parse("01/01/0001", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00007, CLOSING_CALL -> 0.00007),
+    LocalDate.MIN -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00007, CLOSING_CALL -> 0.00007),
     LocalDate.parse("26/11/2013", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
     LocalDate.parse("28/10/2019", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00004, TRADING -> 0.000032, CLOSING_CALL -> 0.00004),
     LocalDate.parse("02/02/2021", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
