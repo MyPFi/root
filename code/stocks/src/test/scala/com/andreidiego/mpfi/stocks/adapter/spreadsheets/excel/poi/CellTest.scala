@@ -1,23 +1,19 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import cats.data.ValidatedNec
-import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFWorkbook, XSSFWorkbookFactory}
 import org.scalatest.freespec.FixtureAnyFreeSpec
-import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.EitherValues.*
-import org.scalatest.Outcome
-
-import java.io.File
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import language.deprecated.symbolLiterals
 
 class CellTest extends FixtureAnyFreeSpec :
 
+  import java.io.File
+  import language.deprecated.symbolLiterals
+  import org.apache.poi.openxml4j.opc.OPCPackage
+  import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFWorkbook, XSSFWorkbookFactory}
+  import org.scalatest.matchers.should.Matchers.*
+  import org.scalatest.Outcome
+  import CellType.{valueOf as _, *}
   import Cell.CellError.IllegalArgument
   import CellTest.{*, given}
-  import CellType.{valueOf as _, *}
 
   override protected type FixtureParam = XSSFRow
 
@@ -146,13 +142,25 @@ class CellTest extends FixtureAnyFreeSpec :
         "string arguments instead of a POI Cell." in { _ =>
           """Cell("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")""" shouldNot compile
         }
-        "a POI Cell that is null." in { _ =>
-          val error = Cell.from(null).toEither.left.value.head
+        "a POI Cell that is" - {
+          "'null'." in { _ =>
+            val error = Cell.from(null).error
 
-          error should have(
-            'class(classOf[IllegalArgument]),
-            'message(s"Invalid cell found: null")
-          )
+            error should have(
+              'class(classOf[IllegalArgument]),
+              'message(s"Invalid cell found: null")
+            )
+          }
+          "a negative date." in { poiRow ⇒
+            val poiCellWithNegativeDate = poiRow.getCell(INDEX_OF_CELL_WITH_NEGATIVE_DATE)
+
+            val error = Cell.from(poiCellWithNegativeDate).error
+
+            error should have(
+              'class(classOf[IllegalArgument]),
+              'message(s"Invalid cell found. Date cells cannot have a negative value but, cell 'AH1' is formatted as date and has value '-39757.0'.")
+            )
+          }
         }
       }
       "be empty if its value is empty." in { poiRow ⇒
@@ -963,6 +971,8 @@ class CellTest extends FixtureAnyFreeSpec :
 
 object CellTest:
 
+  import java.time.LocalDate
+  import java.time.format.DateTimeFormatter
   import Cell.ErrorsOr
 
   private val TEST_SPREADSHEET = "Cell.xlsx"
@@ -1034,14 +1044,18 @@ object CellTest:
   private val DATE_SHAPED_STRING_VALUE = "05/11/2008"
   private val INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA = 32
   private val DATE_SHAPED_STRING_FORMULA_VALUE = "05/11/2008"
-  private val INDEX_OF_CELL_WITH_NOTE = 33
+  private val INDEX_OF_CELL_WITH_NEGATIVE_DATE = 33
+  private val INDEX_OF_CELL_WITH_NOTE = 34
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 34
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 35
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 35
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 36
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   given Conversion[ErrorsOr[Cell], Cell] = _.toEither.value
+
+  extension (errorsOrCell: ErrorsOr[Cell])
+    private def error: Cell.Error = errorsOrCell.toEither.left.value.head
 
   extension (string: String)
     private def toLocalDate: LocalDate = LocalDate.parse(string, DateTimeFormatter.ofPattern("dd/MM/yyyy"))

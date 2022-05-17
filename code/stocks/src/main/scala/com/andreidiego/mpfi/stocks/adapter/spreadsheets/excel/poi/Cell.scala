@@ -78,8 +78,10 @@ object Cell:
   extension (poiCell: XSSFCell)
 
     private def validated: ErrorsOr[XSSFCell] =
-      if poiCell == null then
+      if `null` then
         IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
+      else if numericDate && negative then
+        IllegalArgument(s"Invalid cell found. Date cells cannot have a negative value but, cell '$address' is formatted as date and has value '${poiCell.getNumericCellValue}'.").invalidNec
       else poiCell.validNec
 
     private def address: String = poiCell.getAddress.toString
@@ -115,6 +117,10 @@ object Cell:
       .map(_.getRGBWithTint.map(b => b & 0xFF).mkString(","))
       .getOrElse("")
 
+    private def `null`: Boolean = poiCell == null
+    
+    private def negative: Boolean = poiCell.getNumericCellValue < 0
+    
     private def isInteger: Option[CellType] =
       if numericInteger || stringInteger then Some(INTEGER)
       else None
