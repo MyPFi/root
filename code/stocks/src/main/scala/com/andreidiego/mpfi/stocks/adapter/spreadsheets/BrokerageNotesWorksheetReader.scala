@@ -8,7 +8,7 @@ import com.andreidiego.mpfi.stocks.adapter.services.*
 import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
 import excel.poi.{Cell, Line, Worksheet}
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.util.Locale
 import scala.annotation.targetName
 import scala.math.Ordering.Implicits.*
@@ -165,10 +165,11 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else group.validNec
 
+  // TODO Think about adding a reason to the errors for the cases where the requirements for the validation are not present. For instance, in the case below, any one of the following, if missing or having any other problem, would result in an impossible validation: tradingDate, volume and, actualSettlementFee. For now, we'll choose default values for them in case of problem and the validation will fail because of them. Hopefully, the original cause will be caught by other validation.
   private def assertSettlementFeeIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
-    val tradingDate = line.cells.head.asLocalDate.get
+    val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
@@ -183,7 +184,7 @@ object BrokerageNotesWorksheetReader:
   private def assertNegotiationFeesIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val volumeCell = line.cells(5)
     val negotiationsFeeCell = line.cells(7)
-    val tradingDate = line.cells.head.asLocalDate.get
+    val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val tradingTime = NegotiationFeesRate.TRADING
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val actualNegotiationsFee = negotiationsFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
@@ -199,7 +200,7 @@ object BrokerageNotesWorksheetReader:
   private def assertServiceTaxIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
-    val tradingDate = line.cells.head.asLocalDate.get
+    val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val brokerage = brokerageCell.asDouble.getOrElse(0.0)
     val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
@@ -226,7 +227,7 @@ object BrokerageNotesWorksheetReader:
         val brokerageCell = line.cells(8)
         val serviceTaxCell = line.cells(9)
 
-        val tradingDate = line.cells.head.asLocalDate.get
+        val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
         val qty = qtyCell.asInt.getOrElse(0)
         val volume = volumeCell.asDouble.getOrElse(0.0)
         val settlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
