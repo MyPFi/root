@@ -71,6 +71,7 @@ object BrokerageNotesWorksheetReader:
       assertLinesInGroupHaveSameTradingDate(worksheet.name),
       assertLinesInGroupHaveSameNoteNumber(worksheet.name)
     ), Seq(
+      assertTradingDate(isPresent)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -308,12 +309,28 @@ object BrokerageNotesWorksheetReader:
     else group.validNec
 
   // TODO Add a test for making sure we do not require empty cells to have a fontColor
-  private def assertCellsInLineHaveFontColorRedOrBlue(worksheetName: String): Group ⇒ Cell ⇒ ErrorsOr[Group] = group ⇒ cell ⇒
+  private def assertCellsInLineHaveFontColorRedOrBlue(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, _) ⇒
     cell.fontColor match
       case "255,0,0" | "68,114,196" | "" ⇒ group.validNec
       case _ ⇒ UnexpectedContentColor(
         s"An invalid 'Cell' '${cell.address}' was found on 'Worksheet' '$worksheetName'. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '${cell.fontColor}'."
       ).invalidNec
+
+  private def assertTradingDate(tradingDateValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    given Semigroup[Cell] = (x, _) => x
+
+    if cell.isTradingDate then
+      tradingDateValidations
+        .map(_ (cell)("TradingDate", lineNumber, worksheetName))
+        .reduce(_ combine _)
+        .map(_ ⇒ group)
+    else group.validNec
+
+  private def isPresent(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
+    if cell.isNotEmpty then cell.validNec
+    else RequiredValueMissing(
+      s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' $worksheetName."
+    ).invalidNec
 
   // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells
   private def assertCellsInLineHaveSameFontColor(worksheetName: String): Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group] = group ⇒ (first: Cell, second: Cell) ⇒
@@ -327,13 +344,13 @@ object BrokerageNotesWorksheetReader:
     private def validatedWith(groupValidations: Seq[Group ⇒ ErrorsOr[Group]] = Seq(),
                               lineValidations: Seq[Group ⇒ Line ⇒ ErrorsOr[Group]] = Seq(),
                               interLineValidations: Seq[Group ⇒ (Line, Line) ⇒ ErrorsOr[Group]] = Seq(),
-                              cellValidations: Seq[Group ⇒ Cell ⇒ ErrorsOr[Group]] = Seq(),
+                              cellValidations: Seq[Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group]] = Seq(),
                               interCellValidations: Seq[Group ⇒ (Cell, Cell) ⇒ ErrorsOr[Group]] = Seq()
                              ): ErrorsOr[Group] =
       group.nonSummaryLines.sliding(2).foldLeft(
         group.nonSummaryLines.foldLeft(groupValidations.map(_ (group)).reduce(_ `combine` _)) { (acc, line) ⇒
           line.cells.foldLeft(acc.combine(lineValidations.map(_ (group)(line)).reduce(_ `combine` _))) { (acc, cell) ⇒
-            acc.combine(cellValidations.map(_ (group)(cell)).reduce(_ `combine` _))
+            acc.combine(cellValidations.map(_ (group)(cell, line.number)).reduce(_ `combine` _))
           }
         }
       ) { (independentValidations, lines) ⇒
@@ -391,6 +408,8 @@ object BrokerageNotesWorksheetReader:
     private def isFormula: Boolean = cell.formula.nonEmpty
 
     private def nonEmpty: Boolean = cell.value.nonEmpty
+
+    private def isTradingDate: Boolean = cell.address.startsWith("A")
 
   extension (double: Double)
 
