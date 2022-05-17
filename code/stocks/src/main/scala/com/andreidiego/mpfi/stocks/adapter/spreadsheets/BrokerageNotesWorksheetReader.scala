@@ -321,10 +321,6 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else group.validNec
 
-  extension (worksheet: Worksheet)
-
-    private def name: String = "???Placeholder until we add the name field to the Worksheet class???"
-
   extension (group: Group)
 
     private def validatedWith(groupValidations: Seq[Group ⇒ ErrorsOr[Group]] = Seq(),
