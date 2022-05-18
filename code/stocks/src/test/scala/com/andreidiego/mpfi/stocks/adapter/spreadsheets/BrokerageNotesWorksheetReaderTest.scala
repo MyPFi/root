@@ -108,6 +108,19 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       )
                     }
                   }
+                  "'Ticker'" - {
+                    "when missing." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "TickerMissing"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                      error should have(
+                        'class(classOf[RequiredValueMissing]),
+                        'message(s"A required attribute ('Ticker') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      )
+                    }
+                  }
                 }
               }
             }

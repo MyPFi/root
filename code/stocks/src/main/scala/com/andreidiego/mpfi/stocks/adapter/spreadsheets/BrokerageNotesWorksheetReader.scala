@@ -73,6 +73,7 @@ object BrokerageNotesWorksheetReader:
     ), Seq(
       assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
+      assertTicker(isPresent)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -323,6 +324,9 @@ object BrokerageNotesWorksheetReader:
   private def assertNoteNumber(noteNumberValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
     assertAttribute("NoteNumber", _.isNoteNumber, noteNumberValidations: _*)(worksheetName, group, cell, lineNumber)
 
+  private def assertTicker(tickerValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("Ticker", _.isTicker, tickerValidations: _*)(worksheetName, group, cell, lineNumber)
+
   private def assertAttribute(attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String, group: Group, cell: Cell, lineNumber: Int) =
     given Semigroup[Cell] = (x, _) => x
 
@@ -437,6 +441,8 @@ object BrokerageNotesWorksheetReader:
     private def isTradingDate: Boolean = cell.address.startsWith("A")
 
     private def isNoteNumber: Boolean = cell.address.startsWith("B")
+
+    private def isTicker: Boolean = cell.address.startsWith("C")
 
   extension (double: Double)
 
