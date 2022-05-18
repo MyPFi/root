@@ -96,6 +96,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'message(s"'NoteNumber' ('I662') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number.")
                       )
                     }
+                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "NoteNumberBlack"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                      error should have(
+                        'class(classOf[UnexpectedContentColor]),
+                        'message(s"'NoteNumber's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                      )
+                    }
                   }
                 }
               }
