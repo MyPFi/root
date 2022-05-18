@@ -142,8 +142,8 @@ class CellTest extends FixtureAnyFreeSpec :
         "string arguments instead of a POI Cell." in { _ =>
           """Cell("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")""" shouldNot compile
         }
-        "a POI Cell that is" - {
-          "'null'." in { _ =>
+        "a POI Cell that" - {
+          "is 'null'." in { _ =>
             val error = Cell.from(null).error
 
             error should have(
@@ -151,7 +151,7 @@ class CellTest extends FixtureAnyFreeSpec :
               'message(s"Invalid cell found: null")
             )
           }
-          "a negative date." in { poiRow ⇒
+          "has a negative date." in { poiRow ⇒
             val poiCellWithNegativeDate = poiRow.getCell(INDEX_OF_CELL_WITH_NEGATIVE_DATE)
 
             val error = Cell.from(poiCellWithNegativeDate).error
@@ -159,6 +159,16 @@ class CellTest extends FixtureAnyFreeSpec :
             error should have(
               'class(classOf[IllegalArgument]),
               'message(s"Invalid cell found. Date cells cannot have a negative value but, cell 'AH1' is formatted as date and has value '-39757.0'.")
+            )
+          }
+          "looks like a date but contains characters other than numbers and the '/' symbol." in { poiRow ⇒
+            val poiCellWithDateWithExtraneousCharacters = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS)
+
+            val error = Cell.from(poiCellWithDateWithExtraneousCharacters).error
+
+            error should have(
+              'class(classOf[IllegalArgument]),
+              'message(s"Invalid cell found. Although cell 'AI1' looks like a date ('O5/11/2008'), it contains unexpected characters that are neither numbers nor the '/' symbol.")
             )
           }
         }
@@ -1045,11 +1055,12 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA = 32
   private val DATE_SHAPED_STRING_FORMULA_VALUE = "05/11/2008"
   private val INDEX_OF_CELL_WITH_NEGATIVE_DATE = 33
-  private val INDEX_OF_CELL_WITH_NOTE = 34
+  private val INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS = 34
+  private val INDEX_OF_CELL_WITH_NOTE = 35
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 35
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 36
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 36
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 37
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   given Conversion[ErrorsOr[Cell], Cell] = _.toEither.value

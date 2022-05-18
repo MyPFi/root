@@ -82,6 +82,8 @@ object Cell:
         IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
       else if numericDate && negative then
         IllegalArgument(s"Invalid cell found. Date cells cannot have a negative value but, cell '$address' is formatted as date and has value '${poiCell.getNumericCellValue}'.").invalidNec
+      else if resemblesAStringDate && !stringDate then
+        IllegalArgument(s"Invalid cell found. Although cell '$address' looks like a date ('${poiCell.getStringCellValue}'), it contains unexpected characters that are neither numbers nor the '/' symbol.").invalidNec
       else poiCell.validNec
 
     private def address: String = poiCell.getAddress.toString
@@ -156,6 +158,8 @@ object Cell:
     private def numericDate: Boolean = numericCellWithADate || numericFormulaCellWithADate
 
     private def stringDate: Boolean = stringCellContainingDateValue || stringFormulaCellContainingDateValue
+    
+    private def resemblesAStringDate: Boolean = stringCellResemblingADate || stringFormulaCellResemblingADate
 
     private def ofBlankType: Boolean = poiCell.getCellType == BLANK
 
@@ -173,6 +177,9 @@ object Cell:
 
     private def stringCellContainingDateValue: Boolean =
       ofStringType && dateRegex.findFirstIn(poiCell.getStringCellValue).isDefined
+
+    private def stringCellResemblingADate: Boolean =
+      ofStringType && dateLikeRegex.findFirstIn(poiCell.getStringCellValue).isDefined
 
     private def ofNumericType: Boolean = poiCell.getCellType == NUMERIC
 
@@ -212,6 +219,9 @@ object Cell:
     private def stringFormulaCellContainingDateValue: Boolean =
       stringFormula && dateRegex.findFirstIn(poiCell.getStringCellValue).isDefined
 
+    private def stringFormulaCellResemblingADate: Boolean =
+      stringFormula && dateLikeRegex.findFirstIn(poiCell.getStringCellValue).isDefined
+
     private def numericFormula: Boolean =
       ofFormulaType && poiCell.getCachedFormulaResultType == NUMERIC
 
@@ -235,6 +245,7 @@ object Cell:
       raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r
 
     private def dateRegex = raw"(\d{2}/\d{2}/\d{4})".r
+    private def dateLikeRegex = raw"(\p{Alnum}{2}/\p{Alnum}{2}/\p{Alnum}{4})".r
 
   extension (thisOption: Option[CellType])
     @targetName("or")
