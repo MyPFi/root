@@ -171,6 +171,16 @@ class CellTest extends FixtureAnyFreeSpec :
               'message(s"Invalid cell found. Although cell 'AI1' looks like a date ('O5/11/2008'), it contains unexpected characters that are neither numbers nor the '/' symbol.")
             )
           }
+          "has an invalid date." in { poiRow ⇒
+            val poiCellWithInvalidDate = poiRow.getCell(INDEX_OF_CELL_WITH_INVALID_DATE)
+
+            val error = Cell.from(poiCellWithInvalidDate).error
+
+            error should have(
+              'class(classOf[IllegalArgument]),
+              'message(s"Invalid cell found. Cell 'AJ1' contains an invalid date: '05/13/2008'.")
+            )
+          }
         }
       }
       "be empty if its value is empty." in { poiRow ⇒
@@ -1056,11 +1066,12 @@ object CellTest:
   private val DATE_SHAPED_STRING_FORMULA_VALUE = "05/11/2008"
   private val INDEX_OF_CELL_WITH_NEGATIVE_DATE = 33
   private val INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS = 34
-  private val INDEX_OF_CELL_WITH_NOTE = 35
+  private val INDEX_OF_CELL_WITH_INVALID_DATE = 35
+  private val INDEX_OF_CELL_WITH_NOTE = 36
   private val NOTE = "Note"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 36
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 37
   private val FONT_COLOR_RED = "255,0,0"
-  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 37
+  private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 38
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
 
   given Conversion[ErrorsOr[Cell], Cell] = _.toEither.value
