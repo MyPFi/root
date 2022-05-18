@@ -72,6 +72,7 @@ object BrokerageNotesWorksheetReader:
       assertLinesInGroupHaveSameNoteNumber(worksheet.name)
     ), Seq(
       assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
+      assertNoteNumber(isPresent)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -317,11 +318,17 @@ object BrokerageNotesWorksheetReader:
       ).invalidNec
 
   private def assertTradingDate(tradingDateValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("TradingDate", _.isTradingDate, tradingDateValidations: _*)(worksheetName, group, cell, lineNumber)
+
+  private def assertNoteNumber(noteNumberValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("NoteNumber", _.isNoteNumber, noteNumberValidations: _*)(worksheetName, group, cell, lineNumber)
+
+  private def assertAttribute(attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String, group: Group, cell: Cell, lineNumber: Int) =
     given Semigroup[Cell] = (x, _) => x
 
-    if cell.isTradingDate then
-      tradingDateValidations
-        .map(_ (cell)("TradingDate", lineNumber, worksheetName))
+    if attributeGuard(cell) then
+      attributeValidations
+        .map(_ (cell)(attributeName, lineNumber, worksheetName))
         .reduce(_ combine _)
         .map(_ ⇒ group)
     else group.validNec
@@ -416,6 +423,8 @@ object BrokerageNotesWorksheetReader:
     private def nonEmpty: Boolean = cell.value.nonEmpty
 
     private def isTradingDate: Boolean = cell.address.startsWith("A")
+
+    private def isNoteNumber: Boolean = cell.address.startsWith("B")
 
   extension (double: Double)
 
