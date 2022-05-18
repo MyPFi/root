@@ -73,7 +73,7 @@ object BrokerageNotesWorksheetReader:
     ), Seq(
       assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
-      assertTicker(isPresent)(worksheet.name),
+      assertTicker(isPresent, hasAValidFontColor)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
