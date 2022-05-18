@@ -50,6 +50,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' $TEST_SHEET_NAME.")
                       )
                     }
+                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "TradingDateBlack"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                      error should have(
+                        'class(classOf[UnexpectedContentColor]),
+                        'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' ${TEST_SHEET_NAME} can only be red ('255,0,0') or blue ('68,114,196').")
+                      )
+                    }
                   }
                 }
               }
@@ -117,7 +128,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 'message(s"An invalid 'Cell' 'B3' was found on 'Worksheet' '${TEST_SHEET.name}'. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '68,114,196' in 'B3' is different from '255,0,0' in 'A3'.")
               )
             }
-            "whose font-colors are neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+            "whose font-colors are neither red (255,0,0) nor blue (68,114,196)." ignore { poiWorkbook ⇒
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithBlackFontColor")).get
 
               val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error

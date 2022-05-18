@@ -71,7 +71,7 @@ object BrokerageNotesWorksheetReader:
       assertLinesInGroupHaveSameTradingDate(worksheet.name),
       assertLinesInGroupHaveSameNoteNumber(worksheet.name)
     ), Seq(
-      assertTradingDate(isPresent)(worksheet.name),
+      assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -330,6 +330,12 @@ object BrokerageNotesWorksheetReader:
     if cell.isNotEmpty then cell.validNec
     else RequiredValueMissing(
       s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' $worksheetName."
+    ).invalidNec
+
+  private def hasAValidFontColor(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
+    if Seq(RED, BLUE).contains(cell.fontColor) then cell.validNec
+    else UnexpectedContentColor(
+      s"'$cellHeader's font-color ('${cell.fontColor}') on line '$lineNumber' of 'Worksheet' $worksheetName can only be red ('$RED') or blue ('$BLUE')."
     ).invalidNec
 
   // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells
