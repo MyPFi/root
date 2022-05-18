@@ -72,7 +72,7 @@ object BrokerageNotesWorksheetReader:
       assertLinesInGroupHaveSameNoteNumber(worksheet.name)
     ), Seq(
       assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
-      assertNoteNumber(isPresent, isNotNegative)(worksheet.name),
+      assertNoteNumber(isPresent, isNotNegative, isAValidInteger)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -336,19 +336,25 @@ object BrokerageNotesWorksheetReader:
   private def isPresent(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
     if cell.isNotEmpty then cell.validNec
     else RequiredValueMissing(
-      s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' $worksheetName."
+      s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' '$worksheetName'."
     ).invalidNec
 
   private def hasAValidFontColor(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
     if Seq(RED, BLUE).contains(cell.fontColor) then cell.validNec
     else UnexpectedContentColor(
-      s"'$cellHeader's font-color ('${cell.fontColor}') on line '$lineNumber' of 'Worksheet' $worksheetName can only be red ('$RED') or blue ('$BLUE')."
+      s"'$cellHeader's font-color ('${cell.fontColor}') on line '$lineNumber' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
     ).invalidNec
 
   private def isNotNegative(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
     if cell.asInt.forall(_ >= 0) then cell.validNec
     else UnexpectedContentValue(
-      s"'$cellHeader' (${cell.value}) on line '$lineNumber' of 'Worksheet' $worksheetName cannot be negative."
+      s"'$cellHeader' (${cell.value}) on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be negative."
+    ).invalidNec
+
+  private def isAValidInteger(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
+    if cell.asInt.isDefined then cell.validNec
+    else UnexpectedContentType(
+      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
     ).invalidNec
 
   // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells

@@ -47,7 +47,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' $TEST_SHEET_NAME.")
+                        'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
                       )
                     }
                     "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
@@ -58,7 +58,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' ${TEST_SHEET_NAME} can only be red ('255,0,0') or blue ('68,114,196').")
+                        'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
                       )
                     }
                   }
@@ -71,7 +71,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('NoteNumber') is missing on line '2' of 'Worksheet' $TEST_SHEET_NAME.")
+                        'message(s"A required attribute ('NoteNumber') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
                       )
                     }
                     "if negative." in { poiWorkbook ⇒
@@ -82,7 +82,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"'NoteNumber' (-1662) on line '2' of 'Worksheet' ${TEST_SHEET.name} cannot be negative.")
+                        'message(s"'NoteNumber' (-1662) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                      )
+                    }
+                    "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "NoteNumberExtraneousCharacters"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                      error should have(
+                        'class(classOf[UnexpectedContentType]),
+                        'message(s"'NoteNumber' ('I662') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number.")
                       )
                     }
                   }
