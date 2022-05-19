@@ -75,7 +75,7 @@ object BrokerageNotesWorksheetReader:
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
       assertTicker(isPresent, hasAValidFontColor)(worksheet.name),
       assertQty(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
-      assertPrice(isPresent)(worksheet.name),
+      assertPrice(isPresent, isNotNegative)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -358,7 +358,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
 
   private def isNotNegative(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.asInt.forall(_ >= 0) then cell.validNec
+    if cell.asDouble.forall(_ >= 0.0) then cell.validNec
     else UnexpectedContentValue(
       s"'$cellHeader' (${cell.value}) on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be negative."
     ).invalidNec
