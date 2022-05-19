@@ -183,16 +183,6 @@ class CellTest extends FixtureAnyFreeSpec :
           }
         }
       }
-      "be empty if its value is empty." in { poiRow ⇒
-        val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
-
-        Cell.from(emptyPOICell).toEither.value shouldBe empty
-      }
-      "not be empty if its value is not empty." in { poiRow ⇒
-        val nonEmptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
-
-        assert(Cell.from(nonEmptyPOICell).isNotEmpty)
-      }
       "equal another Cell with the same configuration." in { poiRow ⇒
         val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
@@ -204,47 +194,59 @@ class CellTest extends FixtureAnyFreeSpec :
 
         Cell.from(poiCell1) should not equal Cell.from(poiCell2)
       }
-      "forbid manipulation of its internal address." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+      "forbid manipulation of its internal" - {
+        "address." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).address = "address"""" shouldNot compile
-      }
-      "forbid manipulation of its internal value." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).address = "address"""" shouldNot compile
+        }
+        "value." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).value = "value"""" shouldNot compile
-      }
-      "forbid manipulation of its internal type." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).value = "value"""" shouldNot compile
+        }
+        "type." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).`type` = "type"""" shouldNot compile
-      }
-      "forbid manipulation of its internal mask." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).`type` = CellType.INTEGER""" shouldNot compile
+        }
+        "mask." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).mask = "mask"""" shouldNot compile
-      }
-      "forbid manipulation of its internal formula." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).mask = "mask"""" shouldNot compile
+        }
+        "formula." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).formula = "formula"""" shouldNot compile
-      }
-      "forbid manipulation of its internal note." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).formula = "formula"""" shouldNot compile
+        }
+        "note." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).note = "note"""" shouldNot compile
-      }
-      "forbid manipulation of its internal fontColor." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).note = "note"""" shouldNot compile
+        }
+        "fontColor." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).fontColor = "fontColor"""" shouldNot compile
-      }
-      "forbid manipulation of its internal backgroundColor." in { poiRow ⇒
-        val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+          """Cell.from(poiCell).fontColor = "fontColor"""" shouldNot compile
+        }
+        "backgroundColor." in { poiRow ⇒
+          val poiCell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
-        """Cell.from(poiCell).backgroundColor = "backgroundColor"""" shouldNot compile
+          """Cell.from(poiCell).backgroundColor = "backgroundColor"""" shouldNot compile
+        }
       }
       "be able to tell when it's" - {
+        "empty." in { poiRow ⇒
+          val emptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_BLANK)
+
+          Cell.from(emptyPOICell).toEither.value shouldBe empty
+        }
+        "not empty." in { poiRow ⇒
+          val nonEmptyPOICell = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
+
+          assert(Cell.from(nonEmptyPOICell).isNotEmpty)
+        }
         "a currency." in { poiRow ⇒
           val poiCellWithCurrency = poiRow.getCell(INDEX_OF_CELL_WITH_CURRENCY_FORMAT_ID_5)
 
@@ -265,12 +267,12 @@ class CellTest extends FixtureAnyFreeSpec :
 
           assert(Cell.from(poiCellWithNoDate).isNotDate)
         }
-        "a formula" in { poiRow ⇒
+        "a formula." in { poiRow ⇒
           val poiCellWithFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING_FORMULA)
 
           assert(Cell.from(poiCellWithFormula).isFormula)
         }
-        "not a formula" in { poiRow ⇒
+        "not a formula." in { poiRow ⇒
           val poiCellWithNoFormula = poiRow.getCell(INDEX_OF_CELL_WITH_STRING)
 
           assert(Cell.from(poiCellWithNoFormula).isNotFormula)
