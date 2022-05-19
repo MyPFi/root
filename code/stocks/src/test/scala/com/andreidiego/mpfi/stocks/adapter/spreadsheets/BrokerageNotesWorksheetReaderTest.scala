@@ -155,6 +155,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'message(s"'Qty' (-100) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
                       )
                     }
+                    "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "QtyExtraneousCharacters"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(UnexpectedContentType(
+                        s"'Qty' ('l00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number."
+                      ))
+                    }
                   }
                 }
               }
@@ -540,8 +550,11 @@ object BrokerageNotesWorksheetReaderTest:
     private def brokerageNotes: Seq[BrokerageNote] =
       errorsOrBrokerageNotesWorksheetReader.toEither.value.brokerageNotes
 
+    private def errors: Seq[BrokerageNotesWorksheetReader.Error] =
+      errorsOrBrokerageNotesWorksheetReader.toEither.left.value.toNonEmptyList.toList
+
     private def error: BrokerageNotesWorksheetReader.Error =
-      errorsOrBrokerageNotesWorksheetReader.toEither.left.value.head
+      errors.head
 
     private def operations: Seq[Operation] =
       brokerageNotes.flatMap(_.operations)
