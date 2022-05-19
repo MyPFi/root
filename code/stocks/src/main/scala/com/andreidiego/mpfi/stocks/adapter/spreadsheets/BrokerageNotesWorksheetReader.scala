@@ -17,18 +17,18 @@ class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
 class BrokerageNote(val operations: Seq[Operation], val financialSummary: FinancialSummary)
 
-class Operation(val volume: String, val settlementFee: String, val negotiationFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
+class Operation(val volume: String, val settlementFee: String, val tradingFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
 
 // TODO Add test for turning BuyingOperation into a case class
-case class BuyingOperation(override val volume: String, override val settlementFee: String, override val negotiationFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
-  extends Operation(volume, settlementFee, negotiationFees, brokerage, serviceTax, incomeTaxAtSource, total)
+case class BuyingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total)
 
 // TODO Add test for turning SellingOperation into a case class
-case class SellingOperation(override val volume: String, override val settlementFee: String, override val negotiationFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
-  extends Operation(volume, settlementFee, negotiationFees, brokerage, serviceTax, incomeTaxAtSource, total)
+case class SellingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total)
 
 // TODO Add test for turning FinancialSummary into a case class
-case class FinancialSummary(volume: String, settlementFee: String, negotiationFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
+case class FinancialSummary(volume: String, settlementFee: String, tradingFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
 
 object BrokerageNotesWorksheetReader:
   enum BrokerageNoteReaderError(message: String):
@@ -54,7 +54,7 @@ object BrokerageNotesWorksheetReader:
     .map(_.validatedWith(Seq(
       assertMultilineGroupHasSummary(worksheet.name),
       assertSettlementFeeSummaryIsCalculatedCorrectly(worksheet.name),
-      assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheet.name),
+      assertTradingFeesSummaryIsCalculatedCorrectly(worksheet.name),
       assertBrokerageSummaryIsCalculatedCorrectly(worksheet.name),
       assertServiceTaxSummaryIsCalculatedCorrectly(worksheet.name),
       assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly(worksheet.name),
@@ -63,7 +63,7 @@ object BrokerageNotesWorksheetReader:
     ), Seq(
       assertVolumeIsCalculatedCorrectly(worksheet.name),
       assertSettlementFeeIsCalculatedCorrectly(worksheet.name),
-      assertNegotiationFeesIsCalculatedCorrectly(worksheet.name),
+      assertTradingFeesIsCalculatedCorrectly(worksheet.name),
       assertServiceTaxIsCalculatedCorrectly(worksheet.name),
       assertIncomeTaxAtSourceIsCalculatedCorrectly(worksheet.name),
       assertTotalIsCalculatedCorrectly(worksheet.name)
@@ -119,8 +119,8 @@ object BrokerageNotesWorksheetReader:
       else group.validNec
     }.getOrElse(group.validNec)
 
-  private def assertNegotiationFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "NegotiationFees")(group, worksheetName)
+  private def assertTradingFeesSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
+    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "TradingFees")(group, worksheetName)
 
   private def assertBrokerageSummaryIsCalculatedCorrectly(worksheetName: String): Group ⇒ ErrorsOr[Group] = group ⇒
     assertOperationIndependentSummaryCellIsCalculatedCorrectly(8, "Brokerage")(group, worksheetName)
@@ -186,15 +186,15 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else group.validNec
 
-  private def assertNegotiationFeesIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
+  private def assertTradingFeesIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val volumeCell = line.cells(5)
     val negotiationsFeeCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
-    val tradingTime = NegotiationFeesRate.TRADING
+    val tradingTime = TradingFeesRate.TRADING
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val actualNegotiationsFee = negotiationsFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
-    // TODO Same challenge here since 'NegotiationFees' is also dependent on the time of order execution which is not part of the brokerage note document.
-    val negotiationsFeeRate = NegotiationFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
+    // TODO Same challenge here since 'TradingFees' is also dependent on the time of order execution which is not part of the brokerage note document.
+    val negotiationsFeeRate = TradingFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
     val expectedNegotiationsFee = (volume * negotiationsFeeRate).formatted("%.2f")
 
     if actualNegotiationsFee != expectedNegotiationsFee then UnexpectedContentValue(
@@ -228,7 +228,7 @@ object BrokerageNotesWorksheetReader:
         val qtyCell = line.cells(3)
         val volumeCell = line.cells(5)
         val settlementFeeCell = line.cells(6)
-        val negotiationFeesCell = line.cells(7)
+        val tradingFeesCell = line.cells(7)
         val brokerageCell = line.cells(8)
         val serviceTaxCell = line.cells(9)
 
@@ -236,10 +236,10 @@ object BrokerageNotesWorksheetReader:
         val qty = qtyCell.asInt.getOrElse(0)
         val volume = volumeCell.asDouble.getOrElse(0.0)
         val settlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
-        val negotiationFees = negotiationFeesCell.asDouble.getOrElse(0.0)
+        val tradingFees = tradingFeesCell.asDouble.getOrElse(0.0)
         val brokerage = brokerageCell.asDouble.getOrElse(0.0)
         val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
-        val operationNetResult = volume - settlementFee - negotiationFees - brokerage - serviceTax
+        val operationNetResult = volume - settlementFee - tradingFees - brokerage - serviceTax
         val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qty
         // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
         val operationProfit = operationNetResult - operationAverageCost
@@ -247,7 +247,7 @@ object BrokerageNotesWorksheetReader:
         val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
 
         if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${tradingFeesCell.address}:TradingFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
       case _ ⇒
@@ -267,30 +267,30 @@ object BrokerageNotesWorksheetReader:
   private def assertTotalIsCalculatedCorrectly(worksheetName: String): Group ⇒ Line ⇒ ErrorsOr[Group] = group ⇒ line ⇒
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
-    val negotiationFeesCell = line.cells(7)
+    val tradingFeesCell = line.cells(7)
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
     val totalCell = line.cells(11)
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val settlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
-    val negotiationFees = negotiationFeesCell.asDouble.getOrElse(0.0)
+    val tradingFees = tradingFeesCell.asDouble.getOrElse(0.0)
     val brokerage = brokerageCell.asDouble.getOrElse(0.0)
     val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
     val actualTotal = totalCell.asDouble.getOrElse(0.0)
 
     line.cells.head.fontColor match
       case BLUE ⇒
-        val expectedTotal = volume - settlementFee - negotiationFees - brokerage - serviceTax
+        val expectedTotal = volume - settlementFee - tradingFees - brokerage - serviceTax
 
         if actualTotal !~= expectedTotal then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${negotiationFeesCell.address}:NegotiationFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${tradingFeesCell.address}:TradingFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
       case _ ⇒
-        val expectedTotal = volume + settlementFee + negotiationFees + brokerage + serviceTax
+        val expectedTotal = volume + settlementFee + tradingFees + brokerage + serviceTax
 
         if actualTotal !~= expectedTotal then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${negotiationFeesCell.address}:NegotiationFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+          s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${tradingFeesCell.address}:TradingFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
         ).invalidNec
         else group.validNec
 

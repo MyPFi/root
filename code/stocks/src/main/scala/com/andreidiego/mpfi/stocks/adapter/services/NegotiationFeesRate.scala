@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import scala.collection.SortedMap
 
 // TODO This will become a separate service soon
-object NegotiationFeesRate:
+object TradingFeesRate:
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   val PRE_OPENING: LocalTime = LocalTime.parse("09:45")

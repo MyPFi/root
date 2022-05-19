@@ -311,7 +311,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     )
                   }
                 }
-                "'NegotiationFees', which should equal the 'Volume' * 'NegotiationFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
+                "'TradingFees', which should equal the 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
                   "'PreOpening'." ignore { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
@@ -323,7 +323,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     )
                   }
                   "'Trading'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationsFee")).get
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFees")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
@@ -354,14 +354,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
                 "'IncomeTaxAtSource', which, for" - {
-                  "'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
+                  "'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
+                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
                     )
                   }
                   "'BuyingOperations', should not be calculated and, therefore, should not contain values that are either" - {
@@ -388,24 +388,24 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   }
                 }
                 "'Total', which, for" - {
-                  "'SellingOperations', should equal the 'Volume' - 'SettlementFee' - 'NegotiationFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
+                  "'SellingOperations', should equal the 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForSelling")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:NegotiationFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
+                      'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
                     )
                   }
-                  "'BuyingOperations', should equal 'Volume' + 'SettlementFee' + 'NegotiationFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
+                  "'BuyingOperations', should equal 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForBuying")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '11005.42', which is equal to 'F2:Volume' + 'G2:SettlementFee' + 'H2:NegotiationFees' + 'I2:Brokerage' + 'J2:ServiceTax' but, it actually contained '11005.45'.")
+                      'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '11005.42', which is equal to 'F2:Volume' + 'G2:SettlementFee' + 'H2:TradingFees' + 'I2:Brokerage' + 'J2:ServiceTax' but, it actually contained '11005.45'.")
                     )
                   }
                 }
@@ -422,14 +422,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
                     )
                   }
-                  "'NegotiationFees'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidNegotiationFeesSummary")).get
+                  "'TradingFees'." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFeesSummary")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('H4:NegotiationFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'NegotiationFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
+                      'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
                     )
                   }
                   "'Brokerage'." in { poiWorkbook ⇒
@@ -560,7 +560,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
         financialSummary.volume should equal(operation.volume)
         financialSummary.settlementFee should equal(operation.settlementFee)
-        financialSummary.negotiationFees should equal(operation.negotiationFees)
+        financialSummary.tradingFees should equal(operation.tradingFees)
         financialSummary.brokerage should equal(operation.brokerage)
         financialSummary.serviceTax should equal(operation.serviceTax)
         financialSummary.incomeTaxAtSource should equal(operation.incomeTaxAtSource)
