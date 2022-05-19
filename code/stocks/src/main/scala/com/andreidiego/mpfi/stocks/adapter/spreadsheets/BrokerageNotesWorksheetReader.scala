@@ -75,7 +75,7 @@ object BrokerageNotesWorksheetReader:
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
       assertTicker(isPresent, hasAValidFontColor)(worksheet.name),
       assertQty(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
-      assertPrice(isPresent, isNotNegative, isAValidCurrency)(worksheet.name),
+      assertPrice(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
