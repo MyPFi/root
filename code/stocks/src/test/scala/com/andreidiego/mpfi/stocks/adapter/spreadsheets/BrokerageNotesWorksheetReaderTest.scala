@@ -200,6 +200,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'message(s"'Price' (-15.34) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
                       )
                     }
+                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "PriceExtraneousCharacters"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(UnexpectedContentType(
+                        s"'Price' ('R$$ l5,34') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                      ))
+                    }
                   }
                 }
               }

@@ -75,7 +75,7 @@ object BrokerageNotesWorksheetReader:
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
       assertTicker(isPresent, hasAValidFontColor)(worksheet.name),
       assertQty(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
-      assertPrice(isPresent, isNotNegative)(worksheet.name),
+      assertPrice(isPresent, isNotNegative, isAValidCurrency)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -367,6 +367,12 @@ object BrokerageNotesWorksheetReader:
     if cell.asInt.isDefined then cell.validNec
     else UnexpectedContentType(
       s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
+    ).invalidNec
+
+  private def isAValidCurrency(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
+    if cell.isCurrency then cell.validNec
+    else UnexpectedContentType(
+      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
     ).invalidNec
 
   // TODO Add a test to make sure that empty cells are allowed when comparing cell colors among cells
