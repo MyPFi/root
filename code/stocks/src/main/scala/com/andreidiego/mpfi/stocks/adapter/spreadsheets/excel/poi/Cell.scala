@@ -46,7 +46,7 @@ object Cell:
     case IllegalArgument(message: String) extends CellError(message)
 
   import org.apache.poi.xssf.usermodel.XSSFCell
-  import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING as POI_STRING}
+  import org.apache.poi.ss.usermodel.CellType.{ERROR as POI_ERROR, BLANK, FORMULA, NUMERIC, STRING as POI_STRING}
   import scala.annotation.targetName
   import cats.data.ValidatedNec
   import cats.syntax.validated.*
@@ -90,7 +90,8 @@ object Cell:
     private def address: String = poiCell.getAddress.toString
 
     private def value: String =
-      if numericDate then DateTimeFormatter.ofPattern(PT_BR_DATE_FORMAT).format(poiCell.getLocalDateTimeCellValue)
+      if error then poiCell.getErrorCellString
+      else if numericDate then DateTimeFormatter.ofPattern(PT_BR_DATE_FORMAT).format(poiCell.getLocalDateTimeCellValue)
       else if numericInteger then poiCell.getNumericCellValue.toInt.toString
       else if numericDouble || numericCurrency then poiCell.getNumericCellValue.toString
       else if stringDouble then poiCell.getStringCellValue.replace(",", ".")
@@ -121,6 +122,8 @@ object Cell:
       .getOrElse("")
 
     private def `null`: Boolean = poiCell == null
+
+    private def error: Boolean = poiCell.getCellType == FORMULA && poiCell.getCachedFormulaResultType == POI_ERROR
 
     private def negative: Boolean = poiCell.getNumericCellValue < 0
 

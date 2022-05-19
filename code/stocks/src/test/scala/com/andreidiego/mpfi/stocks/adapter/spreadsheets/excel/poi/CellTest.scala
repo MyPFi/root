@@ -137,6 +137,11 @@ class CellTest extends FixtureAnyFreeSpec :
 
           Cell.from(poiCell).value should be(DOUBLE_FORMULA_VALUE)
         }
+        "an error." in { poiRow =>
+          val poiCellWithErrors = poiRow.getCell(INDEX_OF_CELL_WITH_ERROR)
+
+          Cell.from(poiCellWithErrors).value should be(ERROR_VALUE)
+        }
       }
       "fail to be built when given" - {
         "string arguments instead of a POI Cell." in { _ =>
@@ -995,6 +1000,7 @@ object CellTest:
 
   import java.time.LocalDate
   import java.time.format.DateTimeFormatter
+  import org.apache.poi.ss.usermodel.FormulaError.NAME
   import Cell.ErrorsOr
 
   private val TEST_SPREADSHEET = "Cell.xlsx"
@@ -1075,6 +1081,8 @@ object CellTest:
   private val FONT_COLOR_RED = "255,0,0"
   private val INDEX_OF_CELL_WITH_FONT_COLOR_AUTOMATIC = 38
   private val FONT_COLOR_AUTOMATIC = "0,0,0"
+  private val INDEX_OF_CELL_WITH_ERROR = 39
+  private val ERROR_VALUE = NAME.getString
 
   given Conversion[ErrorsOr[Cell], Cell] = _.toEither.value
 
