@@ -233,6 +233,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         s"A required attribute ('Volume') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
                       ))
                     }
+                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(UnexpectedContentType(
+                        s"'Volume' ('R$$ l534,00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                      ))
+                    }
                   }
                 }
               }
