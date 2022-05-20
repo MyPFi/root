@@ -364,6 +364,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       )
                     }
                   }
+                  "'ServiceTax'" - {
+                    "when missing." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "ServiceTaxMissing"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(RequiredValueMissing(
+                        s"A required attribute ('ServiceTax') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                      ))
+                    }
+                  }
                 }
               }
             }
