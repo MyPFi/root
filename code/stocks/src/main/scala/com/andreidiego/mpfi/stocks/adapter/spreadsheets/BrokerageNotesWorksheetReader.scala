@@ -79,7 +79,7 @@ object BrokerageNotesWorksheetReader:
       assertVolume(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertSettlementFee(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertTradingFees(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
-      assertBrokerage(isPresent, isAValidCurrency)(worksheet.name),
+      assertBrokerage(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
