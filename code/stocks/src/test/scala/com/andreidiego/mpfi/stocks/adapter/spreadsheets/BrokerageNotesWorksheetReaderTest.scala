@@ -300,7 +300,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       ))
                     }
                     "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingFeesExtraneousChars"
+                      val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
@@ -343,7 +343,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       ))
                     }
                     "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "BrokerageExtraneousChars"
+                      val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
@@ -386,7 +386,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       ))
                     }
                     "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "ServiceTaxExtraneousChars"
+                      val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
@@ -405,6 +405,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'class(classOf[UnexpectedContentColor]),
                         'message(s"'ServiceTax's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
                       )
+                    }
+                  }
+                  "'IncomeTaxAtSource'" - {
+                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "IncomeTaxAtSourceExtraneousChar"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(UnexpectedContentType(
+                        s"'IncomeTaxAtSource' ('R$$ O,OO') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                      ))
                     }
                   }
                 }

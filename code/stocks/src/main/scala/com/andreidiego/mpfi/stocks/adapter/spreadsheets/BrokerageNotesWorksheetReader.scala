@@ -81,6 +81,7 @@ object BrokerageNotesWorksheetReader:
       assertTradingFees(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertBrokerage(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertServiceTax(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
+      assertIncomeTaxAtSource(isAValidCurrency)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -355,6 +356,9 @@ object BrokerageNotesWorksheetReader:
   private def assertServiceTax(serviceTaxValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
     assertAttribute("ServiceTax", _.isServiceTax, serviceTaxValidations: _*)(worksheetName, group, cell, lineNumber)
 
+  private def assertIncomeTaxAtSource(incomeTaxAtSourceValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("IncomeTaxAtSource", _.isIncomeTaxAtSource, incomeTaxAtSourceValidations: _*)(worksheetName, group, cell, lineNumber)
+
   private def assertAttribute(attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String, group: Group, cell: Cell, lineNumber: Int) =
     given Semigroup[Cell] = (x, _) => x
 
@@ -390,7 +394,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
 
   private def isAValidCurrency(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.isCurrency then cell.validNec
+    if cell.isEmpty || cell.isCurrency then cell.validNec
     else UnexpectedContentType(
       s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
     ).invalidNec
@@ -491,6 +495,8 @@ object BrokerageNotesWorksheetReader:
     private def isBrokerage: Boolean = cell.address.startsWith("I")
 
     private def isServiceTax: Boolean = cell.address.startsWith("J")
+
+    private def isIncomeTaxAtSource: Boolean = cell.address.startsWith("K")
 
   extension (double: Double)
 
