@@ -82,7 +82,7 @@ object BrokerageNotesWorksheetReader:
       assertBrokerage(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertServiceTax(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertIncomeTaxAtSource(isAValidCurrency, hasAValidFontColor)(worksheet.name),
-      assertTotal(isPresent)(worksheet.name),
+      assertTotal(isPresent, isAValidCurrency)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
