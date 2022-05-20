@@ -375,6 +375,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         s"A required attribute ('ServiceTax') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
                       ))
                     }
+                    "if negative." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "ServiceTaxNegative"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                      errors should contain(UnexpectedContentValue(
+                        s"'ServiceTax' (-0.8) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
+                      ))
+                    }
                   }
                 }
               }
