@@ -79,6 +79,7 @@ object BrokerageNotesWorksheetReader:
       assertVolume(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertSettlementFee(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertTradingFees(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
+      assertBrokerage(isPresent)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -347,6 +348,9 @@ object BrokerageNotesWorksheetReader:
   private def assertTradingFees(tradingFeesValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
     assertAttribute("TradingFees", _.isTradingFees, tradingFeesValidations: _*)(worksheetName, group, cell, lineNumber)
 
+  private def assertBrokerage(brokerageValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("Brokerage", _.isBrokerage, brokerageValidations: _*)(worksheetName, group, cell, lineNumber)
+
   private def assertAttribute(attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String, group: Group, cell: Cell, lineNumber: Int) =
     given Semigroup[Cell] = (x, _) => x
 
@@ -479,6 +483,8 @@ object BrokerageNotesWorksheetReader:
     private def isSettlementFee: Boolean = cell.address.startsWith("G")
 
     private def isTradingFees: Boolean = cell.address.startsWith("H")
+
+    private def isBrokerage: Boolean = cell.address.startsWith("I")
 
   extension (double: Double)
 
