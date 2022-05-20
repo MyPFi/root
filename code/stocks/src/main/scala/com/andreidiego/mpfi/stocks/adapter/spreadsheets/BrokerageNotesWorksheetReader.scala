@@ -81,7 +81,7 @@ object BrokerageNotesWorksheetReader:
       assertTradingFees(isPresent, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertBrokerage(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertServiceTax(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
-      assertIncomeTaxAtSource(isAValidCurrency)(worksheet.name),
+      assertIncomeTaxAtSource(isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -376,7 +376,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
 
   private def hasAValidFontColor(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if Seq(RED, BLUE).contains(cell.fontColor) then cell.validNec
+    if cell.isEmpty || Seq(RED, BLUE).contains(cell.fontColor) then cell.validNec
     else UnexpectedContentColor(
       s"'$cellHeader's font-color ('${cell.fontColor}') on line '$lineNumber' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
     ).invalidNec
