@@ -82,6 +82,7 @@ object BrokerageNotesWorksheetReader:
       assertBrokerage(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertServiceTax(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor)(worksheet.name),
       assertIncomeTaxAtSource(isAValidCurrency, hasAValidFontColor)(worksheet.name),
+      assertTotal(isPresent)(worksheet.name),
       assertCellsInLineHaveFontColorRedOrBlue(worksheet.name)
     ), Seq(
       assertCellsInLineHaveSameFontColor(worksheet.name)
@@ -359,6 +360,9 @@ object BrokerageNotesWorksheetReader:
   private def assertIncomeTaxAtSource(incomeTaxAtSourceValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
     assertAttribute("IncomeTaxAtSource", _.isIncomeTaxAtSource, incomeTaxAtSourceValidations: _*)(worksheetName, group, cell, lineNumber)
 
+  private def assertTotal(totalValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String): Group ⇒ (Cell, Int) ⇒ ErrorsOr[Group] = group ⇒ (cell, lineNumber) ⇒
+    assertAttribute("Total", _.isTotal, totalValidations: _*)(worksheetName, group, cell, lineNumber)
+
   private def assertAttribute(attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeValidations: Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]*)(worksheetName: String, group: Group, cell: Cell, lineNumber: Int) =
     given Semigroup[Cell] = (x, _) => x
 
@@ -497,6 +501,8 @@ object BrokerageNotesWorksheetReader:
     private def isServiceTax: Boolean = cell.address.startsWith("J")
 
     private def isIncomeTaxAtSource: Boolean = cell.address.startsWith("K")
+
+    private def isTotal: Boolean = cell.address.startsWith("L")
 
   extension (double: Double)
 
