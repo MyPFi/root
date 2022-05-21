@@ -81,9 +81,6 @@ object Cell:
         IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
       // In hindsight, 'Cell' doesn't look like the right level for the following validations.
       // TODO The following should be a 'String'
-      else if resemblesAStringDate && !stringDate then
-        IllegalArgument(s"Invalid cell found. Although cell '$address' looks like a date ('${poiCell.getStringCellValue}'), it contains unexpected characters that are neither numbers nor the '/' symbol.").invalidNec
-      // TODO The following should be a 'String'
       else if stringDate && invalidDate then
         IllegalArgument(s"Invalid cell found. Cell '$address' contains an invalid date: '${poiCell.getStringCellValue}'.").invalidNec
       else poiCell.validNec
@@ -169,8 +166,6 @@ object Cell:
 
     private def stringDate: Boolean = stringCellContainingDateValue || stringFormulaCellContainingDateValue
 
-    private def resemblesAStringDate: Boolean = stringCellResemblingADate || stringFormulaCellResemblingADate
-
     private def ofBlankType: Boolean = poiCell.getCellType == BLANK
 
     private def ofStringType: Boolean = poiCell.getCellType == POI_STRING
@@ -187,9 +182,6 @@ object Cell:
 
     private def stringCellContainingDateValue: Boolean =
       ofStringType && dateRegex.findFirstIn(poiCell.getStringCellValue).isDefined
-
-    private def stringCellResemblingADate: Boolean =
-      ofStringType && dateLikeRegex.findFirstIn(poiCell.getStringCellValue).isDefined
 
     private def ofNumericType: Boolean = poiCell.getCellType == NUMERIC
 
@@ -228,9 +220,6 @@ object Cell:
 
     private def stringFormulaCellContainingDateValue: Boolean =
       stringFormula && dateRegex.findFirstIn(poiCell.getStringCellValue).isDefined
-
-    private def stringFormulaCellResemblingADate: Boolean =
-      stringFormula && dateLikeRegex.findFirstIn(poiCell.getStringCellValue).isDefined
 
     private def numericFormula: Boolean =
       ofFormulaType && poiCell.getCachedFormulaResultType == NUMERIC

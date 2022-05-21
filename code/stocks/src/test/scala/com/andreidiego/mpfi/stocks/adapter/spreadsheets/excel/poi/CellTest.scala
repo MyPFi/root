@@ -147,6 +147,11 @@ class CellTest extends FixtureAnyFreeSpec :
 
           Cell.from(poiCellWithNegativeDate).value should be(NEGATIVE_DATE_VALUE)
         }
+        "something that looks like a date but contains characters other than numbers and the '/' symbol." in { poiRow ⇒
+          val poiCellWithDateWithExtraneousCharacters = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS)
+
+          Cell.from(poiCellWithDateWithExtraneousCharacters).value should be(DATE_WITH_EXTRANEOUS_CHARACTERS_VALUE)
+        }
       }
       "fail to be built when given" - {
         "string arguments instead of a POI Cell." in { _ =>
@@ -159,16 +164,6 @@ class CellTest extends FixtureAnyFreeSpec :
             error should have(
               'class(classOf[IllegalArgument]),
               'message(s"Invalid cell found: null")
-            )
-          }
-          "looks like a date but contains characters other than numbers and the '/' symbol." in { poiRow ⇒
-            val poiCellWithDateWithExtraneousCharacters = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS)
-
-            val error = Cell.from(poiCellWithDateWithExtraneousCharacters).error
-
-            error should have(
-              'class(classOf[IllegalArgument]),
-              'message(s"Invalid cell found. Although cell 'AI1' looks like a date ('O5/11/2008'), it contains unexpected characters that are neither numbers nor the '/' symbol.")
             )
           }
           "has an invalid date." in { poiRow ⇒
@@ -309,6 +304,11 @@ class CellTest extends FixtureAnyFreeSpec :
 
                 Cell.from(poiCellWithStringFormula).`type` should be(STRING)
               }
+            }
+            "something that looks like a date but contains characters other than numbers and the '/' symbol." in { poiRow ⇒
+              val poiCellWithDateWithExtraneousCharacters = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS)
+
+              Cell.from(poiCellWithDateWithExtraneousCharacters).`type` should be(STRING)
             }
           }
           "'INTEGER', when its underlying Excel value is" - {
@@ -1075,6 +1075,7 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_NEGATIVE_DATE = 33
   private val NEGATIVE_DATE_VALUE = "-39757"
   private val INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS = 34
+  private val DATE_WITH_EXTRANEOUS_CHARACTERS_VALUE = "O5/11/2008"
   private val INDEX_OF_CELL_WITH_INVALID_DATE = 35
   private val INDEX_OF_CELL_WITH_NOTE = 36
   private val NOTE = "Note"
