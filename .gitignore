@@ -2,6 +2,11 @@
 **/.idea/*
 **/.bsp/
 *.iml
+# VSCode
+**/.bloop/*
+**/.metals/*
+**/.vscode/*
+**/project/metals.sbt
 # sbt
 **/target/*
 **/project/target/*
