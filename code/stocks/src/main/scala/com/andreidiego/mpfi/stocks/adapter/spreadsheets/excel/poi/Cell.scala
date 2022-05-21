@@ -79,10 +79,6 @@ object Cell:
     private def validated: ErrorsOr[XSSFCell] =
       if `null` then
         IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
-      // In hindsight, 'Cell' doesn't look like the right level for the following validations.
-      // TODO The following should be a 'String'
-      else if stringDate && invalidDate then
-        IllegalArgument(s"Invalid cell found. Cell '$address' contains an invalid date: '${poiCell.getStringCellValue}'.").invalidNec
       else poiCell.validNec
 
     private def address: String = poiCell.getAddress.toString
@@ -143,7 +139,7 @@ object Cell:
       else None
 
     private def isDate: Option[CellType] =
-      if numericDate || stringDate then Some(DATE)
+      if numericDate || (stringDate && !invalidDate) then Some(DATE)
       else None
 
     private def isString: Option[CellType] =

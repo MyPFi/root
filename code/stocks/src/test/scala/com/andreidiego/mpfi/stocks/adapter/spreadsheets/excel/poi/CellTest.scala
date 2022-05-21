@@ -152,30 +152,23 @@ class CellTest extends FixtureAnyFreeSpec :
 
           Cell.from(poiCellWithDateWithExtraneousCharacters).value should be(DATE_WITH_EXTRANEOUS_CHARACTERS_VALUE)
         }
+        "an invalid date." in { poiRow ⇒
+          val poiCellWithInvalidDate = poiRow.getCell(INDEX_OF_CELL_WITH_INVALID_DATE)
+
+          Cell.from(poiCellWithInvalidDate).value should be(INVALID_DATE_VALUE)
+        }
       }
       "fail to be built when given" - {
         "string arguments instead of a POI Cell." in { _ =>
           """Cell("Address", "Value", "Type", "Mask", "Formula", "Note", "FontColor", "BackgroundColor")""" shouldNot compile
         }
-        "a POI Cell that" - {
-          "is 'null'." in { _ =>
-            val error = Cell.from(null).error
+        "a POI Cell that is 'null'." in { _ =>
+          val error = Cell.from(null).error
 
-            error should have(
-              'class(classOf[IllegalArgument]),
-              'message(s"Invalid cell found: null")
-            )
-          }
-          "has an invalid date." in { poiRow ⇒
-            val poiCellWithInvalidDate = poiRow.getCell(INDEX_OF_CELL_WITH_INVALID_DATE)
-
-            val error = Cell.from(poiCellWithInvalidDate).error
-
-            error should have(
-              'class(classOf[IllegalArgument]),
-              'message(s"Invalid cell found. Cell 'AJ1' contains an invalid date: '05/13/2008'.")
-            )
-          }
+          error should have(
+            'class(classOf[IllegalArgument]),
+            'message(s"Invalid cell found: null")
+          )
         }
       }
       "equal another Cell with the same configuration." in { poiRow ⇒
@@ -309,6 +302,11 @@ class CellTest extends FixtureAnyFreeSpec :
               val poiCellWithDateWithExtraneousCharacters = poiRow.getCell(INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS)
 
               Cell.from(poiCellWithDateWithExtraneousCharacters).`type` should be(STRING)
+            }
+            "an invalid date." in { poiRow ⇒
+              val poiCellWithInvalidDate = poiRow.getCell(INDEX_OF_CELL_WITH_INVALID_DATE)
+
+              Cell.from(poiCellWithInvalidDate).`type` should be(STRING)
             }
           }
           "'INTEGER', when its underlying Excel value is" - {
@@ -1077,6 +1075,7 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS = 34
   private val DATE_WITH_EXTRANEOUS_CHARACTERS_VALUE = "O5/11/2008"
   private val INDEX_OF_CELL_WITH_INVALID_DATE = 35
+  private val INVALID_DATE_VALUE = "05/13/2008"
   private val INDEX_OF_CELL_WITH_NOTE = 36
   private val NOTE = "Note"
   private val INDEX_OF_CELL_WITH_FONT_COLOR_RED = 37
