@@ -79,20 +79,26 @@ object Cell:
     private def validated: ErrorsOr[XSSFCell] =
       if `null` then
         IllegalArgument(s"Invalid cell found: $poiCell").invalidNec
-      else if numericDate && negative then
-        IllegalArgument(s"Invalid cell found. Date cells cannot have a negative value but, cell '$address' is formatted as date and has value '${poiCell.getNumericCellValue}'.").invalidNec
+      // In hindsight, 'Cell' doesn't look like the right level for the following validations.
+      // TODO The following should be a 'String'
       else if resemblesAStringDate && !stringDate then
         IllegalArgument(s"Invalid cell found. Although cell '$address' looks like a date ('${poiCell.getStringCellValue}'), it contains unexpected characters that are neither numbers nor the '/' symbol.").invalidNec
+      // TODO The following should be a 'String'
       else if stringDate && invalidDate then
         IllegalArgument(s"Invalid cell found. Cell '$address' contains an invalid date: '${poiCell.getStringCellValue}'.").invalidNec
       else poiCell.validNec
 
     private def address: String = poiCell.getAddress.toString
 
+    // TODO There is clearly a design flaw in the relationship between 'value' and 'type' methods.
+    // Initially, I thought 'value' would use 'type' but this turned out to be not possible.
+    // It looks like it will be the other way around but this looks like a major change that will be postponed for now.
+    // Right now, 'value' and 'type' are being handled independently when the're a clear dependency between them. 
+    // This dependency is demonstrated by the fact that every change to one entails a change to the other and that has to be carefully coordinated which is a big smell.
     private def value: String =
       if error then poiCell.getErrorCellString
-      else if numericDate then DateTimeFormatter.ofPattern(PT_BR_DATE_FORMAT).format(poiCell.getLocalDateTimeCellValue)
-      else if numericInteger then poiCell.getNumericCellValue.toInt.toString
+      else if numericDate && !negative then DateTimeFormatter.ofPattern(PT_BR_DATE_FORMAT).format(poiCell.getLocalDateTimeCellValue)
+      else if numericInteger || (numericDate && negative) then poiCell.getNumericCellValue.toInt.toString
       else if numericDouble || numericCurrency then poiCell.getNumericCellValue.toString
       else if stringDouble then poiCell.getStringCellValue.replace(",", ".")
       else if stringCurrency then currencyRegex.findFirstIn(poiCell.getStringCellValue)
@@ -128,7 +134,7 @@ object Cell:
     private def negative: Boolean = poiCell.getNumericCellValue < 0
 
     private def isInteger: Option[CellType] =
-      if numericInteger || stringInteger then Some(INTEGER)
+      if numericInteger || stringInteger || (numericDate && negative) then Some(INTEGER)
       else None
 
     private def isDouble: Option[CellType] =

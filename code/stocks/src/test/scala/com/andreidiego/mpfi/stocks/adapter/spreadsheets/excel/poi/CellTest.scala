@@ -142,6 +142,11 @@ class CellTest extends FixtureAnyFreeSpec :
 
           Cell.from(poiCellWithErrors).value should be(ERROR_VALUE)
         }
+        "a negative date." in { poiRow ⇒
+          val poiCellWithNegativeDate = poiRow.getCell(INDEX_OF_CELL_WITH_NEGATIVE_DATE)
+
+          Cell.from(poiCellWithNegativeDate).value should be(NEGATIVE_DATE_VALUE)
+        }
       }
       "fail to be built when given" - {
         "string arguments instead of a POI Cell." in { _ =>
@@ -154,16 +159,6 @@ class CellTest extends FixtureAnyFreeSpec :
             error should have(
               'class(classOf[IllegalArgument]),
               'message(s"Invalid cell found: null")
-            )
-          }
-          "has a negative date." in { poiRow ⇒
-            val poiCellWithNegativeDate = poiRow.getCell(INDEX_OF_CELL_WITH_NEGATIVE_DATE)
-
-            val error = Cell.from(poiCellWithNegativeDate).error
-
-            error should have(
-              'class(classOf[IllegalArgument]),
-              'message(s"Invalid cell found. Date cells cannot have a negative value but, cell 'AH1' is formatted as date and has value '-39757.0'.")
             )
           }
           "looks like a date but contains characters other than numbers and the '/' symbol." in { poiRow ⇒
@@ -340,6 +335,11 @@ class CellTest extends FixtureAnyFreeSpec :
 
                 Cell.from(poiCellWithIntegerShapedStringFormula).`type` should be(INTEGER)
               }
+            }
+            "a negative date." in { poiRow ⇒
+              val poiCellWithNegativeDate = poiRow.getCell(INDEX_OF_CELL_WITH_NEGATIVE_DATE)
+
+              Cell.from(poiCellWithNegativeDate).`type` should be(INTEGER)
             }
           }
           "'DOUBLE', when its underlying Excel value is" - {
@@ -1073,6 +1073,7 @@ object CellTest:
   private val INDEX_OF_CELL_WITH_DATE_SHAPED_STRING_FORMULA = 32
   private val DATE_SHAPED_STRING_FORMULA_VALUE = "05/11/2008"
   private val INDEX_OF_CELL_WITH_NEGATIVE_DATE = 33
+  private val NEGATIVE_DATE_VALUE = "-39757"
   private val INDEX_OF_CELL_WITH_DATE_WITH_EXTRANEOUS_CHARACTERS = 34
   private val INDEX_OF_CELL_WITH_INVALID_DATE = 35
   private val INDEX_OF_CELL_WITH_NOTE = 36
