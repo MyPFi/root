@@ -71,7 +71,7 @@ object BrokerageNotesWorksheetReader:
       assertLinesInGroupHaveSameTradingDate(worksheet.name),
       assertLinesInGroupHaveSameNoteNumber(worksheet.name)
     ), Seq(
-      assertTradingDate(isPresent, hasAValidFontColor)(worksheet.name),
+      assertTradingDate(isPresent, isAValidDate, hasAValidFontColor)(worksheet.name),
       assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
       assertTicker(isPresent, hasAValidFontColor)(worksheet.name),
       assertQty(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor)(worksheet.name),
@@ -377,6 +377,12 @@ object BrokerageNotesWorksheetReader:
     if cell.isNotEmpty then cell.validNec
     else RequiredValueMissing(
       s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' '$worksheetName'."
+    ).invalidNec
+
+  private def isAValidDate(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
+    if cell.asLocalDate.isDefined then cell.validNec
+    else UnexpectedContentType(
+      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as a date."
     ).invalidNec
 
   private def hasAValidFontColor(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
