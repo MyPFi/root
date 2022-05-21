@@ -61,6 +61,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                         'message(s"'TradingDate' ('-39757') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
                       )
                     }
+                    "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
+                      val TEST_SHEET_NAME = "TradingDateExtraneousCharacters"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                      error should have(
+                        'class(classOf[UnexpectedContentType]),
+                        'message(s"'TradingDate' ('O5/11/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                      )
+                    }
                     "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "TradingDateBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
