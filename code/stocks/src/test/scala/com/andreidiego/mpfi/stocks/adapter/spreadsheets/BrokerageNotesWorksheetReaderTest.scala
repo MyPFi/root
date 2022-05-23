@@ -35,546 +35,257 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
       "given a 'Worksheet'" - {
         "containing invalid 'BrokerageNote's, that is, 'BrokerageNote's that" - {
           "contain 'Operation's which are either:" - {
-            "Invalid:" - {
-              "Contain 'Attribute's which are either" - {
-                "invalid, like:" - {
-                  "'TradingDate'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingDateMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
-                      )
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingDateNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentType]),
-                        'message(s"'TradingDate' ('-39757') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
-                      )
-                    }
-                    "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingDateExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentType]),
-                        'message(s"'TradingDate' ('O5/11/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
-                      )
-                    }
-                    "when containing an invalid date." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingDateInvalidDate"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentType]),
-                        'message(s"'TradingDate' ('05/13/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
-                      )
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingDateBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'NoteNumber'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "NoteNumberMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('NoteNumber') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
-                      )
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "NoteNumberNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(s"'NoteNumber' (-1662) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
-                      )
-                    }
-                    "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "NoteNumberExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentType]),
-                        'message(s"'NoteNumber' ('I662') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number.")
-                      )
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "NoteNumberBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'NoteNumber's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Ticker'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TickerMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('Ticker') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
-                      )
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TickerBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Ticker's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Qty'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "QtyMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('Qty') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
-                      )
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "QtyNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(s"'Qty' (-100) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
-                      )
-                    }
-                    "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "QtyExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'Qty' ('l00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "QtyBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Qty's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Price'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "PriceMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[RequiredValueMissing]),
-                        'message(s"A required attribute ('Price') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
-                      )
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "PriceNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(s"'Price' (-15.34) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
-                      )
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "PriceExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'Price' ('R$$ l5,34') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "PriceBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Price's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Volume'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "VolumeMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('Volume') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'Volume' ('R$$ l534,00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "VolumeBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Volume's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'SettlementFee'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "SettlementFeeMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('SettlementFee') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "SettlementFeeExtraneousChars"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'SettlementFee' ('R$$ O,42') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "SettlementFeeBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'SettlementFee's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'TradingFees'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingFeesMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('TradingFees') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'TradingFees' ('R$$ O,11') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TradingFeesBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'TradingFees's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Brokerage'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "BrokerageMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('Brokerage') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "BrokerageNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentValue(
-                        s"'Brokerage' (-15.99) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'Brokerage' ('R$$ l5,99') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "BrokerageBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Brokerage's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'ServiceTax'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "ServiceTaxMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('ServiceTax') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "if negative." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "ServiceTaxNegative"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentValue(
-                        s"'ServiceTax' (-0.8) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'ServiceTax' ('R$$ O,8O') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "ServiceTaxBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'ServiceTax's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'IncomeTaxAtSource'" - {
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "IncomeTaxAtSourceExtraneousChar"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'IncomeTaxAtSource' ('R$$ O,OO') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "IncomeTaxAtSourceBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'IncomeTaxAtSource's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
-                  "'Total'" - {
-                    "when missing." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TotalMissing"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(RequiredValueMissing(
-                        s"A required attribute ('Total') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                      ))
-                    }
-                    "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TotalExtraneousCharacters"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                      errors should contain(UnexpectedContentType(
-                        s"'Total' ('R$$ l551,32') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                      ))
-                    }
-                    "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "TotalBlack"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Total's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
-                      )
-                    }
-                  }
+            "Invalid, that is, contain invalid 'Attribute's, like:" - {
+              "'TradingDate'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingDateMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                  )
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingDateNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(s"'TradingDate' ('-39757') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                  )
+                }
+                "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingDateExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(s"'TradingDate' ('O5/11/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                  )
+                }
+                "when containing an invalid date." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingDateInvalidDate"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(s"'TradingDate' ('05/13/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                  )
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingDateBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
                 }
               }
-            }
-          }
-        }
-        "whose" - {
-          "'Groups'" - {
-            "contain 'Lines' with different" - {
-              "'TradingDate's." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
-                assume(TEST_SHEET.groups.size == 4)
+              "'NoteNumber'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "NoteNumberMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                error should have(
-                  'class(classOf[UnexpectedContentValue]),
-                  // TODO Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
-                  'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' '${TEST_SHEET.name}'. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
-                )
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(s"A required attribute ('NoteNumber') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                  )
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "NoteNumberNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"'NoteNumber' (-1662) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                  )
+                }
+                "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "NoteNumberExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(s"'NoteNumber' ('I662') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number.")
+                  )
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "NoteNumberBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'NoteNumber's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
               }
-              "'NoteNumbers's." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
-                assume(TEST_SHEET.groups.size == 4)
+              "'Ticker'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TickerMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                error should have(
-                  'class(classOf[UnexpectedContentValue]),
-                  'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' '${TEST_SHEET.name}'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
-                )
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(s"A required attribute ('Ticker') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                  )
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TickerBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Ticker's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
               }
-            }
-            "that contain more than one 'Operation'" - {
-              "don't have a 'Summary'." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
+              "'Qty'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "QtyMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                error should have(
-                  'class(classOf[RequiredValueMissing]),
-                  'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. 'MultilineGroup's must have a 'SummaryLine'.")
-                )
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(s"A required attribute ('Qty') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                  )
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "QtyNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"'Qty' (-100) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                  )
+                }
+                "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "QtyExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'Qty' ('l00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "QtyBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Qty's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
               }
-              "have an invalid 'Summary' (one where not all empty cells are formulas)." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithInvalidSummary")).get
+              "'Price'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "PriceMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                error should have(
-                  'class(classOf[UnexpectedContentType]),
-                  'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:CURRENCY]'.")
-                )
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(s"A required attribute ('Price') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                  )
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "PriceNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"'Price' (-15.34) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                  )
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "PriceExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'Price' ('R$$ l5,34') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "PriceBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Price's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
               }
-            }
-          }
-          "'Line's contain 'Cell's" - {
-            "with different font-colors." in { poiWorkbook ⇒
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithDifferentFontColors")).get
+              "'Volume'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "VolumeMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-              error should have(
-                'class(classOf[UnexpectedContentColor]),
-                'message(s"An invalid 'Cell' 'B3' was found on 'Worksheet' '${TEST_SHEET.name}'. 'FontColor' should be the same for all 'Cell's in a 'Line' in order to being able to turn it into an 'Operation' but, '68,114,196' in 'B3' is different from '255,0,0' in 'A3'.")
-              )
-            }
-            "whose font-colors are neither red (255,0,0) nor blue (68,114,196)." ignore { poiWorkbook ⇒
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("LineWithBlackFontColor")).get
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('Volume') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-              error should have(
-                'class(classOf[UnexpectedContentColor]),
-                'message(s"An invalid 'Cell' 'A2' was found on 'Worksheet' '${TEST_SHEET.name}'. 'Cell's should have font-color either red (255,0,0) or blue (68,114,196) in order to being able to turn the 'Line's they are in into 'Operation's but this 'Cell' has font-color '0,0,0'.")
-              )
-            }
-            "whose values are supposed to have been calculated from other 'Cell's but, do not pass the recalculation test, namely:" - {
-              "For 'Operation's:" - {
-                "'Volume', which should equal 'Qty' * 'Price'." in { poiWorkbook ⇒
+                  errors should contain(UnexpectedContentType(
+                    s"'Volume' ('R$$ l534,00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "VolumeBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Volume's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than 'Qty' * 'Price'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("VolumeDoesNotMatchQtyTimesPrice")).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -584,7 +295,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'Cell' ('F2:Volume') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7030.00', which is equal to 'D2:Qty * E2:Price (200 * 35.15)' but, it actually contained '7030.01'.")
                   )
                 }
-                "'SettlementFee', which should equal the 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
+              }
+              "'SettlementFee'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "SettlementFeeMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('SettlementFee') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "SettlementFeeExtraneousChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'SettlementFee' ('R$$ O,42') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "SettlementFeeBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'SettlementFee's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
                   "'Normal'." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
@@ -606,7 +350,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     )
                   }
                 }
-                "'TradingFees', which should equal the 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
+              }
+              "'TradingFees'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingFeesMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('TradingFees') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'TradingFees' ('R$$ O,11') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingFeesBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'TradingFees's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
                   "'PreOpening'." ignore { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
 
@@ -638,7 +415,93 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     )
                   }
                 }
-                "'ServiceTax', which should equal the 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
+              }
+              "'Brokerage'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('Brokerage') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentValue(
+                    s"'Brokerage' (-15.99) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'Brokerage' ('R$$ l5,99') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Brokerage's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+              }
+              "'ServiceTax'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('ServiceTax') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "if negative." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxNegative"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentValue(
+                    s"'ServiceTax' (-0.8) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'ServiceTax' ('R$$ O,8O') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'ServiceTax's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTax")).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -648,8 +511,31 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     'message(s"An invalid calculated 'Cell' ('J2:ServiceTax') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.13', which is equal to 'I2:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (1.99 * 6.5%)' but, it actually contained '0.12'.")
                   )
                 }
-                "'IncomeTaxAtSource', which, for" - {
-                  "'SellingOperations', should equal (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
+              }
+              "'IncomeTaxAtSource'" - {
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "IncomeTaxAtSourceExtraneousChar"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'IncomeTaxAtSource' ('R$$ O,OO') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "IncomeTaxAtSourceBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'IncomeTaxAtSource's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than" - {
+                  "for 'SellingOperations', (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -659,31 +545,52 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
                     )
                   }
-                  "'BuyingOperations', should not be calculated and, therefore, should not contain values that are either" - {
-                    "non-currencies" in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("IncomeTaxAtSourceNot$OnBuying")).get
+                  "for 'BuyingOperations, if not empty, zero." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NonZeroIncomeTaxAtSourceBuying")).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                      error should have(
-                        'class(classOf[UnexpectedContentType]),
-                        'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '0'.")
-                      )
-                    }
-                    "or non-zero." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NonZeroIncomeTaxAtSourceBuying")).get
-
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
-                      )
-                    }
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
+                      'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
+                    )
                   }
                 }
-                "'Total', which, for" - {
-                  "'SellingOperations', should equal the 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
+              }
+              "'Total'" - {
+                "when missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TotalMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('Total') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TotalExtraneousCharacters"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'Total' ('R$$ l551,32') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
+                "if displayed with an invalid font-color (neither red (255,0,0) nor blue (68,114,196))." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TotalBlack"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(s"'Total's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('255,0,0') or blue ('68,114,196').")
+                  )
+                }
+                "if different than" - {
+                  "for 'SellingOperations', 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForSelling")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -693,7 +600,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
                     )
                   }
-                  "'BuyingOperations', should equal 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
+                  "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForBuying")).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -705,83 +612,141 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   }
                 }
               }
-              "For 'FinancialSummary's:" - {
-                "the accessory costs' columns below, which should, each, equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote', namely:" - {
-                  "'SettlementFee'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
+            }
+            "Not harmonic with each other, that is, contain different" - {
+              "'TradingDate's." in { poiWorkbook ⇒
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+                assume(TEST_SHEET.groups.size == 4)
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
-                    )
-                  }
-                  "'TradingFees'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFeesSummary")).get
+                error should have(
+                  'class(classOf[UnexpectedContentValue]),
+                  // TODO Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
+                  'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' '${TEST_SHEET.name}'. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+                )
+              }
+              "'NoteNumbers's." in { poiWorkbook ⇒
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
+                assume(TEST_SHEET.groups.size == 4)
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
-                    )
-                  }
-                  "'Brokerage'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
+                error should have(
+                  'class(classOf[UnexpectedContentValue]),
+                  'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' '${TEST_SHEET.name}'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
+                )
+              }
+            }
+          }
+          "having more than one 'Operation'" - { 
+            "don't have a 'Summary'." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '3.98', which is the sum of all 'Brokerage's of the 'Group' (I2...I3) but, it actually contained '3.95'.")
-                    )
-                  }
-                  "'ServiceTax'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTaxSummary")).get
+              error should have(
+                'class(classOf[RequiredValueMissing]),
+                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. 'MultilineGroup's must have a 'SummaryLine'.")
+              )
+            }
+            "have an invalid 'Summary', in which" - {
+              "'Volume'" - {
+                // TODO Maybe break this test in two???
+                "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedOps")).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's of the 'Group' (J2...J3) but, it actually contained '0.29'.")
-                    )
-                  }
-                  // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
-                  "'IncomeTaxAtSource'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
-
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's of the 'Group' (K2...K4) but, it actually contained '0.05'.")
-                    )
-                  }
-                }
-                "the columns below, which should, each, consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result:" - {
-                  "'Volume'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedOps")).get
-
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (F2...F3) but, it actually contained '16810.00'.")
-                    )
-                  }
-                  "'Total'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedOps")).get
-
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's of the 'Group' (L2...L3) but, it actually contained '16820.69'.")
-                    )
-                  }
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (F2...F3) but, it actually contained '16810.00'.")
+                  )
                 }
               }
+              "'SettlementFee'" - {
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
+                  )
+                }
+              }
+              "'TradingFees'" - {
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFeesSummary")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
+                  )
+                }
+              }
+              "'Brokerage'" - {
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '3.98', which is the sum of all 'Brokerage's of the 'Group' (I2...I3) but, it actually contained '3.95'.")
+                  )
+                }
+              }
+              "'ServiceTax'" - {
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTaxSummary")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's of the 'Group' (J2...J3) but, it actually contained '0.29'.")
+                  )
+                }
+              }
+              "'IncomeTaxAtSource'" - {
+                // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's of the 'Group' (K2...K4) but, it actually contained '0.05'.")
+                  )
+                }
+              }
+              "'Total'" - {
+                "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedOps")).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentValue]),
+                    'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's of the 'Group' (L2...L3) but, it actually contained '16820.69'.")
+                  )
+                }
+              }
+            }
+            "have an invalid 'Summary' (one where not all empty cells are formulas)." in { poiWorkbook ⇒
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithInvalidSummary")).get
+
+              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+              error should have(
+                'class(classOf[UnexpectedContentType]),
+                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:CURRENCY]'.")
+              )
             }
           }
         }
