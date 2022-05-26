@@ -36,7 +36,7 @@ object IncomeTaxAtSourceRate:
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
-    LocalDate.parse("01/01/0001", dateFormatter) -> Map(Normal -> 0.00005, DayTrade -> 0.01),
+    LocalDate.MIN -> Map(Normal -> 0.00005, DayTrade -> 0.01),
     LocalDate.parse("01/02/2017", dateFormatter) -> Map(Normal -> 0.00005, DayTrade -> 0.01)
   )
 

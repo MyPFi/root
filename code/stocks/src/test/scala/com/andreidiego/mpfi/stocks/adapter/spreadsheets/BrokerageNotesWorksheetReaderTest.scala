@@ -1167,14 +1167,14 @@ object BrokerageNotesWorksheetReaderTest:
 
   extension (errorsOrBrokerageNotesWorksheetReader: ErrorsOr[BrokerageNotesWorksheetReader])
 
-    private def brokerageNotes: Seq[BrokerageNote] =
-      errorsOrBrokerageNotesWorksheetReader.toEither.value.brokerageNotes
-
-    private def errors: Seq[BrokerageNotesWorksheetReader.Error] =
-      errorsOrBrokerageNotesWorksheetReader.toEither.left.value.toNonEmptyList.toList
-
     private def error: BrokerageNotesWorksheetReader.Error =
       errors.head
+      
+    private def errors: Seq[BrokerageNotesWorksheetReader.Error] =
+      errorsOrBrokerageNotesWorksheetReader.toEither.left.value.toNonEmptyList.toList
+        
+    private def brokerageNotes: Seq[BrokerageNote] =
+      errorsOrBrokerageNotesWorksheetReader.toEither.value.brokerageNotes
 
     private def operations: Seq[Operation] =
       brokerageNotes.flatMap(_.operations)
