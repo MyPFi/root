@@ -977,6 +977,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
             }
             "have an invalid 'Summary', in which" - {
               "'Volume'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "VolumeSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('VolumeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 // TODO Maybe break this test in two???
                 "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedOps")).get
@@ -990,6 +1000,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
               "'SettlementFee'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "SettlementFeeSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('SettlementFeeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
 
@@ -1002,6 +1022,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
               "'TradingFees'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingFeesSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('TradingFeesSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFeesSummary")).get
 
@@ -1014,6 +1044,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
               "'Brokerage'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('BrokerageSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
 
@@ -1026,6 +1066,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
               "'ServiceTax'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('ServiceTaxSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTaxSummary")).get
 
@@ -1051,6 +1101,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 }
               }
               "'Total'" - {
+                "is missing." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TotalSummaryMissing"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(RequiredValueMissing(
+                    s"A required attribute ('TotalSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
                 "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedOps")).get
 

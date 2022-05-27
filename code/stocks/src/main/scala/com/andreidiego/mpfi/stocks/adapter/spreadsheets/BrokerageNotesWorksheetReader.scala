@@ -90,6 +90,12 @@ object BrokerageNotesWorksheetReader:
         assertLinesInGroupHaveSameNoteNumber
       ), 
       groupValidations(
+        assertVolumeSummary(isPresent),
+        assertSettlementFeeSummary(isPresent),
+        assertTradingFeesSummary(isPresent),
+        assertBrokerageSummary(isPresent),
+        assertServiceTaxSummary(isPresent),
+        assertTotalSummary(isPresent),
         assertMultilineGroupHasSummary,
         assertSettlementFeeSummaryIsCalculatedCorrectly,
         assertTradingFeesSummaryIsCalculatedCorrectly,
@@ -409,6 +415,30 @@ object BrokerageNotesWorksheetReader:
       s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' '$worksheetName'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
     ).invalidNec
     else second.validNec
+
+  private def assertVolumeSummary(volumeSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(5, "VolumeSummary", _.isVolume, volumeSummaryChecks: _*)(worksheetName, group)
+
+  private def assertSettlementFeeSummary(settlementfeeSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(6, "SettlementFeeSummary", _.isSettlementFee, settlementfeeSummaryChecks: _*)(worksheetName, group)
+
+  private def assertTradingFeesSummary(tradingfeesSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(7, "TradingFeesSummary", _.isTradingFees, tradingfeesSummaryChecks: _*)(worksheetName, group)
+
+  private def assertBrokerageSummary(brokerageSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(8, "BrokerageSummary", _.isBrokerage, brokerageSummaryChecks: _*)(worksheetName, group)
+
+  private def assertServiceTaxSummary(servicetaxSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(9, "ServiceTaxSummary", _.isServiceTax, servicetaxSummaryChecks: _*)(worksheetName, group)
+
+  private def assertTotalSummary(totalSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(11, "TotalSummary", _.isTotal, totalSummaryChecks: _*)(worksheetName, group)
+
+  private def assertSummaryAttribute(attributeIndex: Int, attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeChecks: CellCheck*)(worksheetName: String, group: Group): ErrorsOr[Group] =
+    group.summary.map { summary ⇒
+      val summaryAttribute = summary.cells(attributeIndex)
+      assertAttribute(summaryAttribute, attributeName, attributeGuard, attributeChecks: _*)(worksheetName, summary.number).accumulate.liftTo(summary).accumulate.liftTo(group)
+    }.getOrElse(group.validNec)
 
   private def assertMultilineGroupHasSummary: GroupValidation = group ⇒ worksheetName =>
     group.nonSummaryLines match
