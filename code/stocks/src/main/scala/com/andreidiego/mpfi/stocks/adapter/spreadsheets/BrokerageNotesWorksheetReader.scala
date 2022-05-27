@@ -42,15 +42,17 @@ object BrokerageNotesWorksheetReader:
   type Error = BrokerageNoteReaderError | Worksheet.Error
   type ErrorsOr[A] = ValidatedNec[Error, A]
   private type Group = Seq[Line]
-  private type CellValidation = Cell => (String, Int) ⇒ ErrorsOr[Cell]
-  private type CellCheck = Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]
-  private type InterCellValidation = (Cell, Cell) ⇒ String ⇒ ErrorsOr[Cell]
-  private type LineValidation = Line ⇒ String => ErrorsOr[Line]
-  private type InterLineValidation = (Line, Line) => String ⇒ ErrorsOr[Line]
-  private type GroupValidation = Group ⇒ String => ErrorsOr[Group]
+  private type AttributeValidation = Cell => (String, Int) ⇒ ErrorsOr[Cell]
+  private type AttributeCheck = Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]
+  private type AttributesHarmonyCheck = (Cell, Cell) ⇒ String ⇒ ErrorsOr[Cell]
+  private type OperationValidation = Line ⇒ String => ErrorsOr[Line]
+  private type OperationsHarmonyCheck = (Line, Line) => String ⇒ ErrorsOr[Line]
+  private type BrokerageNoteValidation = Group ⇒ String => ErrorsOr[Group]
+  private type SummaryAttributeCheck = Cell ⇒ (Int, String, Int, Group, String) ⇒ ErrorsOr[Cell]
 
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
+  private val UPPERCASE_A_ASCII = 65
 
   given comparisonPrecision: Double = 0.02
 
@@ -58,7 +60,7 @@ object BrokerageNotesWorksheetReader:
 
   def from(worksheet: Worksheet): ErrorsOr[BrokerageNotesWorksheetReader] = worksheet.groups
     .map(_.validatedWith(
-      cellValidations(
+      attributeValidations(
         assertTradingDate(isPresent, isAValidDate, hasAValidFontColor),
         assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor),
         assertTicker(isPresent, hasAValidFontColor),
@@ -72,9 +74,9 @@ object BrokerageNotesWorksheetReader:
         assertIncomeTaxAtSource(isAValidCurrency, hasAValidFontColor),
         assertTotal(isPresent, isAValidCurrency, hasAValidFontColor),
       ), 
-      interCellValidations(
+      attributesHarmonyChecks(
       ), 
-      lineValidations(
+      operationValidations(
         assertFontColorReflectsOperationType(
           onTradingDate, onNoteNumber, onTicker, onQty, onPrice, onVolume, onSettlementFee, onTradingFees, onBrokerage, onServiceTax, onIncomeTaxAtSource, onTotal
         ),
@@ -85,123 +87,117 @@ object BrokerageNotesWorksheetReader:
         assertIncomeTaxAtSourceIsCalculatedCorrectly,
         assertTotalIsCalculatedCorrectly
       ), 
-      interLineValidations(
-        assertLinesInGroupHaveSameTradingDate,
-        assertLinesInGroupHaveSameNoteNumber
+      operationsHarmonyChecks(
+        assertOperationsInBrokerageNoteHaveSameTradingDate,
+        assertOperationsInBrokerageNoteHaveSameNoteNumber
       ), 
-      groupValidations(
-        assertVolumeSummary(isPresent),
-        assertSettlementFeeSummary(isPresent),
-        assertTradingFeesSummary(isPresent),
-        assertBrokerageSummary(isPresent),
-        assertServiceTaxSummary(isPresent),
-        assertTotalSummary(isPresent),
-        assertMultilineGroupHasSummary,
-        assertSettlementFeeSummaryIsCalculatedCorrectly,
-        assertTradingFeesSummaryIsCalculatedCorrectly,
-        assertBrokerageSummaryIsCalculatedCorrectly,
-        assertServiceTaxSummaryIsCalculatedCorrectly,
-        assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly,
-        assertVolumeSummaryIsCalculatedCorrectly,
-        assertTotalSummaryIsCalculatedCorrectly
+      brokerageNoteValidations(
+        assertVolumeSummary(isPresent, isOperationSensitive),
+        assertSettlementFeeSummary(isPresent, isCalculatedCorrectly),
+        assertTradingFeesSummary(isPresent, isCalculatedCorrectly),
+        assertBrokerageSummary(isPresent, isCalculatedCorrectly),
+        assertServiceTaxSummary(isPresent, isCalculatedCorrectly),
+        assertIncomeTaxAtSourceSummary(isCalculatedCorrectly),
+        assertTotalSummary(isPresent, isOperationSensitive),
+        assertMultilineGroupHasSummary
       )
     )(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
     .reduce(_ combine _)
     .map(BrokerageNotesWorksheetReader(_))
 
-  private def cellValidations(cellValidation: CellValidation*) = cellValidation
+  private def attributeValidations(attributeValidations: AttributeValidation*) = attributeValidations
 
-  private def interCellValidations(interCellValidation: InterCellValidation*) = interCellValidation
+  private def attributesHarmonyChecks(attributesHarmonyChecks: AttributesHarmonyCheck*) = attributesHarmonyChecks
   
-  private def lineValidations(lineValidation: LineValidation*) = lineValidation
+  private def operationValidations(operationValidations: OperationValidation*) = operationValidations
   
-  private def interLineValidations(interLineValidation: InterLineValidation*) = interLineValidation
+  private def operationsHarmonyChecks(operationsHarmonyChecks: OperationsHarmonyCheck*) = operationsHarmonyChecks
   
-  private def groupValidations(groupValidation: GroupValidation*) = groupValidation
+  private def brokerageNoteValidations(brokerageNoteValidations: BrokerageNoteValidation*) = brokerageNoteValidations
 
-  private def assertTradingDate(tradingDateChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "TradingDate", _.isTradingDate, tradingDateChecks: _*)(worksheetName, lineNumber)
+  private def assertTradingDate(tradingDateChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "TradingDate", _.isTradingDate, tradingDateChecks: _*)(worksheetName, operationIndex)
 
-  private def assertNoteNumber(noteNumberChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "NoteNumber", _.isNoteNumber, noteNumberChecks: _*)(worksheetName, lineNumber)
+  private def assertNoteNumber(noteNumberChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "NoteNumber", _.isNoteNumber, noteNumberChecks: _*)(worksheetName, operationIndex)
 
-  private def assertTicker(tickerChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Ticker", _.isTicker, tickerChecks: _*)(worksheetName, lineNumber)
+  private def assertTicker(tickerChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Ticker", _.isTicker, tickerChecks: _*)(worksheetName, operationIndex)
 
-  private def assertQty(qtyChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Qty", _.isQty, qtyChecks: _*)(worksheetName, lineNumber)
+  private def assertQty(qtyChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Qty", _.isQty, qtyChecks: _*)(worksheetName, operationIndex)
 
-  private def assertPrice(priceChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Price", _.isPrice, priceChecks: _*)(worksheetName, lineNumber)
+  private def assertPrice(priceChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Price", _.isPrice, priceChecks: _*)(worksheetName, operationIndex)
 
-  private def assertVolume(volumeChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Volume", _.isVolume, volumeChecks: _*)(worksheetName, lineNumber)
+  private def assertVolume(volumeChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Volume", _.isVolume, volumeChecks: _*)(worksheetName, operationIndex)
 
-  private def assertSettlementFee(settlementFeeChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "SettlementFee", _.isSettlementFee, settlementFeeChecks: _*)(worksheetName, lineNumber)
+  private def assertSettlementFee(settlementFeeChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "SettlementFee", _.isSettlementFee, settlementFeeChecks: _*)(worksheetName, operationIndex)
 
-  private def assertTradingFees(tradingFeesChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "TradingFees", _.isTradingFees, tradingFeesChecks: _*)(worksheetName, lineNumber)
+  private def assertTradingFees(tradingFeesChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "TradingFees", _.isTradingFees, tradingFeesChecks: _*)(worksheetName, operationIndex)
 
-  private def assertBrokerage(brokerageChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Brokerage", _.isBrokerage, brokerageChecks: _*)(worksheetName, lineNumber)
+  private def assertBrokerage(brokerageChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Brokerage", _.isBrokerage, brokerageChecks: _*)(worksheetName, operationIndex)
 
-  private def assertServiceTax(serviceTaxChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "ServiceTax", _.isServiceTax, serviceTaxChecks: _*)(worksheetName, lineNumber)
+  private def assertServiceTax(serviceTaxChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "ServiceTax", _.isServiceTax, serviceTaxChecks: _*)(worksheetName, operationIndex)
 
-  private def assertIncomeTaxAtSource(incomeTaxAtSourceChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "IncomeTaxAtSource", _.isIncomeTaxAtSource, incomeTaxAtSourceChecks: _*)(worksheetName, lineNumber)
+  private def assertIncomeTaxAtSource(incomeTaxAtSourceChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "IncomeTaxAtSource", _.isIncomeTaxAtSource, incomeTaxAtSourceChecks: _*)(worksheetName, operationIndex)
 
-  private def assertTotal(totalChecks: CellCheck*): CellValidation = cell => (worksheetName, lineNumber) ⇒ 
-    assertAttribute(cell, "Total", _.isTotal, totalChecks: _*)(worksheetName, lineNumber)
+  private def assertTotal(totalChecks: AttributeCheck*): AttributeValidation = attribute => (worksheetName, operationIndex) ⇒ 
+    assertAttribute(attribute, "Total", _.isTotal, totalChecks: _*)(worksheetName, operationIndex)
 
-  private def assertAttribute(attribute: Cell, attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeChecks: CellCheck*)(worksheetName: String, lineNumber: Int): ErrorsOr[Cell] =
+  private def assertAttribute(attribute: Cell, attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeChecks: AttributeCheck*)(worksheetName: String, operationIndex: Int): ErrorsOr[Cell] =
     given Semigroup[Cell] = (x, _) => x
 
     if attributeGuard(attribute) then
       attributeChecks
-        .map(_ (attribute)(attributeName, lineNumber, worksheetName))
+        .map(_ (attribute)(attributeName, operationIndex, worksheetName))
         .reduce(_ combine _)
         // .map(_ ⇒ group)
     else attribute.validNec
 
-  private def isPresent(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.isNotEmpty then cell.validNec
+  private def isPresent(attribute: Cell)(attributeHeader: String, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
+    if attribute.isNotEmpty then attribute.validNec
     else RequiredValueMissing(
-      s"A required attribute ('$cellHeader') is missing on line '$lineNumber' of 'Worksheet' '$worksheetName'."
+      s"A required attribute ('$attributeHeader') is missing on line '$operationIndex' of 'Worksheet' '$worksheetName'."
     ).invalidNec
 
-  private def isAValidDate(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.asLocalDate.isDefined then cell.validNec
+  private def isAValidDate: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+    if attribute.asLocalDate.isDefined then attribute.validNec
     else UnexpectedContentType(
-      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as a date."
+      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as a date."
     ).invalidNec
 
-  private def hasAValidFontColor(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.isEmpty || Seq(RED, BLUE).contains(cell.fontColor) then cell.validNec
+  private def hasAValidFontColor: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+    if attribute.isEmpty || Seq(RED, BLUE).contains(attribute.fontColor) then attribute.validNec
     else UnexpectedContentColor(
-      s"'$cellHeader's font-color ('${cell.fontColor}') on line '$lineNumber' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
+      s"'$attributeHeader's font-color ('${attribute.fontColor}') on line '$operationIndex' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
     ).invalidNec
 
-  private def isNotNegative(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.asDouble.forall(_ >= 0.0) then cell.validNec
+  private def isNotNegative: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+    if attribute.asDouble.forall(_ >= 0.0) then attribute.validNec
     else UnexpectedContentValue(
-      s"'$cellHeader' (${cell.value}) on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be negative."
+      s"'$attributeHeader' (${attribute.value}) on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be negative."
     ).invalidNec
 
-  private def isAValidInteger(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.asInt.isDefined then cell.validNec
+  private def isAValidInteger: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+    if attribute.asInt.isDefined then attribute.validNec
     else UnexpectedContentType(
-      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
+      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
     ).invalidNec
 
-  private def isAValidCurrency(cell: Cell)(cellHeader: String, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] =
-    if cell.isEmpty || cell.isCurrency then cell.validNec
+  private def isAValidCurrency: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+    if attribute.isEmpty || attribute.isCurrency then attribute.validNec
     else UnexpectedContentType(
-      s"'$cellHeader' ('${cell.value}') on line '$lineNumber' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
+      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
     ).invalidNec
 
-  private def assertFontColorReflectsOperationType(attributeColorChecks: (Operation) => (Line, String) => ErrorsOr[Cell]*): LineValidation = line ⇒ worksheetName =>
+  private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => (Line, String) => ErrorsOr[Cell]*): OperationValidation = line ⇒ worksheetName =>
     line.toMostLikelyOperation(worksheetName)
       .andThen{operation => 
         attributeColorChecks
@@ -211,55 +207,55 @@ object BrokerageNotesWorksheetReader:
       }
     
   private def onTradingDate(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(0))("TradingDate", operation, line.number, worksheetName)
+    onAttribute(line.cells(0))("TradingDate", operation, line.number, worksheetName)
 
   private def onNoteNumber(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(1))("NoteNumber", operation, line.number, worksheetName)
+    onAttribute(line.cells(1))("NoteNumber", operation, line.number, worksheetName)
 
   private def onTicker(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(2))("Ticker", operation, line.number, worksheetName)
+    onAttribute(line.cells(2))("Ticker", operation, line.number, worksheetName)
 
   private def onQty(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(3))("Qty", operation, line.number, worksheetName)
+    onAttribute(line.cells(3))("Qty", operation, line.number, worksheetName)
 
   private def onPrice(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(4))("Price", operation, line.number, worksheetName)
+    onAttribute(line.cells(4))("Price", operation, line.number, worksheetName)
 
   private def onVolume(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(5))("Volume", operation, line.number, worksheetName)
+    onAttribute(line.cells(5))("Volume", operation, line.number, worksheetName)
 
   private def onSettlementFee(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(6))("SettlementFee", operation, line.number, worksheetName)
+    onAttribute(line.cells(6))("SettlementFee", operation, line.number, worksheetName)
 
   private def onTradingFees(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(7))("TradingFees", operation, line.number, worksheetName)
+    onAttribute(line.cells(7))("TradingFees", operation, line.number, worksheetName)
 
   private def onBrokerage(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(8))("Brokerage", operation, line.number, worksheetName)
+    onAttribute(line.cells(8))("Brokerage", operation, line.number, worksheetName)
 
   private def onServiceTax(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(9))("ServiceTax", operation, line.number, worksheetName)
+    onAttribute(line.cells(9))("ServiceTax", operation, line.number, worksheetName)
 
   private def onIncomeTaxAtSource(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(10))("IncomeTaxAtSource", operation, line.number, worksheetName)
+    onAttribute(line.cells(10))("IncomeTaxAtSource", operation, line.number, worksheetName)
 
   private def onTotal(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    inCell(line.cells(11))("Total", operation, line.number, worksheetName)
+    onAttribute(line.cells(11))("Total", operation, line.number, worksheetName)
 
-  private def inCell(cell: Cell)(cellHeader: String, operation: Operation, lineNumber: Int, worksheetName: String): ErrorsOr[Cell] = 
-    if cell.isEmpty then cell.validNec
+  private def onAttribute(attribute: Cell)(attributeHeader: String, operation: Operation, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] = 
+    if attribute.isEmpty then attribute.validNec
     else 
-      val errorMessage: (String, String, String) => String = (lineOperation, cellFontColor, cellOperation) => s"The 'Operation' on line '$lineNumber' of 'Worksheet' '$worksheetName' looks like '$lineOperation' but, '$cellHeader' has font-color $cellFontColor which denotes '$cellOperation'."
+      val errorMessage: (String, String, String) => String = (lineOperation, cellFontColor, cellOperation) => s"The 'Operation' on line '$operationIndex' of 'Worksheet' '$worksheetName' looks like '$lineOperation' but, '$attributeHeader' has font-color $cellFontColor which denotes '$cellOperation'."
       operation match
         case a: SellingOperation =>       
-          if cell.fontColor != RED then cell.validNec
+          if attribute.fontColor != RED then attribute.validNec
           else UnexpectedContentColor(errorMessage("Selling", s"red('$RED')", "Buying")).invalidNec
 
         case a: BuyingOperation =>
-          if cell.fontColor != BLUE then cell.validNec
+          if attribute.fontColor != BLUE then attribute.validNec
           else UnexpectedContentColor(errorMessage("Buying", s"blue('$BLUE')", "Selling")).invalidNec
 
-  private def assertVolumeIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertVolumeIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val qtyCell = line.cells(3)
     val priceCell = line.cells(4)
     val volumeCell = line.cells(5)
@@ -275,7 +271,7 @@ object BrokerageNotesWorksheetReader:
     else line.validNec
 
   // TODO Think about adding a reason to the errors for the cases where the requirements for the validation are not present. For instance, in the case below, any one of the following, if missing or having any other problem, would result in an impossible validation: tradingDate, volume and, actualSettlementFee. For now, we'll choose default values for them in case of problem and the validation will fail because of them. Hopefully, the original cause will be caught by other validation.
-  private def assertSettlementFeeIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertSettlementFeeIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
@@ -290,7 +286,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertTradingFeesIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val volumeCell = line.cells(5)
     val negotiationsFeeCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
@@ -306,7 +302,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertServiceTaxIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertServiceTaxIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
@@ -321,7 +317,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertIncomeTaxAtSourceIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertIncomeTaxAtSourceIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val incomeTaxAtSourceCell = line.cells(10)
     // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
     val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble.getOrElse(0.0)
@@ -369,7 +365,7 @@ object BrokerageNotesWorksheetReader:
       }
       else line.validNec
 
-  private def assertTotalIsCalculatedCorrectly: LineValidation = line ⇒ worksheetName =>
+  private def assertTotalIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingFeesCell = line.cells(7)
@@ -398,7 +394,7 @@ object BrokerageNotesWorksheetReader:
       ).invalidNec
       else line.validNec
 
-  private def assertLinesInGroupHaveSameTradingDate: InterLineValidation = (first: Line, second: Line) => worksheetName ⇒
+  private def assertOperationsInBrokerageNoteHaveSameTradingDate: OperationsHarmonyCheck = (first: Line, second: Line) => worksheetName ⇒
     val firstTradingDateCell = first.cells.head
     val secondTradingDateCell = second.cells.head
 
@@ -407,7 +403,7 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else second.validNec
 
-  private def assertLinesInGroupHaveSameNoteNumber: InterLineValidation = (first: Line, second: Line) => worksheetName ⇒
+  private def assertOperationsInBrokerageNoteHaveSameNoteNumber: OperationsHarmonyCheck = (first: Line, second: Line) => worksheetName ⇒
     val firstNoteNumberCell = first.cells.tail.head
     val secondNoteNumberCell = second.cells.tail.head
 
@@ -416,38 +412,75 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else second.validNec
 
-  private def assertVolumeSummary(volumeSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(5, "VolumeSummary", _.isVolume, volumeSummaryChecks: _*)(worksheetName, group)
+  private def assertVolumeSummary(volumeSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(5, "VolumeSummary", volumeSummaryChecks: _*)(worksheetName, group)
 
-  private def assertSettlementFeeSummary(settlementfeeSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(6, "SettlementFeeSummary", _.isSettlementFee, settlementfeeSummaryChecks: _*)(worksheetName, group)
+  private def assertSettlementFeeSummary(settlementFeeSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(6, "SettlementFeeSummary", settlementFeeSummaryChecks: _*)(worksheetName, group)
 
-  private def assertTradingFeesSummary(tradingfeesSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(7, "TradingFeesSummary", _.isTradingFees, tradingfeesSummaryChecks: _*)(worksheetName, group)
+  private def assertTradingFeesSummary(tradingFeesSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(7, "TradingFeesSummary", tradingFeesSummaryChecks: _*)(worksheetName, group)
 
-  private def assertBrokerageSummary(brokerageSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(8, "BrokerageSummary", _.isBrokerage, brokerageSummaryChecks: _*)(worksheetName, group)
+  private def assertBrokerageSummary(brokerageSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(8, "BrokerageSummary", brokerageSummaryChecks: _*)(worksheetName, group)
 
-  private def assertServiceTaxSummary(servicetaxSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(9, "ServiceTaxSummary", _.isServiceTax, servicetaxSummaryChecks: _*)(worksheetName, group)
+  private def assertServiceTaxSummary(serviceTaxSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(9, "ServiceTaxSummary", serviceTaxSummaryChecks: _*)(worksheetName, group)
 
-  private def assertTotalSummary(totalSummaryChecks: CellCheck*): GroupValidation = group ⇒ worksheetName =>
-    assertSummaryAttribute(11, "TotalSummary", _.isTotal, totalSummaryChecks: _*)(worksheetName, group)
+  private def assertIncomeTaxAtSourceSummary(incomeTaxAtSourceSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(10, "IncomeTaxAtSourceSummary", incomeTaxAtSourceSummaryChecks: _*)(worksheetName, group)
 
-  private def assertSummaryAttribute(attributeIndex: Int, attributeName: String, attributeGuard: Cell ⇒ Boolean, attributeChecks: CellCheck*)(worksheetName: String, group: Group): ErrorsOr[Group] =
+  private def assertTotalSummary(totalSummaryChecks: SummaryAttributeCheck*): BrokerageNoteValidation = group ⇒ worksheetName =>
+    assertSummaryAttribute(11, "TotalSummary", totalSummaryChecks: _*)(worksheetName, group)
+
+  private def assertSummaryAttribute(attributeIndex: Int, attributeName: String, attributeSummaryChecks: SummaryAttributeCheck*)(worksheetName: String, group: Group): ErrorsOr[Group] =
     group.summary.map { summary ⇒
+      given Semigroup[Cell] = (x, _) => x
       val summaryAttribute = summary.cells(attributeIndex)
-      assertAttribute(summaryAttribute, attributeName, attributeGuard, attributeChecks: _*)(worksheetName, summary.number).accumulate.liftTo(summary).accumulate.liftTo(group)
+
+      attributeSummaryChecks
+        .map(_ (summaryAttribute)(attributeIndex, attributeName, summary.number, group, worksheetName))
+        .reduce(_ combine _)
+        .liftTo(group)(summary)
     }.getOrElse(group.validNec)
 
-  private def assertMultilineGroupHasSummary: GroupValidation = group ⇒ worksheetName =>
+  private def isPresent: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+    isPresent(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
+
+  private def isCalculatedCorrectly: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+    val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(attributeIndex).asDouble.getOrElse(0.0))
+    val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
+
+    if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
+      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+    ).invalidNec
+    else summaryAttribute.validNec
+
+  private def isOperationSensitive: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+    val expectedSummaryValue = group.nonSummaryLines
+      .foldLeft(0.0) { (acc, operation) ⇒
+        val valueToSummarize = operation.cells(summaryAttribute.index).asDouble.getOrElse(0.0)
+        if operation.hasMostCellsRed then
+          acc - valueToSummarize
+        else 
+          acc + valueToSummarize
+      }
+
+    val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
+
+    if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
+      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '${attributeHeader.replace("Summary", "")}'s minus the sum of all 'BuyingOperation's '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+    ).invalidNec
+    else summaryAttribute.validNec
+
+  private def assertMultilineGroupHasSummary: BrokerageNoteValidation = group ⇒ worksheetName =>
     group.nonSummaryLines match
       case Seq(_, _, _*) ⇒ group.summary match
         case None ⇒ group.summaryLikeLine match
           case Some(summaryLikeLine) ⇒
             val invalidSummaryCells = summaryLikeLine.nonEmptyCells
               .filter(!_.isFormula)
-              .map(cell ⇒ s"${cell.address}:${cell.`type`}")
+              .map(attribute ⇒ s"${attribute.address}:${attribute.`type`}")
               .mkString("[", ",", "]")
 
             UnexpectedContentType(
@@ -459,63 +492,6 @@ object BrokerageNotesWorksheetReader:
           ).invalidNec
         case _ ⇒ group.validNec
       case _ ⇒ group.validNec
-
-  private def assertSettlementFeeSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(6, "SettlementFee")(group, worksheetName)
-
-  private def assertTradingFeesSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(7, "TradingFees")(group, worksheetName)
-
-  private def assertBrokerageSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(8, "Brokerage")(group, worksheetName)
-
-  private def assertServiceTaxSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(9, "ServiceTax")(group, worksheetName)
-
-  private def assertIncomeTaxAtSourceSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationIndependentSummaryCellIsCalculatedCorrectly(10, "IncomeTaxAtSource")(group, worksheetName)
-
-  private def assertOperationIndependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String)(group: Group, worksheetName: String): ErrorsOr[Group] =
-    group.summary.map { summary ⇒
-      val summaryCell = summary.cells(cellIndex)
-
-      val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(cellIndex).asDouble.getOrElse(0.0))
-      val actualSummaryValue = summaryCell.asDouble.getOrElse(0.0)
-
-      if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-        s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
-      ).invalidNec
-      else group.validNec
-    }.getOrElse(group.validNec)
-
-  private def assertVolumeSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationDependentSummaryCellIsCalculatedCorrectly(5, "Volume", _.volume.asDouble)(group, worksheetName)
-
-  private def assertTotalSummaryIsCalculatedCorrectly: GroupValidation = group ⇒ worksheetName =>
-    assertOperationDependentSummaryCellIsCalculatedCorrectly(11, "Total", _.total.asDouble)(group, worksheetName)
-
-  private def assertOperationDependentSummaryCellIsCalculatedCorrectly(cellIndex: Int, cellName: String, valueToSummarizeFrom: Operation ⇒ Double)(group: Group, worksheetName: String) =
-    group.summary.map { summary ⇒
-      val summaryCell = summary.cells(cellIndex)
-
-      group.nonSummaryLines
-        .map(_.toOperation(worksheetName).map(Seq(_)))
-        .reduce(_ combine _)
-        .andThen{ operations => 
-          val expectedSummaryValue = operations.foldLeft(0.0) { (acc, operation) ⇒
-            operation match {
-              case operation: BuyingOperation ⇒ acc - valueToSummarizeFrom(operation)
-              case _ ⇒ acc + valueToSummarizeFrom(operation)
-            }
-          }
-          val actualSummaryValue = summaryCell.asDouble.getOrElse(0.0)
-
-          if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-            s"An invalid calculated 'SummaryCell' ('${summaryCell.address}:${cellName}Summary') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '$cellName's minus the sum of all 'BuyingOperation's '$cellName's of the 'Group' (${group.head.cells(cellIndex).address}...${group.takeRight(2).head.cells(cellIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
-          ).invalidNec
-          else group.validNec
-        }
-    }.getOrElse(group.validNec)
 
   extension (errorsOrBrokerageNote: ErrorsOr[BrokerageNote])
 
@@ -537,6 +513,8 @@ object BrokerageNotesWorksheetReader:
     @targetName("accumulateCell")
     private def accumulate: ErrorsOr[Seq[Cell]] = errorsOrCell.map(Seq(_))
 
+    private def liftTo(group: Group)(line: Line): ErrorsOr[Group] = errorsOrCell.accumulate.liftTo(line).accumulate.liftTo(group)
+
   extension (errorsOrSeqOfCell: ErrorsOr[Seq[Cell]])
 
     @targetName("liftSeqOfCellToLine")
@@ -545,30 +523,30 @@ object BrokerageNotesWorksheetReader:
   extension (group: Group)
 
     private def validatedWith(
-      cellValidations: Seq[CellValidation] = Seq(),
-      interCellValidations: Seq[InterCellValidation] = Seq(),
-      lineValidations: Seq[LineValidation] = Seq(),
-      interLineValidations: Seq[InterLineValidation] = Seq(),
-      groupValidations: Seq[GroupValidation] = Seq()
+      attributeValidations: Seq[AttributeValidation] = Seq(),
+      attributesHarmonyChecks: Seq[AttributesHarmonyCheck] = Seq(),
+      operationValidations: Seq[OperationValidation] = Seq(),
+      operationsHarmonyChecks: Seq[OperationsHarmonyCheck] = Seq(),
+      brokerageNoteValidations: Seq[BrokerageNoteValidation] = Seq()
     )(worksheetName: String): ErrorsOr[Group] =
       given Semigroup[Group] = (x, _) => x
       given Semigroup[Line] = (x, _) => x
-      val appliedGroupValidations: ErrorsOr[Group] = groupValidations.map(_ (group)(worksheetName)).reduce(_ combine _)
+      val appliedBrokerageNoteValidations: ErrorsOr[Group] = brokerageNoteValidations.map(_ (group)(worksheetName)).reduce(_ combine _)
       val validateAndHarmonize: (Line => ErrorsOr[Seq[Line]]) => ErrorsOr[Seq[Line]] = f => group.nonSummaryLines.map(f).reduce(_ combine _)
       val applyHarmonyChecksTo: (Seq[Line] => ErrorsOr[Seq[Line]]) => ErrorsOr[Seq[Line]] = f => group.nonSummaryLines.sliding(2).map(f).reduce(_ combine _)
-      val applyLinesHarmonyChecksTo: (Line, Line) => ErrorsOr[Line] = (line1, line2) => interLineValidations.map(_ (line1, line2)(worksheetName)).reduce(_ combine _)
+      val applyOperationsHarmonyChecksTo: (Line, Line) => ErrorsOr[Line] = (line1, line2) => operationsHarmonyChecks.map(_ (line1, line2)(worksheetName)).reduce(_ combine _)
 
-      appliedGroupValidations.combine{
+      appliedBrokerageNoteValidations.combine{
         validateAndHarmonize{ line => 
-          line.validatedWith(lineValidations)(worksheetName).accumulate.combine{
-            line.harmonizedWith(interCellValidations)(worksheetName).accumulate.combine{
-              line.withCellsValidated(cellValidations)(worksheetName).accumulate
+          line.validatedWith(operationValidations)(worksheetName).accumulate.combine{
+            line.harmonizedWith(attributesHarmonyChecks)(worksheetName).accumulate.combine{
+              line.withCellsValidated(attributeValidations)(worksheetName).accumulate
             }
           }
         }.liftTo(group).combine{
           applyHarmonyChecksTo{ lineWindow ⇒
             lineWindow match {
-              case Seq(line1, line2) ⇒ applyLinesHarmonyChecksTo(line1, line2).accumulate
+              case Seq(line1, line2) ⇒ applyOperationsHarmonyChecksTo(line1, line2).accumulate
               case Seq(line) ⇒ line.validNec.accumulate
             }
           }
@@ -630,22 +608,22 @@ object BrokerageNotesWorksheetReader:
 
     private def isSummaryLikeLine: Boolean = nonEmptyCells.count(_.isFormula) > nonEmptyCells.size / 2
     
-    private def validatedWith(lineValidations: Seq[LineValidation])(worksheetName: String): ErrorsOr[Line] = 
+    private def validatedWith(operationValidations: Seq[OperationValidation])(worksheetName: String): ErrorsOr[Line] = 
       given Semigroup[Line] = (x, _) => x
-      lineValidations.map(_ (line)(worksheetName)).reduce(_ combine _)
+      operationValidations.map(_ (line)(worksheetName)).reduce(_ combine _)
 
-    private def withCellsValidated(cellValidations: Seq[CellValidation])(worksheetName: String): ErrorsOr[Line] = 
-      cells.map(_.validatedWith(cellValidations)(worksheetName, line.number).accumulate).reduce(_ combine _).liftTo(line)
+    private def withCellsValidated(attributeValidations: Seq[AttributeValidation])(worksheetName: String): ErrorsOr[Line] = 
+      cells.map(_.validatedWith(attributeValidations)(worksheetName, line.number).accumulate).reduce(_ combine _).liftTo(line)
 
-    private def harmonizedWith(cellsHarmonyChecks: Seq[InterCellValidation])(worksheetName: String): ErrorsOr[Line] = 
+    private def harmonizedWith(attributesHarmonyChecks: Seq[AttributesHarmonyCheck])(worksheetName: String): ErrorsOr[Line] = 
       given Semigroup[Cell] = (x, _) => x
-      val applyCellsHarmonyChecksTo: (Cell, Cell) => ErrorsOr[Cell] = (cell1, cell2) => cellsHarmonyChecks.map(_ (cell1, cell2)(worksheetName)).reduce(_ combine _)
+      val applyAttributesHarmonyChecksTo: (Cell, Cell) => ErrorsOr[Cell] = (cell1, cell2) => attributesHarmonyChecks.map(_ (cell1, cell2)(worksheetName)).reduce(_ combine _)
       val harmonized: (Seq[Cell] => ErrorsOr[Seq[Cell]]) => ErrorsOr[Seq[Cell]] = f ⇒ cells.sliding(2).map(f).reduce(_ combine _)
       
-      if !cellsHarmonyChecks.isEmpty then
+      if !attributesHarmonyChecks.isEmpty then
         harmonized{ cells ⇒
           cells match {
-            case Seq(cell1, cell2) ⇒ applyCellsHarmonyChecksTo(cell1, cell2).accumulate
+            case Seq(cell1, cell2) ⇒ applyAttributesHarmonyChecksTo(cell1, cell2).accumulate
             case Seq(cell) ⇒ cell.validNec.accumulate
           }
         }.liftTo(line)
@@ -679,9 +657,11 @@ object BrokerageNotesWorksheetReader:
 
     private def isTotal: Boolean = cell.address.startsWith("L")
     
-    private def validatedWith(cellValidations: Seq[CellValidation])(worksheetName: String, lineNumber: Int): ErrorsOr[Cell] =
+    private def validatedWith(attributeValidations: Seq[AttributeValidation])(worksheetName: String, operationIndex: Int): ErrorsOr[Cell] =
       given Semigroup[Cell] = (x, _) => x
-      cellValidations.map(_ (cell)(worksheetName, lineNumber)).reduce(_ combine _)
+      attributeValidations.map(_ (cell)(worksheetName, operationIndex)).reduce(_ combine _)
+      
+    private def index: Int = cell.address.charAt(0) - UPPERCASE_A_ASCII
 
   extension (double: Double)
 

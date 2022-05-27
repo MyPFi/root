@@ -995,7 +995,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's of the 'Group' (F2...F3) but, it actually contained '16810.00'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '16810.00'.")
                   )
                 }
               }
@@ -1017,7 +1017,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's of the 'Group' (G2...G3) but, it actually contained '5.68'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's in the 'Group' (G2...G3) but, it actually contained '5.68'.")
                   )
                 }
               }
@@ -1039,7 +1039,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's of the 'Group' (H2...H3) but, it actually contained '1.10'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's in the 'Group' (H2...H3) but, it actually contained '1.10'.")
                   )
                 }
               }
@@ -1061,7 +1061,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '3.98', which is the sum of all 'Brokerage's of the 'Group' (I2...I3) but, it actually contained '3.95'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '3.98', which is the sum of all 'Brokerage's in the 'Group' (I2...I3) but, it actually contained '3.95'.")
                   )
                 }
               }
@@ -1083,7 +1083,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's of the 'Group' (J2...J3) but, it actually contained '0.29'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's in the 'Group' (J2...J3) but, it actually contained '0.29'.")
                   )
                 }
               }
@@ -1096,7 +1096,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's of the 'Group' (K2...K4) but, it actually contained '0.05'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's in the 'Group' (K2...K4) but, it actually contained '0.05'.")
                   )
                 }
               }
@@ -1118,7 +1118,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's of the 'Group' (L2...L3) but, it actually contained '16820.69'.")
+                    'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's in the 'Group' (L2...L3) but, it actually contained '16820.69'.")
                   )
                 }
               }
