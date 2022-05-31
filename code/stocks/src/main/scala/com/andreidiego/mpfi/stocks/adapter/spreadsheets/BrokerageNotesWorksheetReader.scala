@@ -37,7 +37,11 @@ object BrokerageNotesWorksheetReader:
     case UnexpectedContentType(message: String) extends BrokerageNoteReaderError(message)
     case UnexpectedContentColor(message: String) extends BrokerageNoteReaderError(message)
 
+  enum GroupType:
+    case Homogeneous, Heterogeneous
+
   import BrokerageNoteReaderError.*
+  import GroupType.*
 
   type Error = BrokerageNoteReaderError | Worksheet.Error
   type ErrorsOr[A] = ValidatedNec[Error, A]
@@ -92,13 +96,13 @@ object BrokerageNotesWorksheetReader:
         assertOperationsInBrokerageNoteHaveSameNoteNumber
       ), 
       brokerageNoteValidations(
-        assertVolumeSummary(isPresent, isAValidCurrency, isOperationSensitive),
+        assertVolumeSummary(isPresent, isAValidCurrency, isOperationTypeAwareWhenCalculated),
         assertSettlementFeeSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
         assertTradingFeesSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
         assertBrokerageSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
         assertServiceTaxSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
         assertIncomeTaxAtSourceSummary(isAValidCurrency, isCorrectlyCalculated),
-        assertTotalSummary(isPresent, isAValidCurrency, isOperationSensitive),
+        assertTotalSummary(isPresent, isAValidCurrency, isOperationTypeAwareWhenCalculated),
         assertMultilineGroupHasSummary
       )
     )(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
@@ -459,20 +463,23 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else summaryAttribute.validNec
 
-  private def isOperationSensitive: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
-    val expectedSummaryValue = group.nonSummaryLines
-      .foldLeft(0.0) { (acc, operation) ⇒
-        val valueToSummarize = operation.cells(summaryAttribute.index).asDouble.getOrElse(0.0)
+  private def isOperationTypeAwareWhenCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+    val valueToSummarize: Line => Double = _.cells(summaryAttribute.index).asDouble.getOrElse(0.0)
+    val (expectedSummaryValue, summaryExplanation) = group.`type` match
+      case Homogeneous => (group.nonSummaryLines.map(valueToSummarize).sum, "'Operation's 'Volume's")
+      case Heterogeneous => (group.nonSummaryLines.foldLeft(0.0) { (acc, operation) ⇒
         if operation.hasMostCellsRed then
-          acc - valueToSummarize
+          acc - valueToSummarize(operation)
         else 
-          acc + valueToSummarize
-      }
+          acc + valueToSummarize(operation)
+      }, 
+      s"'SellingOperation's '${attributeHeader.replace("Summary", "")}'s minus the sum of all 'BuyingOperation's '${attributeHeader.replace("Summary", "")}'s"
+      )
 
     val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
 
-    if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all 'SellingOperation's '${attributeHeader.replace("Summary", "")}'s minus the sum of all 'BuyingOperation's '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+    if actualSummaryValue.abs !~= expectedSummaryValue.abs then UnexpectedContentValue(
+      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all $summaryExplanation in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
     ).invalidNec
     else summaryAttribute.validNec
 
@@ -553,8 +560,12 @@ object BrokerageNotesWorksheetReader:
         .map(BrokerageNote(_, group.head.toFinancialSummary))
 
     private def nonSummaryLines: Seq[Line] = summary.map(_ => group.init).getOrElse(group)
-
+    
     private def summary: Option[Line] = if group.size <= 1 then None else group.lastOption.filter(_.cells.count(_.isEmpty) > 1)
+    
+    private def `type`: GroupType = nonSummaryLines.distinctBy(_.toMostLikelyOperation("").map(_.getClass)).size match
+      case 1 => Homogeneous
+      case _ => Heterogeneous
 
   extension (line: Line)
 

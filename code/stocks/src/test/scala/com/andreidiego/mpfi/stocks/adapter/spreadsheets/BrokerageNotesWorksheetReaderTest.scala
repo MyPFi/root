@@ -997,16 +997,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     s"'VolumeSummary' ('-R$$ 9.322,OO') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
-                // TODO Maybe break this test in two???
-                "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedOps")).get
+                "is different than the sum of the 'Volume's of all" - {
+                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryHomogGroups")).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  error should have(
-                    'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '16810.00'.")
-                  )
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
+                      'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '16810.00', which is the sum of all 'Operation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '-2110.00'.")
+                    )
+                  }
+                  "'SellingOperation's minus the sum of the 'Volume's of all 'BuyingOperation's for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedGroups")).get
+
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
+                      'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '16810.00'.")
+                    )
+                  }
                 }
               }
               "'SettlementFeeSummary'" - {
@@ -1181,15 +1192,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     s"'TotalSummary' ('-R$$ 9.37S,S9') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
-                "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedOps")).get
+                "is different than the sum of the 'Total's of all" - {
+                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryHomogGroups")).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  error should have(
-                    'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's in the 'Group' (L2...L3) but, it actually contained '16820.69'.")
-                  )
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
+                      'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '16820.69', which is the sum of all 'Operation's 'Volume's in the 'Group' (L2...L3) but, it actually contained '-2110.69'.")
+                    )
+                  }
+                  "'SellingOperation's minus the sum of the 'Total's of all 'BuyingOperation's, for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedGroups")).get
+
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                    error should have(
+                      'class(classOf[UnexpectedContentValue]),
+                      'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's in the 'Group' (L2...L3) but, it actually contained '16820.69'.")
+                    )
+                  }
                 }
               }
             }
