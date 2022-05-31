@@ -92,13 +92,13 @@ object BrokerageNotesWorksheetReader:
         assertOperationsInBrokerageNoteHaveSameNoteNumber
       ), 
       brokerageNoteValidations(
-        assertVolumeSummary(isPresent, isOperationSensitive),
-        assertSettlementFeeSummary(isPresent, isCalculatedCorrectly),
-        assertTradingFeesSummary(isPresent, isCalculatedCorrectly),
-        assertBrokerageSummary(isPresent, isCalculatedCorrectly),
-        assertServiceTaxSummary(isPresent, isCalculatedCorrectly),
-        assertIncomeTaxAtSourceSummary(isCalculatedCorrectly),
-        assertTotalSummary(isPresent, isOperationSensitive),
+        assertVolumeSummary(isPresent, isAValidCurrency, isOperationSensitive),
+        assertSettlementFeeSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
+        assertTradingFeesSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
+        assertBrokerageSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
+        assertServiceTaxSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
+        assertIncomeTaxAtSourceSummary(isAValidCurrency, isCorrectlyCalculated),
+        assertTotalSummary(isPresent, isAValidCurrency, isOperationSensitive),
         assertMultilineGroupHasSummary
       )
     )(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
@@ -191,7 +191,7 @@ object BrokerageNotesWorksheetReader:
       s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
     ).invalidNec
 
-  private def isAValidCurrency: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
+  private def isAValidCurrency(attribute: Cell)(attributeHeader: String, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
     if attribute.isEmpty || attribute.isCurrency then attribute.validNec
     else UnexpectedContentType(
       s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
@@ -447,7 +447,10 @@ object BrokerageNotesWorksheetReader:
   private def isPresent: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
     isPresent(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
 
-  private def isCalculatedCorrectly: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+  private def isAValidCurrency: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+    isAValidCurrency(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
+
+  private def isCorrectlyCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
     val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(attributeIndex).asDouble.getOrElse(0.0))
     val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
 
@@ -475,22 +478,12 @@ object BrokerageNotesWorksheetReader:
 
   private def assertMultilineGroupHasSummary: BrokerageNoteValidation = group ⇒ worksheetName =>
     group.nonSummaryLines match
-      case Seq(_, _, _*) ⇒ group.summary match
-        case None ⇒ group.summaryLikeLine match
-          case Some(summaryLikeLine) ⇒
-            val invalidSummaryCells = summaryLikeLine.nonEmptyCells
-              .filter(!_.isFormula)
-              .map(attribute ⇒ s"${attribute.address}:${attribute.`type`}")
-              .mkString("[", ",", "]")
-
-            UnexpectedContentType(
-              s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' '$worksheetName'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '$invalidSummaryCells'."
-            ).invalidNec
-
-          case _ ⇒ RequiredValueMissing(
+      case Seq(_, _, _*) ⇒ 
+        group.summary
+          .map(_ => group.validNec)
+          .getOrElse(RequiredValueMissing(
             s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' '$worksheetName'. 'MultilineGroup's must have a 'SummaryLine'."
-          ).invalidNec
-        case _ ⇒ group.validNec
+          ).invalidNec)
       case _ ⇒ group.validNec
 
   extension (errorsOrBrokerageNote: ErrorsOr[BrokerageNote])
@@ -559,11 +552,9 @@ object BrokerageNotesWorksheetReader:
         .reduce(_ combine _)
         .map(BrokerageNote(_, group.head.toFinancialSummary))
 
-    private def nonSummaryLines: Seq[Line] = group.filter(line => !line.isSummary && !line.isSummaryLikeLine)
+    private def nonSummaryLines: Seq[Line] = summary.map(_ => group.init).getOrElse(group)
 
-    private def summary: Option[Line] = Option(group.last).filter(_.isSummary)
-
-    private def summaryLikeLine: Option[Line] = Option(group.last).filter(_.isSummaryLikeLine)
+    private def summary: Option[Line] = if group.size <= 1 then None else group.lastOption.filter(_.cells.count(_.isEmpty) > 1)
 
   extension (line: Line)
 
@@ -582,8 +573,6 @@ object BrokerageNotesWorksheetReader:
     private def nonEmptyCells: Seq[Cell] = cells.filter(_.isNotEmpty)
 
     private def cells: Seq[Cell] = line.cells
-
-    private def isSummary: Boolean = nonEmptyCells.forall(isFormula)
 
     private def toMostLikelyOperation(worksheetName: String): ErrorsOr[Operation] = 
       if hasMostCellsBlue then
@@ -606,8 +595,6 @@ object BrokerageNotesWorksheetReader:
     private def toFinancialSummary: FinancialSummary =
       FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
 
-    private def isSummaryLikeLine: Boolean = nonEmptyCells.count(_.isFormula) > nonEmptyCells.size / 2
-    
     private def validatedWith(operationValidations: Seq[OperationValidation])(worksheetName: String): ErrorsOr[Line] = 
       given Semigroup[Line] = (x, _) => x
       operationValidations.map(_ (line)(worksheetName)).reduce(_ combine _)
@@ -630,8 +617,6 @@ object BrokerageNotesWorksheetReader:
       else line.validNec
 
   extension (cell: Cell)
-
-    private def isFormula: Boolean = cell.formula.nonEmpty
 
     private def isTradingDate: Boolean = cell.address.startsWith("A")
 
@@ -669,7 +654,3 @@ object BrokerageNotesWorksheetReader:
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
 
     private def formatted(format: String): String = String.format(Locale.US, format, double)
-
-  extension (string: String)
-
-    private def asDouble: Double = string.replace(",", ".").toDouble

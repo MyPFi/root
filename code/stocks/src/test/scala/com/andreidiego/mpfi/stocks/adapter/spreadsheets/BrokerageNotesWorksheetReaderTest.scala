@@ -428,7 +428,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." ignore { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { poiWorkbook ⇒
                         val TEST_SHEET_NAME = "VolumeRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -439,7 +439,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                           'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Volume' has font-color red('$RED') which denotes 'Buying'.")
                         )
                       }
-                      "Blue for 'Buyings'." ignore { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { poiWorkbook ⇒
                         val TEST_SHEET_NAME = "VolumeBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -976,7 +976,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
               )
             }
             "have an invalid 'Summary', in which" - {
-              "'Volume'" - {
+              "'VolumeSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "VolumeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -985,6 +985,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('VolumeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "VolumeSummaryExtraneousChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'VolumeSummary' ('-R$$ 9.322,OO') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 // TODO Maybe break this test in two???
@@ -999,7 +1009,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'SettlementFee'" - {
+              "'SettlementFeeSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "SettlementFeeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -1008,6 +1018,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('SettlementFeeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "SettlementFeeSummaryExtrChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'SettlementFeeSummary' ('R$$ 2,S6') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1021,7 +1041,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'TradingFees'" - {
+              "'TradingFeesSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TradingFeesSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -1030,6 +1050,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('TradingFeesSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TradingFeesSummaryExtrChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'TradingFeesSummary' ('R$$ O,65') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1043,7 +1073,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'Brokerage'" - {
+              "'BrokerageSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "BrokerageSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -1052,6 +1082,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('BrokerageSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "BrokerageSummaryExtraneousChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'BrokerageSummary' ('R$$ 4T,97') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1065,7 +1105,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'ServiceTax'" - {
+              "'ServiceTaxSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "ServiceTaxSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -1074,6 +1114,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('ServiceTaxSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "ServiceTaxSummaryExtrChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'ServiceTaxSummary' ('R$$ 2,4O') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1087,7 +1137,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'IncomeTaxAtSource'" - {
+              "'IncomeTaxAtSourceSummary'" - {
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "IncomeTaxAtSourceSummExtrChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'IncomeTaxAtSourceSummary' ('R$$ O,OO') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
+                  ))
+                }
                 // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
@@ -1100,7 +1160,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-              "'Total'" - {
+              "'TotalSummary'" - {
                 "is missing." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TotalSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
@@ -1109,6 +1169,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   errors should contain(RequiredValueMissing(
                     s"A required attribute ('TotalSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
+                  ))
+                }
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  val TEST_SHEET_NAME = "TotalSummaryExtraneousChars"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                  errors should contain(UnexpectedContentType(
+                    s"'TotalSummary' ('-R$$ 9.37S,S9') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
                   ))
                 }
                 "does not consider 'SellingOperations' as increasing and 'BuyingOperations' as decreasing the result." in { poiWorkbook ⇒
@@ -1122,16 +1192,6 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   )
                 }
               }
-            }
-            "have an invalid 'Summary' (one where not all empty cells are formulas)." in { poiWorkbook ⇒
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithInvalidSummary")).get
-
-              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-              error should have(
-                'class(classOf[UnexpectedContentType]),
-                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. All non-empty 'Cell's of a 'Group's 'Summary' are supposed to be formulas but, that's not the case with '[G4:CURRENCY]'.")
-              )
             }
           }
         }

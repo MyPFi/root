@@ -240,9 +240,7 @@ object Cell:
       LocalDate.parse(poiCell.getStringCellValue, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }.toOption
 
-    private def currencyRegex =
-      raw"^([-\u00AD]?)(R?\p{Sc})(\s*)(([1-9]\d{0,2}([,.]\d{3})*)|(([1-9]\d*)?\d))([,.]\d\d)?".r
-
+    private def currencyRegex = raw"^([-\u00AD]?)(R?\p{Sc})(\s*)([1-9]\d{0,2}([,.]\d{3})*)([,.]\d\d)$$".r
     private def dateRegex = raw"(\d{2}/\d{2}/\d{4})".r
     private def dateLikeRegex = raw"(\p{Alnum}{2}/\p{Alnum}{2}/\p{Alnum}{4})".r
 
