@@ -13,6 +13,8 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
   import org.scalatest.matchers.should.Matchers.*
   import org.scalatest.Inspectors.{forAll, forExactly}
   import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.{RequiredValueMissing, UnexpectedContentColor, UnexpectedContentType, UnexpectedContentValue}
+  import BrokerageNotesWorksheetMessages.*
+  import BrokerageNotesWorksheetTestMessages.*
   import BrokerageNotesWorksheetReaderTest.*
 
   override protected type FixtureParam = XSSFWorkbook
@@ -46,7 +48,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
-                      'message(s"A required attribute ('TradingDate') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      'message(tradingDateMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if negative." in { poiWorkbook ⇒
@@ -57,7 +59,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
-                      'message(s"'TradingDate' ('-39757') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                      'message(unexpectedContentTypeInTradingDate("-39757", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
@@ -68,7 +70,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
-                      'message(s"'TradingDate' ('O5/11/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                      'message(unexpectedContentTypeInTradingDate("O5/11/2008", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing an invalid date." in { poiWorkbook ⇒
@@ -79,7 +81,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
-                      'message(s"'TradingDate' ('05/13/2008') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a date.")
+                      'message(unexpectedContentTypeInTradingDate("05/13/2008", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -91,7 +93,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'TradingDate's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInTradingDate("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -103,7 +105,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'TradingDate' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInTradingDate(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -114,7 +116,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'TradingDate' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInTradingDate(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -129,7 +131,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
-                      'message(s"A required attribute ('NoteNumber') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      'message(noteNumberMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if negative." in { poiWorkbook ⇒
@@ -140,7 +142,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"'NoteNumber' (-1662) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                      'message(unexpectedNegativeNoteNumber("-1662", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
@@ -151,7 +153,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
-                      'message(s"'NoteNumber' ('I662') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number.")
+                      'message(unexpectedContentTypeInNoteNumber("I662", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -163,7 +165,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'NoteNumber's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInNoteNumber("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -175,7 +177,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'NoteNumber' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInNoteNumber(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -186,7 +188,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'NoteNumber' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInNoteNumber(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -201,7 +203,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
-                      'message(s"A required attribute ('Ticker') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      'message(tickerMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -213,7 +215,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Ticker's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInTicker("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -225,7 +227,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Ticker' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInTicker(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -236,7 +238,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Ticker' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInTicker(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -251,7 +253,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
-                      'message(s"A required attribute ('Qty') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      'message(qtyMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if negative." in { poiWorkbook ⇒
@@ -262,7 +264,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"'Qty' (-100) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                      'message(unexpectedNegativeQty("-100", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
@@ -271,9 +273,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'Qty' ('l00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as an integer number."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInQty("l00", 2)(TEST_SHEET_NAME)))
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
@@ -284,7 +284,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Qty's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInQty("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -296,7 +296,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Qty' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInQty(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -307,7 +307,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Qty' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInQty(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -322,7 +322,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
-                      'message(s"A required attribute ('Price') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'.")
+                      'message(priceMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if negative." in { poiWorkbook ⇒
@@ -333,7 +333,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"'Price' (-15.34) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative.")
+                      'message(unexpectedNegativePrice("-15.34", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
@@ -342,9 +342,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'Price' ('R$$ l5,34') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInPrice("R$ l5,34", 2)(TEST_SHEET_NAME)))
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
@@ -355,7 +353,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Price's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInPrice("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -367,7 +365,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Price' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInPrice(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -378,7 +376,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Price' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInPrice(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -391,9 +389,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('Volume') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(volumeMissing(2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
@@ -401,18 +397,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'Volume' ('R$$ l534,00') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInVolume("R$ l534,00", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than 'Qty' * 'Price'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("VolumeDoesNotMatchQtyTimesPrice")).get
+                    val TEST_SHEET_NAME = "VolumeDoesNotMatchQtyTimesPrice"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'Cell' ('F2:Volume') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7030.00', which is equal to 'D2:Qty * E2:Price (200 * 35.15)' but, it actually contained '7030.01'.")
+                      'message(unexpectedVolume("7030.01", 2)("7030.00", "200", "35.15")(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -424,7 +419,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Volume's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInVolume("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -436,7 +431,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Volume' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInVolume(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -447,7 +442,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Volume' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInVolume(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -460,9 +455,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('SettlementFee') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(settlementFeeMissing(2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "SettlementFeeExtraneousChars"
@@ -470,29 +463,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'SettlementFee' ('R$$ O,42') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInSettlementFee("R$ O,42", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
                     "'Normal'." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
+                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.00 * 0.0250%)' but, it actually contained '2.76'.")
+                        'message(unexpectedSettlementFee("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
                       )
                     }
                     "'DayTrade'." ignore { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
+                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.00 * 0.00025)' but, it actually contained '2.76'.")
+                        'message(unexpectedSettlementFee("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -505,7 +498,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'SettlementFee's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInSettlementFee("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -517,7 +510,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'SettlementFee' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInSettlementFee(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -528,7 +521,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'SettlementFee' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInSettlementFee(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -541,9 +534,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('TradingFees') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(tradingFeesMissing(2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
@@ -551,39 +542,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'TradingFees' ('R$$ O,11') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInTradingFees("R$ O,11", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
                     "'PreOpening'." ignore { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
+                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.00 * 0.00025)' but, it actually contained '2.76'.")
+                        'message(unexpectedTradingFees("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
                       )
                     }
                     "'Trading'." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFees")).get
+                      val TEST_SHEET_NAME = "InvalidTradingFees"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('H2:NegotiationsFee') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.55', which is equal to 'F2:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (11000.00 * 0.0050%)' but, it actually contained '0.56'.")
+                        'message(unexpectedTradingFees("0.56", 2)("0.55", "11000.00", "0.0050%")(TEST_SHEET_NAME))
                       )
                     }
                     "'ClosingCall'." ignore { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeNotVolumeTimesRate")).get
+                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('G2:SettlementFee') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '2.75', which is equal to 'F2:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (11000.00 * 0.00025)' but, it actually contained '2.76'.")
+                        'message(unexpectedTradingFees("0.56", 2)("0.55", "11000.00", "0.0050%")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -596,7 +588,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'TradingFees's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInTradingFees("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -608,7 +600,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'TradingFees' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInTradingFees(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -619,7 +611,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'TradingFees' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInTradingFees(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -632,9 +624,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('Brokerage') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(brokerageMissing(2)(TEST_SHEET_NAME)))
                   }
                   "if negative." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "BrokerageNegative"
@@ -642,9 +632,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentValue(
-                      s"'Brokerage' (-15.99) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
-                    ))
+                    errors should contain(UnexpectedContentValue(unexpectedNegativeBrokerage("-15.99", 2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
@@ -652,9 +640,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'Brokerage' ('R$$ l5,99') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInBrokerage("R$ l5,99", 2)(TEST_SHEET_NAME)))
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
@@ -665,7 +651,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Brokerage's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInBrokerage("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -677,7 +663,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Brokerage' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInBrokerage(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -688,7 +674,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Brokerage' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInBrokerage(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -701,9 +687,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('ServiceTax') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(serviceTaxMissing(2)(TEST_SHEET_NAME)))
                   }
                   "if negative." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "ServiceTaxNegative"
@@ -711,9 +695,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentValue(
-                      s"'ServiceTax' (-0.8) on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be negative."
-                    ))
+                    errors should contain(UnexpectedContentValue(unexpectedNegativeServiceTax("-0.8", 2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
@@ -721,18 +703,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'ServiceTax' ('R$$ O,8O') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInServiceTax("R$ O,8O", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTax")).get
+                    val TEST_SHEET_NAME = "InvalidServiceTax"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'Cell' ('J2:ServiceTax') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.13', which is equal to 'I2:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (1.99 * 6.5%)' but, it actually contained '0.12'.")
+                      'message(unexpectedServiceTax("0.12", 2)("0.13", "1.99", "6.5%")(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -744,7 +725,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'ServiceTax's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInServiceTax("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -756,7 +737,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'ServiceTax' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInServiceTax(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -767,7 +748,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'ServiceTax' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInServiceTax(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -780,29 +761,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'IncomeTaxAtSource' ('R$$ O,OO') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInIncomeTaxAtSource("R$ O,OO", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than" - {
                     "for 'SellingOperations', (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSource")).get
+                      val TEST_SHEET_NAME = "InvalidIncomeTaxAtSource"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.09', which is equal to (('F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax') - ('AverageStockPrice' for the 'C2:Ticker' * 'D2:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (1803.47 * 0.0050%)' but, it actually contained '0.19'.")
+                        'message(unexpectedIncomeTaxAtSourceForSellings("0.19", 2)("0.09", "1803.47", "0.0050%")(TEST_SHEET_NAME))
                       )
                     }
                     "for 'BuyingOperations, if not empty, zero." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NonZeroIncomeTaxAtSourceBuying")).get
+                      val TEST_SHEET_NAME = "NonZeroIncomeTaxAtSourceBuying"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('K2:IncomeTaxAtSource') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to be either empty or equal to '0.00' but, it actually contained '0.01'.")
+                        'message(unexpectedIncomeTaxAtSourceForBuyings("0.01", 2)(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -815,7 +796,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'IncomeTaxAtSource's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInIncomeTaxAtSource("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -827,7 +808,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'IncomeTaxAtSource' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInIncomeTaxAtSource(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -838,7 +819,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'IncomeTaxAtSource' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInIncomeTaxAtSource(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -851,9 +832,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(RequiredValueMissing(
-                      s"A required attribute ('Total') is missing on line '2' of 'Worksheet' '$TEST_SHEET_NAME'."
-                    ))
+                    errors should contain(RequiredValueMissing(totalMissing(2)(TEST_SHEET_NAME)))
                   }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "TotalExtraneousCharacters"
@@ -861,29 +840,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(
-                      s"'Total' ('R$$ l551,32') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                    ))
+                    errors should contain(UnexpectedContentType(unexpectedContentTypeInTotal("R$ l551,32", 2)(TEST_SHEET_NAME)))
                   }
                   "if different than" - {
                     "for 'SellingOperations', 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForSelling")).get
+                      val TEST_SHEET_NAME = "InvalidTotalForSelling"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '7010.78', which is equal to 'F2:Volume' - 'G2:SettlementFee' - 'H2:TradingFees' - 'I2:Brokerage' - 'J2:ServiceTax' but, it actually contained '7010.81'.")
+                        'message(unexpectedTotalForSellings("7010.81", 2)("7010.78")(TEST_SHEET_NAME))
                       )
                     }
                     "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalForBuying")).get
+                      val TEST_SHEET_NAME = "InvalidTotalForBuying"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(s"An invalid calculated 'Cell' ('L2:Total') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '11005.42', which is equal to 'F2:Volume' + 'G2:SettlementFee' + 'H2:TradingFees' + 'I2:Brokerage' + 'J2:ServiceTax' but, it actually contained '11005.45'.")
+                        'message(unexpectedTotalForBuyings("11005.45", 2)("11005.42")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -896,7 +875,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
-                        'message(s"'Total's font-color ('0,0,0') on line '2' of 'Worksheet' '$TEST_SHEET_NAME' can only be red ('$RED') or blue ('$BLUE').")
+                        'message(invalidColorInTotal("0,0,0", 2)(TEST_SHEET_NAME))
                       )
                     }
                     "for the operation type:" - { 
@@ -908,7 +887,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Selling' but, 'Total' has font-color red('$RED') which denotes 'Buying'.")
+                          'message(unexpectedColorForSellingInTotal(2)(TEST_SHEET_NAME))
                         )
                       }
                       "Blue for 'Buyings'." in { poiWorkbook ⇒
@@ -919,7 +898,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
-                          'message(s"The 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' looks like 'Buying' but, 'Total' has font-color blue('$BLUE') which denotes 'Selling'.")
+                          'message(unexpectedColorForBuyingInTotal(2)(TEST_SHEET_NAME))
                         )
                       }
                     }
@@ -934,13 +913,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                 error should have(
                   'class(classOf[UnexpectedContentColor]),
-                  'message(s"Impossible to determine the type of 'Operation' on line '2' of 'Worksheet' '$TEST_SHEET_NAME' due to exactly half of the non-empty 'Attribute's of each valid color.")
+                  'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
                 )
               }
             }
             "Not harmonic with each other, that is, contain different" - {
               "'TradingDate's." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentTradingDates")).get
+                val TEST_SHEET_NAME = "GroupWithDifferentTradingDates"
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
                 assume(TEST_SHEET.groups.size == 4)
 
                 val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
@@ -948,31 +928,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                 error should have(
                   'class(classOf[UnexpectedContentValue]),
                   // TODO Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
-                  'message(s"An invalid 'Group' ('1662') was found on 'Worksheet' '${TEST_SHEET.name}'. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '06/11/2008' in 'A3' is different from '05/11/2008' in 'A2'.")
+                  'message(conflictingTradingDate("A3", "1662", "06/11/2008")("05/11/2008", "A2")(TEST_SHEET_NAME))
                 )
               }
               "'NoteNumbers's." in { poiWorkbook ⇒
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupWithDifferentNoteNumbers")).get
+                val TEST_SHEET_NAME = "GroupWithDifferentNoteNumbers"
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
                 assume(TEST_SHEET.groups.size == 4)
 
                 val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                 error should have(
                   'class(classOf[UnexpectedContentValue]),
-                  'message(s"An invalid 'Group' ('1663') was found on 'Worksheet' '${TEST_SHEET.name}'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '1663' in 'B3' is different from '1662' in 'B2'.")
+                  'message(conflictingNoteNumber("B3", "1663", "1663")("1662", "B2")(TEST_SHEET_NAME))
                 )
               }
             }
           }
           "having more than one 'Operation'" - { 
             "don't have a 'Summary'." in { poiWorkbook ⇒
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("MultiLineGroupWithNoSummary")).get
+              val TEST_SHEET_NAME = "MultiLineGroupWithNoSummary"
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
               val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
               error should have(
                 'class(classOf[RequiredValueMissing]),
-                'message(s"An invalid 'Group' ('85060') was found on 'Worksheet' '${TEST_SHEET.name}'. 'MultilineGroup's must have a 'SummaryLine'.")
+                'message(summaryLineMissing("85060")(TEST_SHEET_NAME))
               )
             }
             "have an invalid 'Summary', in which" - {
@@ -983,9 +965,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('VolumeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(volumeSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "VolumeSummaryExtraneousChars"
@@ -993,29 +973,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'VolumeSummary' ('-R$$ 9.322,OO') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInVolumeSummary("-R$ 9.322,OO", 5)(TEST_SHEET_NAME)))
                 }
                 "is different than the sum of the 'Volume's of all" - {
                   "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryHomogGroups")).get
+                    val TEST_SHEET_NAME = "InvalidVolumeSummaryHomogGroups"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '16810.00', which is the sum of all 'Operation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '-2110.00'.")
+                      'message(unexpectedVolumeSummaryForHomogeneousGroups("-2110.00", 4)("16810.00", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                   "'SellingOperation's minus the sum of the 'Volume's of all 'BuyingOperation's for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidVolumeSummaryMixedGroups")).get
+                    val TEST_SHEET_NAME = "InvalidVolumeSummaryMixedGroups"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('F4:VolumeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.00', which is the sum of all 'SellingOperation's 'Volume's minus the sum of all 'BuyingOperation's 'Volume's in the 'Group' (F2...F3) but, it actually contained '16810.00'.")
+                      'message(unexpectedVolumeSummaryForHeterogeneousGroups("16810.00", 4)("-2110.00", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                 }
@@ -1027,9 +1007,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('SettlementFeeSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(settlementFeeSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "SettlementFeeSummaryExtrChars"
@@ -1037,18 +1015,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'SettlementFeeSummary' ('R$$ 2,S6') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInSettlementFeeSummary("R$ 2,S6", 5)(TEST_SHEET_NAME)))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidSettlementFeeSummary")).get
+                  val TEST_SHEET_NAME = "InvalidSettlementFeeSummary"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('G4:SettlementFeeSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '5.65', which is the sum of all 'SettlementFee's in the 'Group' (G2...G3) but, it actually contained '5.68'.")
+                    'message(unexpectedSettlementFeeSummary("5.68", 4)("5.65", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1059,9 +1036,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('TradingFeesSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(tradingFeesSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TradingFeesSummaryExtrChars"
@@ -1069,18 +1044,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'TradingFeesSummary' ('R$$ O,65') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInTradingFeesSummary("R$ O,65", 5)(TEST_SHEET_NAME)))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTradingFeesSummary")).get
+                  val TEST_SHEET_NAME = "InvalidTradingFeesSummary"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('H4:TradingFeesSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '1.13', which is the sum of all 'TradingFees's in the 'Group' (H2...H3) but, it actually contained '1.10'.")
+                    'message(unexpectedTradingFeesSummary("1.10", 4)("1.13", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1091,9 +1065,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('BrokerageSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(brokerageSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "BrokerageSummaryExtraneousChars"
@@ -1101,18 +1073,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'BrokerageSummary' ('R$$ 4T,97') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInBrokerageSummary("R$ 4T,97", 5)(TEST_SHEET_NAME)))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidBrokerageSummary")).get
+                  val TEST_SHEET_NAME = "InvalidBrokerageSummary"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('I4:BrokerageSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '3.98', which is the sum of all 'Brokerage's in the 'Group' (I2...I3) but, it actually contained '3.95'.")
+                    'message(unexpectedBrokerageSummary("3.95", 4)("3.98", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1123,9 +1094,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('ServiceTaxSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(serviceTaxSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "ServiceTaxSummaryExtrChars"
@@ -1133,18 +1102,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'ServiceTaxSummary' ('R$$ 2,4O') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInServiceTaxSummary("R$ 2,4O", 5)(TEST_SHEET_NAME)))
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidServiceTaxSummary")).get
+                  val TEST_SHEET_NAME = "InvalidServiceTaxSummary"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('J4:ServiceTaxSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.26', which is the sum of all 'ServiceTax's in the 'Group' (J2...J3) but, it actually contained '0.29'.")
+                    'message(unexpectedServiceTaxSummary("0.29", 4)("0.26", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1155,19 +1123,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'IncomeTaxAtSourceSummary' ('R$$ O,OO') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInIncomeTaxAtSourceSummary("R$ O,OO", 5)(TEST_SHEET_NAME)))
                 }
                 // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
-                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidIncomeTaxAtSourceSummary")).get
+                  val TEST_SHEET_NAME = "InvalidIncomeTaxAtSourceSummary"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                   val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(s"An invalid calculated 'SummaryCell' ('K5:IncomeTaxAtSourceSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '0.08', which is the sum of all 'IncomeTaxAtSource's in the 'Group' (K2...K4) but, it actually contained '0.05'.")
+                    'message(unexpectedIncomeTaxAtSourceSummary("0.05", 5)("0.08", 2, 4)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1178,9 +1145,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(RequiredValueMissing(
-                    s"A required attribute ('TotalSummary') is missing on line '5' of 'Worksheet' '$TEST_SHEET_NAME'."
-                  ))
+                  errors should contain(RequiredValueMissing(totalSummaryMissing(5)(TEST_SHEET_NAME)))
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TotalSummaryExtraneousChars"
@@ -1188,29 +1153,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                   val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  errors should contain(UnexpectedContentType(
-                    s"'TotalSummary' ('-R$$ 9.37S,S9') on line '5' of 'Worksheet' '$TEST_SHEET_NAME' cannot be interpreted as a currency."
-                  ))
+                  errors should contain(UnexpectedContentType(unexpectedContentTypeInTotalSummary("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME)))
                 }
                 "is different than the sum of the 'Total's of all" - {
                   "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryHomogGroups")).get
+                    val TEST_SHEET_NAME = "InvalidTotalSummaryHomogGroups"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '16820.69', which is the sum of all 'Operation's 'Volume's in the 'Group' (L2...L3) but, it actually contained '-2110.69'.")
+                      'message(unexpectedTotalSummaryForHomogeneousGroups("-2110.69", 4)("16820.69", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                   "'SellingOperation's minus the sum of the 'Total's of all 'BuyingOperation's, for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("InvalidTotalSummaryMixedGroups")).get
+                    val TEST_SHEET_NAME = "InvalidTotalSummaryMixedGroups"
+                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                     val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(s"An invalid calculated 'SummaryCell' ('L4:TotalSummary') was found on 'Worksheet' '${TEST_SHEET.name}'. It was supposed to contain '-2110.69', which is the sum of all 'SellingOperation's 'Total's minus the sum of all 'BuyingOperation's 'Total's in the 'Group' (L2...L3) but, it actually contained '16820.69'.")
+                      'message(unexpectedTotalSummaryForHeterogeneousGroups("16820.69", 4)("-2110.69", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                 }
@@ -1357,3 +1322,285 @@ object BrokerageNotesWorksheetReaderTest:
     private def redFont: Boolean = cell.fontColor == RED
 
     private def blueFont: Boolean = cell.fontColor == BLUE
+
+object BrokerageNotesWorksheetTestMessages:
+  private val RED = "255,0,0"
+  private val BLUE = "68,114,196"
+
+  import BrokerageNotesWorksheetMessages.*
+
+  def tradingDateMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("TradingDate", operationIndex)(worksheetName)
+  def noteNumberMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("NoteNumber", operationIndex)(worksheetName)
+  def tickerMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Ticker", operationIndex)(worksheetName)
+  def qtyMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Qty", operationIndex)(worksheetName)
+  def priceMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Price", operationIndex)(worksheetName)
+  def volumeMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Volume", operationIndex)(worksheetName)
+  def settlementFeeMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("SettlementFee", operationIndex)(worksheetName)
+  def tradingFeesMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("TradingFees", operationIndex)(worksheetName)
+  def brokerageMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Brokerage", operationIndex)(worksheetName)
+  def serviceTaxMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("ServiceTax", operationIndex)(worksheetName)
+  def totalMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("Total", operationIndex)(worksheetName)
+  def volumeSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("VolumeSummary", operationIndex)(worksheetName)
+  def settlementFeeSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("SettlementFeeSummary", operationIndex)(worksheetName)
+  def tradingFeesSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("TradingFeesSummary", operationIndex)(worksheetName)
+  def brokerageSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("BrokerageSummary", operationIndex)(worksheetName)
+  def serviceTaxSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("ServiceTaxSummary", operationIndex)(worksheetName)
+  def totalSummaryMissing(operationIndex: Int)(worksheetName: String): String =
+    attributeMissing("TotalSummary", operationIndex)(worksheetName)
+
+  def unexpectedContentTypeInTradingDate(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TradingDate", operationIndex)("a date")(worksheetName)
+  def unexpectedContentTypeInNoteNumber(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "NoteNumber", operationIndex)("an integer number")(worksheetName)
+  def unexpectedContentTypeInQty(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Qty", operationIndex)("an integer number")(worksheetName)
+  def unexpectedContentTypeInPrice(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Price", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInVolume(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Volume", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInSettlementFee(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "SettlementFee", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInTradingFees(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TradingFees", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInBrokerage(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Brokerage", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInServiceTax(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "ServiceTax", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInIncomeTaxAtSource(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "IncomeTaxAtSource", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInTotal(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Total", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInVolumeSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "VolumeSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInSettlementFeeSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "SettlementFeeSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInTradingFeesSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TradingFeesSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInBrokerageSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "BrokerageSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInServiceTaxSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "ServiceTaxSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInIncomeTaxAtSourceSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "IncomeTaxAtSourceSummary", operationIndex)("a currency")(worksheetName)
+  def unexpectedContentTypeInTotalSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TotalSummary", operationIndex)("a currency")(worksheetName)
+
+  def invalidColorInTradingDate(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "TradingDate", operationIndex)(worksheetName)
+  def invalidColorInNoteNumber(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "NoteNumber", operationIndex)(worksheetName)
+  def invalidColorInTicker(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Ticker", operationIndex)(worksheetName)
+  def invalidColorInQty(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Qty", operationIndex)(worksheetName)
+  def invalidColorInPrice(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Price", operationIndex)(worksheetName)
+  def invalidColorInVolume(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Volume", operationIndex)(worksheetName)
+  def invalidColorInSettlementFee(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "SettlementFee", operationIndex)(worksheetName)
+  def invalidColorInTradingFees(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "TradingFees", operationIndex)(worksheetName)
+  def invalidColorInBrokerage(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Brokerage", operationIndex)(worksheetName)
+  def invalidColorInServiceTax(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "ServiceTax", operationIndex)(worksheetName)
+  def invalidColorInIncomeTaxAtSource(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "IncomeTaxAtSource", operationIndex)(worksheetName)
+  def invalidColorInTotal(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
+    invalidAttributeColor(attributeColor, "Total", operationIndex)(worksheetName)
+
+  def unexpectedColorForSelling(attributeName: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedAttributeColor(s"red($RED)", attributeName, operationIndex)("Buying", "Selling")(worksheetName)
+  def unexpectedColorForSellingInTradingDate(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("TradingDate", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInNoteNumber(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("NoteNumber", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInTicker(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Ticker", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInQty(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Qty", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInPrice(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Price", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInVolume(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Volume", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInSettlementFee(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("SettlementFee", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInTradingFees(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("TradingFees", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInBrokerage(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Brokerage", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInServiceTax(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("ServiceTax", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInIncomeTaxAtSource(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("IncomeTaxAtSource", operationIndex)(worksheetName)
+  def unexpectedColorForSellingInTotal(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForSelling("Total", operationIndex)(worksheetName)
+  
+  def unexpectedColorForBuying(attributeName: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedAttributeColor(s"blue($BLUE)", attributeName, operationIndex)("Selling", "Buying")(worksheetName)
+  def unexpectedColorForBuyingInTradingDate(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("TradingDate", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInNoteNumber(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("NoteNumber", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInTicker(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Ticker", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInQty(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Qty", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInPrice(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Price", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInVolume(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Volume", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInSettlementFee(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("SettlementFee", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInTradingFees(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("TradingFees", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInBrokerage(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Brokerage", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInServiceTax(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("ServiceTax", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInIncomeTaxAtSource(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("IncomeTaxAtSource", operationIndex)(worksheetName)
+  def unexpectedColorForBuyingInTotal(operationIndex: Int)(worksheetName: String): String =
+    unexpectedColorForBuying("Total", operationIndex)(worksheetName)
+
+  def unexpectedNegativeNoteNumber(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedNegativeAttribute("NoteNumber", attributeValue, operationIndex)(worksheetName)
+  def unexpectedNegativeQty(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedNegativeAttribute("Qty", attributeValue, operationIndex)(worksheetName)
+  def unexpectedNegativePrice(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedNegativeAttribute("Price", attributeValue, operationIndex)(worksheetName)
+  def unexpectedNegativeBrokerage(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedNegativeAttribute("Brokerage", attributeValue, operationIndex)(worksheetName)
+  def unexpectedNegativeServiceTax(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedNegativeAttribute("ServiceTax", attributeValue, operationIndex)(worksheetName)
+
+  private def calculatedAttributeSummaryFormulaDescription(attributeName: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    s"the sum of all '$attributeName's in the 'Group' ($attributeLetter$indexOfFirstOperation...$attributeLetter$indexOfLastOperation)"
+  
+  private def settlementFeeSummaryFormulaDescription(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    calculatedAttributeSummaryFormulaDescription("SettlementFee", 'G', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedSettlementFeeSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, "SettlementFeeSummary", s"G$summaryIndex"
+    )(
+      expectedValue, settlementFeeSummaryFormulaDescription(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def tradingFeesSummaryFormulaDescription(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    calculatedAttributeSummaryFormulaDescription("TradingFees", 'H', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedTradingFeesSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, "TradingFeesSummary", s"H$summaryIndex"
+    )(
+      expectedValue, tradingFeesSummaryFormulaDescription(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def brokerageSummaryFormulaDescription(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    calculatedAttributeSummaryFormulaDescription("Brokerage", 'I', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedBrokerageSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, "BrokerageSummary", s"I$summaryIndex"
+    )(
+      expectedValue, brokerageSummaryFormulaDescription(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def serviceTaxSummaryFormulaDescription(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    calculatedAttributeSummaryFormulaDescription("ServiceTax", 'J', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedServiceTaxSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, "ServiceTaxSummary", s"J$summaryIndex"
+    )(
+      expectedValue, serviceTaxSummaryFormulaDescription(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def incomeTaxAtSourceSummaryFormulaDescription(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    calculatedAttributeSummaryFormulaDescription("IncomeTaxAtSource", 'K', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedIncomeTaxAtSourceSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, "IncomeTaxAtSourceSummary", s"K$summaryIndex"
+    )(
+      expectedValue, incomeTaxAtSourceSummaryFormulaDescription(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def unexpectedVolumeSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, formulaDescription: String)(worksheetName: String) =
+    unexpectedOperationTypeAwareAttributeSummary(
+      actualValue, "VolumeSummary", summaryIndex
+    )(
+      expectedValue, 'F', formulaDescription
+    )(worksheetName)
+
+  private def volumeSummaryFormulaDescriptionForHomogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) = 
+    operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups("Volume", 'F', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedVolumeSummaryForHomogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+    unexpectedVolumeSummary(
+      actualValue, summaryIndex
+    )(
+      expectedValue, volumeSummaryFormulaDescriptionForHomogeneousGroups(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def volumeSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups("Volume", 'F', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedVolumeSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+    unexpectedVolumeSummary(
+      actualValue, summaryIndex
+    )(
+      expectedValue, volumeSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def unexpectedTotalSummary(actualValue: String, summaryIndex: Int)(expectedValue: String, formulaDescription: String)(worksheetName: String) =
+    unexpectedOperationTypeAwareAttributeSummary(
+      actualValue, "TotalSummary", summaryIndex
+    )(
+      expectedValue, 'L', formulaDescription
+    )(worksheetName)
+
+  private def totalSummaryFormulaDescriptionForHomogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) = 
+    operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups("Total", 'L', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedTotalSummaryForHomogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+    unexpectedTotalSummary(
+      actualValue, summaryIndex
+    )(
+      expectedValue, totalSummaryFormulaDescriptionForHomogeneousGroups(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+  
+  private def totalSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups("Total", 'L', indexOfFirstOperation, indexOfLastOperation)
+  def unexpectedTotalSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+    unexpectedTotalSummary(
+      actualValue, summaryIndex
+    )(
+      expectedValue, totalSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation, indexOfLastOperation)
+    )(worksheetName)
+    
+// NOT USED
+  // def unexpectedOperationTypeAwareAttributeSummaryForHomogeneousGroups(actualValue: String, attributeName: String, summaryIndex: Int)(expectedValue: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+  //   unexpectedOperationTypeAwareAttributeSummary(
+  //     actualValue, attributeName, summaryIndex
+  //   )(
+  //     expectedValue, attributeLetter, operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLastOperation)
+  //   )(worksheetName)
+    
+  // def unexpectedOperationTypeAwareAttributeSummaryForHeterogeneousGroups(actualValue: String, attributeName: String, summaryIndex: Int)(expectedValue: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
+  //   unexpectedOperationTypeAwareAttributeSummary(
+  //     actualValue, attributeName, summaryIndex
+  //   )(
+  //     expectedValue, attributeLetter, operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLastOperation)
+  //   )(worksheetName)
+// NOT USED

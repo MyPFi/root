@@ -41,6 +41,7 @@ object BrokerageNotesWorksheetReader:
     case Homogeneous, Heterogeneous
 
   import BrokerageNoteReaderError.*
+  import BrokerageNotesWorksheetMessages.*
   import GroupType.*
 
   type Error = BrokerageNoteReaderError | Worksheet.Error
@@ -167,97 +168,92 @@ object BrokerageNotesWorksheetReader:
 
   private def isPresent(attribute: Cell)(attributeHeader: String, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
     if attribute.isNotEmpty then attribute.validNec
-    else RequiredValueMissing(
-      s"A required attribute ('$attributeHeader') is missing on line '$operationIndex' of 'Worksheet' '$worksheetName'."
-    ).invalidNec
+    else RequiredValueMissing(attributeMissing(attributeHeader, operationIndex)(worksheetName)).invalidNec
 
   private def isAValidDate: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
     if attribute.asLocalDate.isDefined then attribute.validNec
     else UnexpectedContentType(
-      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as a date."
+      unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a date")(worksheetName)
     ).invalidNec
 
   private def hasAValidFontColor: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
     if attribute.isEmpty || Seq(RED, BLUE).contains(attribute.fontColor) then attribute.validNec
-    else UnexpectedContentColor(
-      s"'$attributeHeader's font-color ('${attribute.fontColor}') on line '$operationIndex' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
-    ).invalidNec
+    else UnexpectedContentColor(invalidAttributeColor(attribute.fontColor, attributeHeader, operationIndex)(worksheetName)).invalidNec
 
   private def isNotNegative: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
     if attribute.asDouble.forall(_ >= 0.0) then attribute.validNec
-    else UnexpectedContentValue(
-      s"'$attributeHeader' (${attribute.value}) on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be negative."
-    ).invalidNec
+    else UnexpectedContentValue(unexpectedNegativeAttribute(attributeHeader, attribute.value, operationIndex)(worksheetName)).invalidNec
 
   private def isAValidInteger: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
     if attribute.asInt.isDefined then attribute.validNec
     else UnexpectedContentType(
-      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as an integer number."
+      unexpectedContentType(attribute.value, attributeHeader, operationIndex)("an integer number")(worksheetName)
     ).invalidNec
 
   private def isAValidCurrency(attribute: Cell)(attributeHeader: String, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
     if attribute.isEmpty || attribute.isCurrency then attribute.validNec
     else UnexpectedContentType(
-      s"'$attributeHeader' ('${attribute.value}') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as a currency."
+      unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a currency")(worksheetName)
     ).invalidNec
 
   private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => (Line, String) => ErrorsOr[Cell]*): OperationValidation = line ⇒ worksheetName =>
     line.toMostLikelyOperation(worksheetName)
-      .andThen{operation => 
+      .andThen{operation =>
         attributeColorChecks
           .map(_(operation)(line, worksheetName).map(Seq(_)))
           .reduce(_ combine _)
           .map(_=> line)
       }
-    
-  private def onTradingDate(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
-    onAttribute(line.cells(0))("TradingDate", operation, line.number, worksheetName)
 
-  private def onNoteNumber(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onTradingDate(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
+    onAttribute(line.cells.head)("TradingDate", operation, line.number, worksheetName)
+
+  private def onNoteNumber(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(1))("NoteNumber", operation, line.number, worksheetName)
 
-  private def onTicker(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onTicker(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(2))("Ticker", operation, line.number, worksheetName)
 
-  private def onQty(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onQty(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(3))("Qty", operation, line.number, worksheetName)
 
-  private def onPrice(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onPrice(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(4))("Price", operation, line.number, worksheetName)
 
-  private def onVolume(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onVolume(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(5))("Volume", operation, line.number, worksheetName)
 
-  private def onSettlementFee(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onSettlementFee(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(6))("SettlementFee", operation, line.number, worksheetName)
 
-  private def onTradingFees(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onTradingFees(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(7))("TradingFees", operation, line.number, worksheetName)
 
-  private def onBrokerage(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onBrokerage(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(8))("Brokerage", operation, line.number, worksheetName)
 
-  private def onServiceTax(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onServiceTax(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(9))("ServiceTax", operation, line.number, worksheetName)
 
-  private def onIncomeTaxAtSource(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onIncomeTaxAtSource(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(10))("IncomeTaxAtSource", operation, line.number, worksheetName)
 
-  private def onTotal(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] = 
+  private def onTotal(operation: Operation)(line: Line, worksheetName: String): ErrorsOr[Cell] =
     onAttribute(line.cells(11))("Total", operation, line.number, worksheetName)
 
-  private def onAttribute(attribute: Cell)(attributeHeader: String, operation: Operation, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] = 
+  private def onAttribute(attribute: Cell)(attributeHeader: String, operation: Operation, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
     if attribute.isEmpty then attribute.validNec
-    else 
-      val errorMessage: (String, String, String) => String = (lineOperation, cellFontColor, cellOperation) => s"The 'Operation' on line '$operationIndex' of 'Worksheet' '$worksheetName' looks like '$lineOperation' but, '$attributeHeader' has font-color $cellFontColor which denotes '$cellOperation'."
+    else
+      val errorMessage: (String, String, String) => String = (currentOperation, attributeColor, operationDenoted) =>
+        unexpectedAttributeColor(attributeColor, attributeHeader, operationIndex)(operationDenoted, currentOperation)(worksheetName)
       operation match
-        case a: SellingOperation =>       
+        case _: SellingOperation =>
           if attribute.fontColor != RED then attribute.validNec
-          else UnexpectedContentColor(errorMessage("Selling", s"red('$RED')", "Buying")).invalidNec
+          else UnexpectedContentColor(errorMessage("Selling", s"red($RED)", "Buying")).invalidNec
 
-        case a: BuyingOperation =>
+        case _: BuyingOperation =>
           if attribute.fontColor != BLUE then attribute.validNec
-          else UnexpectedContentColor(errorMessage("Buying", s"blue('$BLUE')", "Selling")).invalidNec
+          else UnexpectedContentColor(errorMessage("Buying", s"blue($BLUE)", "Selling")).invalidNec
 
   private def assertVolumeIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val qtyCell = line.cells(3)
@@ -270,7 +266,7 @@ object BrokerageNotesWorksheetReader:
     val expectedVolume = (qty * price).formatted("%.2f")
 
     if actualVolume != expectedVolume then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${volumeCell.address}:Volume') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedVolume', which is equal to '${qtyCell.address}:Qty * ${priceCell.address}:Price ($qty * ${price.formatted("%.2f")})' but, it actually contained '$actualVolume'."
+      unexpectedVolume(actualVolume, line.number)(expectedVolume, qtyCell.value, price.formatted("%.2f"))(worksheetName)
     ).invalidNec
     else line.validNec
 
@@ -286,23 +282,23 @@ object BrokerageNotesWorksheetReader:
     val expectedSettlementFee = (volume * settlementFeeRate).formatted("%.2f")
 
     if actualSettlementFee != expectedSettlementFee then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${settlementFeeCell.address}:SettlementFee') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedSettlementFee', which is equal to '${volumeCell.address}:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' (${volume.formatted("%.2f")} * ${(settlementFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualSettlementFee'."
+      unexpectedSettlementFee(actualSettlementFee, line.number)(expectedSettlementFee, volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
   private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
     val volumeCell = line.cells(5)
-    val negotiationsFeeCell = line.cells(7)
+    val tradingFeesCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val tradingTime = TradingFeesRate.TRADING
     val volume = volumeCell.asDouble.getOrElse(0.0)
-    val actualNegotiationsFee = negotiationsFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
+    val actualTradingFees = tradingFeesCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Same challenge here since 'TradingFees' is also dependent on the time of order execution which is not part of the brokerage note document.
-    val negotiationsFeeRate = TradingFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
-    val expectedNegotiationsFee = (volume * negotiationsFeeRate).formatted("%.2f")
+    val tradingFeesRate = TradingFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
+    val expectedTradingFees = (volume * tradingFeesRate).formatted("%.2f")
 
-    if actualNegotiationsFee != expectedNegotiationsFee then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${negotiationsFeeCell.address}:NegotiationsFee') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedNegotiationsFee', which is equal to '${volumeCell.address}:Volume * 'NegotiationsFeeRate' at 'TradingDateTime' (${volume.formatted("%.2f")} * ${(negotiationsFeeRate * 100).formatted("%.4f")}%)' but, it actually contained '$actualNegotiationsFee'."
+    if actualTradingFees != expectedTradingFees then UnexpectedContentValue(
+      unexpectedTradingFees(actualTradingFees, line.number)(expectedTradingFees, volume.formatted("%.2f"), (tradingFeesRate * 100).formatted("%.4f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
@@ -317,7 +313,7 @@ object BrokerageNotesWorksheetReader:
     val expectedServiceTax = (brokerage * serviceTaxRate).formatted("%.2f")
 
     if actualServiceTax != expectedServiceTax then UnexpectedContentValue(
-      s"An invalid calculated 'Cell' ('${serviceTaxCell.address}:ServiceTax') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '$expectedServiceTax', which is equal to '${brokerageCell.address}:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' (${brokerage.formatted("%.2f")} * ${(serviceTaxRate * 100).formatted("%.1f")}%)' but, it actually contained '$actualServiceTax'."
+      unexpectedServiceTax(actualServiceTax, line.number)(expectedServiceTax, brokerage.formatted("%.2f"), (serviceTaxRate * 100).formatted("%.1f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
@@ -350,7 +346,7 @@ object BrokerageNotesWorksheetReader:
       val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
 
       if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
-        s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedIncomeTaxAtSource.formatted("%.2f")}', which is equal to (('${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${tradingFeesCell.address}:TradingFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax') - ('AverageStockPrice' for the '${tickerCell.address}:Ticker' * '${qtyCell.address}:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' (${operationProfit.formatted("%.2f")} * ${(incomeTaxAtSourceRate * 100).formatted("%.4f")}%)' but, it actually contained '${actualIncomeTaxAtSource.formatted("%.2f")}'."
+        unexpectedIncomeTaxAtSourceForSellings(actualIncomeTaxAtSource.formatted("%.2f"), line.number)(expectedIncomeTaxAtSource.formatted("%.2f"), operationProfit.formatted("%.2f"), (incomeTaxAtSourceRate * 100).formatted("%.4f%%"))(worksheetName)
       ).invalidNec
       else line.validNec
     else
@@ -358,12 +354,12 @@ object BrokerageNotesWorksheetReader:
 
       if incomeTaxAtSourceCell.isNotEmpty then {
         if !incomeTaxAtSourceCell.isCurrency then UnexpectedContentType(
-          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${incomeTaxAtSourceCell.value}'."
+          unexpectedIncomeTaxAtSourceForBuyings(incomeTaxAtSourceCell.value, line.number)(worksheetName)
         ).invalidNec
         else line.validNec
       } combine {
         if actualIncomeTaxAtSource > 0.0 then UnexpectedContentValue(
-          s"An invalid calculated 'Cell' ('${incomeTaxAtSourceCell.address}:IncomeTaxAtSource') was found on 'Worksheet' '$worksheetName'. It was supposed to be either empty or equal to '0.00' but, it actually contained '${if incomeTaxAtSourceCell.isCurrency then actualIncomeTaxAtSource.formatted("%.2f") else incomeTaxAtSourceCell.value}'."
+          unexpectedIncomeTaxAtSourceForBuyings(incomeTaxAtSourceCell.value, line.number)(worksheetName)
         ).invalidNec
         else line.validNec
       }
@@ -387,14 +383,14 @@ object BrokerageNotesWorksheetReader:
       val expectedTotal = volume - settlementFee - tradingFees - brokerage - serviceTax
 
       if actualTotal !~= expectedTotal then UnexpectedContentValue(
-        s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' - '${settlementFeeCell.address}:SettlementFee' - '${tradingFeesCell.address}:TradingFees' - '${brokerageCell.address}:Brokerage' - '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+        unexpectedTotalForSellings(actualTotal.formatted("%.2f"), line.number)(expectedTotal.formatted("%.2f"))(worksheetName)
       ).invalidNec
       else line.validNec
     else
       val expectedTotal = volume + settlementFee + tradingFees + brokerage + serviceTax
 
       if actualTotal !~= expectedTotal then UnexpectedContentValue(
-        s"An invalid calculated 'Cell' ('${totalCell.address}:Total') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedTotal.formatted("%.2f")}', which is equal to '${volumeCell.address}:Volume' + '${settlementFeeCell.address}:SettlementFee' + '${tradingFeesCell.address}:TradingFees' + '${brokerageCell.address}:Brokerage' + '${serviceTaxCell.address}:ServiceTax' but, it actually contained '${actualTotal.formatted("%.2f")}'."
+        unexpectedTotalForBuyings(actualTotal.formatted("%.2f"), line.number)(expectedTotal.formatted("%.2f"))(worksheetName)
       ).invalidNec
       else line.validNec
 
@@ -403,7 +399,11 @@ object BrokerageNotesWorksheetReader:
     val secondTradingDateCell = second.cells.head
 
     if firstTradingDateCell.value != secondTradingDateCell.value then UnexpectedContentValue(
-      s"An invalid 'Group' ('${second.cells.tail.head.value}') was found on 'Worksheet' '$worksheetName'. 'TradingDate's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondTradingDateCell.value}' in '${secondTradingDateCell.address}' is different from '${firstTradingDateCell.value}' in '${firstTradingDateCell.address}'."
+      conflictingTradingDate(
+        secondTradingDateCell.address, second.cells.tail.head.value, secondTradingDateCell.value
+      )(
+        firstTradingDateCell.value, firstTradingDateCell.address
+      )(worksheetName)
     ).invalidNec
     else second.validNec
 
@@ -412,7 +412,11 @@ object BrokerageNotesWorksheetReader:
     val secondNoteNumberCell = second.cells.tail.head
 
     if firstNoteNumberCell.value != secondNoteNumberCell.value then UnexpectedContentValue(
-      s"An invalid 'Group' ('${secondNoteNumberCell.value}') was found on 'Worksheet' '$worksheetName'. 'NoteNumber's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '${secondNoteNumberCell.value}' in '${secondNoteNumberCell.address}' is different from '${firstNoteNumberCell.value}' in '${firstNoteNumberCell.address}'."
+      conflictingNoteNumber(
+        secondNoteNumberCell.address, second.cells.tail.head.value, secondNoteNumberCell.value
+      )(
+        firstNoteNumberCell.value, firstNoteNumberCell.address
+      )(worksheetName)
     ).invalidNec
     else second.validNec
 
@@ -448,49 +452,51 @@ object BrokerageNotesWorksheetReader:
         .liftTo(group)(summary)
     }.getOrElse(group.validNec)
 
-  private def isPresent: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+  private def isPresent: SummaryAttributeCheck = summaryAttribute => (_, attributeHeader, operationIndex, _, worksheetName) =>
     isPresent(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
 
-  private def isAValidCurrency: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+  private def isAValidCurrency: SummaryAttributeCheck = summaryAttribute => (_, attributeHeader, operationIndex, _, worksheetName) =>
     isAValidCurrency(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
 
-  private def isCorrectlyCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
+  private def isCorrectlyCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, _, group, worksheetName) =>
     val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(attributeIndex).asDouble.getOrElse(0.0))
     val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
 
     if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
-      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+      unexpectedValueForCalculatedSummaryAttribute(actualSummaryValue.formatted("%.2f"), attributeHeader, summaryAttribute.address)(expectedSummaryValue.formatted("%.2f"), s"the sum of all '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address})")(worksheetName)
     ).invalidNec
     else summaryAttribute.validNec
 
   private def isOperationTypeAwareWhenCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, operationIndex, group, worksheetName) =>
     val valueToSummarize: Line => Double = _.cells(summaryAttribute.index).asDouble.getOrElse(0.0)
-    val (expectedSummaryValue, summaryExplanation) = group.`type` match
-      case Homogeneous => (group.nonSummaryLines.map(valueToSummarize).sum, "'Operation's 'Volume's")
+    val attributeName = attributeHeader.replace("Summary", "")
+    val attributeLetter = (attributeIndex + 65).toChar
+    val indexOfFirstOperation = group.head.number
+    val indexOfLarstOperation = group.takeRight(2).head.number
+    val (expectedSummaryValue, formulaDescription) = group.`type` match
+      case Homogeneous => (group.nonSummaryLines.map(valueToSummarize).sum, operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLarstOperation))
       case Heterogeneous => (group.nonSummaryLines.foldLeft(0.0) { (acc, operation) ⇒
         if operation.hasMostCellsRed then
           acc - valueToSummarize(operation)
-        else 
+        else
           acc + valueToSummarize(operation)
-      }, 
-      s"'SellingOperation's '${attributeHeader.replace("Summary", "")}'s minus the sum of all 'BuyingOperation's '${attributeHeader.replace("Summary", "")}'s"
+      },
+      operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLarstOperation)
       )
 
     val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
 
     if actualSummaryValue.abs !~= expectedSummaryValue.abs then UnexpectedContentValue(
-      s"An invalid calculated 'SummaryCell' ('${summaryAttribute.address}:${attributeHeader}') was found on 'Worksheet' '$worksheetName'. It was supposed to contain '${expectedSummaryValue.formatted("%.2f")}', which is the sum of all $summaryExplanation in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address}) but, it actually contained '${actualSummaryValue.formatted("%.2f")}'."
+      unexpectedOperationTypeAwareAttributeSummary(actualSummaryValue.formatted("%.2f"), attributeHeader, operationIndex)(expectedSummaryValue.formatted("%.2f"), attributeLetter, formulaDescription)(worksheetName)
     ).invalidNec
     else summaryAttribute.validNec
 
   private def assertMultilineGroupHasSummary: BrokerageNoteValidation = group ⇒ worksheetName =>
     group.nonSummaryLines match
-      case Seq(_, _, _*) ⇒ 
+      case Seq(_, _, _*) ⇒
         group.summary
           .map(_ => group.validNec)
-          .getOrElse(RequiredValueMissing(
-            s"An invalid 'Group' ('${group.head.cells(1).value}') was found on 'Worksheet' '$worksheetName'. 'MultilineGroup's must have a 'SummaryLine'."
-          ).invalidNec)
+          .getOrElse(RequiredValueMissing(summaryLineMissing(group.head.cells(1).value)(worksheetName)).invalidNec)
       case _ ⇒ group.validNec
 
   extension (errorsOrBrokerageNote: ErrorsOr[BrokerageNote])
@@ -533,36 +539,34 @@ object BrokerageNotesWorksheetReader:
       given Semigroup[Line] = (x, _) => x
       val appliedBrokerageNoteValidations: ErrorsOr[Group] = brokerageNoteValidations.map(_ (group)(worksheetName)).reduce(_ combine _)
       val validateAndHarmonize: (Line => ErrorsOr[Seq[Line]]) => ErrorsOr[Seq[Line]] = f => group.nonSummaryLines.map(f).reduce(_ combine _)
-      val applyHarmonyChecksTo: (Seq[Line] => ErrorsOr[Seq[Line]]) => ErrorsOr[Seq[Line]] = f => group.nonSummaryLines.sliding(2).map(f).reduce(_ combine _)
+      val applyHarmonyChecksToLineWindow: (Seq[Line] => ErrorsOr[Seq[Line]]) => ErrorsOr[Seq[Line]] = f => group.nonSummaryLines.sliding(2).map(f).reduce(_ combine _)
       val applyOperationsHarmonyChecksTo: (Line, Line) => ErrorsOr[Line] = (line1, line2) => operationsHarmonyChecks.map(_ (line1, line2)(worksheetName)).reduce(_ combine _)
 
       appliedBrokerageNoteValidations.combine{
-        validateAndHarmonize{ line => 
+        validateAndHarmonize{ line =>
           line.validatedWith(operationValidations)(worksheetName).accumulate.combine{
             line.harmonizedWith(attributesHarmonyChecks)(worksheetName).accumulate.combine{
               line.withCellsValidated(attributeValidations)(worksheetName).accumulate
             }
           }
         }.liftTo(group).combine{
-          applyHarmonyChecksTo{ lineWindow ⇒
-            lineWindow match {
-              case Seq(line1, line2) ⇒ applyOperationsHarmonyChecksTo(line1, line2).accumulate
-              case Seq(line) ⇒ line.validNec.accumulate
-            }
+          applyHarmonyChecksToLineWindow {
+            case Seq(line1, line2) ⇒ applyOperationsHarmonyChecksTo(line1, line2).accumulate
+            case Seq(line) ⇒ line.validNec.accumulate
           }
         }
-      } 
+      }
 
-    private def toBrokerageNote(worksheetName: String): ErrorsOr[BrokerageNote] = 
+    private def toBrokerageNote(worksheetName: String): ErrorsOr[BrokerageNote] =
       nonSummaryLines
         .map(_.toOperation(worksheetName).map(Seq(_)))
         .reduce(_ combine _)
         .map(BrokerageNote(_, group.head.toFinancialSummary))
 
     private def nonSummaryLines: Seq[Line] = summary.map(_ => group.init).getOrElse(group)
-    
+
     private def summary: Option[Line] = if group.size <= 1 then None else group.lastOption.filter(_.cells.count(_.isEmpty) > 1)
-    
+
     private def `type`: GroupType = nonSummaryLines.distinctBy(_.toMostLikelyOperation("").map(_.getClass)).size match
       case 1 => Homogeneous
       case _ => Heterogeneous
@@ -570,60 +574,58 @@ object BrokerageNotesWorksheetReader:
   extension (line: Line)
 
     private def hasMostCells(fontColor: String): Boolean = nonEmptyCells.count(_.fontColor == fontColor) > nonEmptyCells.size / 2
-    
+
     private def hasMostCellsRed: Boolean = hasMostCells(RED)
 
     private def hasMostCellsBlue: Boolean = hasMostCells(BLUE)
-    
+
     private def allNonEmpty(fontColor: String): Boolean = nonEmptyCells.forall(_.fontColor == fontColor)
 
     private def allNonEmptyBlue: Boolean = allNonEmpty(BLUE)
-    
+
     private def allNonEmptyRed: Boolean = allNonEmpty(RED)
 
     private def nonEmptyCells: Seq[Cell] = cells.filter(_.isNotEmpty)
 
     private def cells: Seq[Cell] = line.cells
 
-    private def toMostLikelyOperation(worksheetName: String): ErrorsOr[Operation] = 
+    private def toMostLikelyOperation(worksheetName: String): ErrorsOr[Operation] =
       if hasMostCellsBlue then
         SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else if hasMostCellsRed then
         BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else UnexpectedContentColor(
-        s"Impossible to determine the type of 'Operation' on line '${line.number}' of 'Worksheet' '$worksheetName' due to exactly half of the non-empty 'Attribute's of each valid color."
+        impossibleToDetermineMostLikelyOperationType(line.number)(worksheetName)
       ).invalidNec
 
-    private def toOperation(worksheetName: String): ErrorsOr[Operation] = 
+    private def toOperation(worksheetName: String): ErrorsOr[Operation] =
       if allNonEmptyBlue then
         SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else if allNonEmptyRed then
         BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else UnexpectedContentColor(
-        s"Impossible to determine the type of 'Operation' on line '${line.number}' of 'Worksheet' '$worksheetName' due to its 'Attribute's having divergent font colors."
+        impossibleToDetermineOperationType(line.number)(worksheetName)
       ).invalidNec
 
     private def toFinancialSummary: FinancialSummary =
       FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
 
-    private def validatedWith(operationValidations: Seq[OperationValidation])(worksheetName: String): ErrorsOr[Line] = 
+    private def validatedWith(operationValidations: Seq[OperationValidation])(worksheetName: String): ErrorsOr[Line] =
       given Semigroup[Line] = (x, _) => x
       operationValidations.map(_ (line)(worksheetName)).reduce(_ combine _)
 
-    private def withCellsValidated(attributeValidations: Seq[AttributeValidation])(worksheetName: String): ErrorsOr[Line] = 
+    private def withCellsValidated(attributeValidations: Seq[AttributeValidation])(worksheetName: String): ErrorsOr[Line] =
       cells.map(_.validatedWith(attributeValidations)(worksheetName, line.number).accumulate).reduce(_ combine _).liftTo(line)
 
-    private def harmonizedWith(attributesHarmonyChecks: Seq[AttributesHarmonyCheck])(worksheetName: String): ErrorsOr[Line] = 
+    private def harmonizedWith(attributesHarmonyChecks: Seq[AttributesHarmonyCheck])(worksheetName: String): ErrorsOr[Line] =
       given Semigroup[Cell] = (x, _) => x
       val applyAttributesHarmonyChecksTo: (Cell, Cell) => ErrorsOr[Cell] = (cell1, cell2) => attributesHarmonyChecks.map(_ (cell1, cell2)(worksheetName)).reduce(_ combine _)
-      val harmonized: (Seq[Cell] => ErrorsOr[Seq[Cell]]) => ErrorsOr[Seq[Cell]] = f ⇒ cells.sliding(2).map(f).reduce(_ combine _)
-      
-      if !attributesHarmonyChecks.isEmpty then
-        harmonized{ cells ⇒
-          cells match {
-            case Seq(cell1, cell2) ⇒ applyAttributesHarmonyChecksTo(cell1, cell2).accumulate
-            case Seq(cell) ⇒ cell.validNec.accumulate
-          }
+      val harmonizedCells: (Seq[Cell] => ErrorsOr[Seq[Cell]]) => ErrorsOr[Seq[Cell]] = f ⇒ cells.sliding(2).map(f).reduce(_ combine _)
+
+      if attributesHarmonyChecks.nonEmpty then
+        harmonizedCells {
+          case Seq(cell1, cell2) ⇒ applyAttributesHarmonyChecksTo(cell1, cell2).accumulate
+          case Seq(cell) ⇒ cell.validNec.accumulate
         }.liftTo(line)
       else line.validNec
 
@@ -652,11 +654,11 @@ object BrokerageNotesWorksheetReader:
     private def isIncomeTaxAtSource: Boolean = cell.address.startsWith("K")
 
     private def isTotal: Boolean = cell.address.startsWith("L")
-    
+
     private def validatedWith(attributeValidations: Seq[AttributeValidation])(worksheetName: String, operationIndex: Int): ErrorsOr[Cell] =
       given Semigroup[Cell] = (x, _) => x
       attributeValidations.map(_ (cell)(worksheetName, operationIndex)).reduce(_ combine _)
-      
+
     private def index: Int = cell.address.charAt(0) - UPPERCASE_A_ASCII
 
   extension (double: Double)
@@ -665,3 +667,154 @@ object BrokerageNotesWorksheetReader:
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
 
     private def formatted(format: String): String = String.format(Locale.US, format, double)
+
+object BrokerageNotesWorksheetMessages:
+  private val RED = "255,0,0"
+  private val BLUE = "68,114,196"
+
+  def attributeMissing(attributeName: String, operationIndex: Int)(worksheetName: String): String =
+    s"A required attribute ('$attributeName') is missing on line '$operationIndex' of 'Worksheet' '$worksheetName'."
+
+  def summaryLineMissing(noteNumber: String)(worksheetName: String): String =
+    s"An invalid 'Group' ('$noteNumber') was found on 'Worksheet' '$worksheetName'. 'MultilineGroup's must have a 'SummaryLine'."
+
+  def unexpectedContentType(attributeValue: String, attributeName: String, operationIndex: Int)(expectedDataType: String)(worksheetName: String) =
+    s"'$attributeName' ('$attributeValue') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be interpreted as $expectedDataType."
+
+  def invalidAttributeColor(attributeColor: String, attributeName: String, operationIndex: Int)(worksheetName: String) =
+    s"'$attributeName's font-color ('$attributeColor') on line '$operationIndex' of 'Worksheet' '$worksheetName' can only be red ('$RED') or blue ('$BLUE')."
+
+  def unexpectedAttributeColor(attributeColor: String, attributeName: String, operationIndex: Int)(operationDenoted: String, currentOperation: String)(worksheetName: String): String =
+    s"The 'Operation' on line '$operationIndex' of 'Worksheet' '$worksheetName' looks like '$currentOperation' but, '$attributeName' has font-color '$attributeColor' which denotes '$operationDenoted'."
+
+  private def impossibleToDetermineOperationType(operationIndex: Int, reason: String)(worksheetName: String): String =
+    s"Impossible to determine the type of 'Operation' on line '$operationIndex' of 'Worksheet' '$worksheetName' due to $reason."
+
+  private val attributesWithDivergentFontColors = "its 'Attribute's having divergent font colors"
+  def impossibleToDetermineMostLikelyOperationType(operationIndex: Int)(worksheetName: String): String =
+    impossibleToDetermineOperationType(operationIndex, attributesWithDivergentFontColors)(worksheetName)
+
+  private val halfOfTheAttributesFromEachValidColor = "exactly half of the non-empty 'Attribute's of each valid color"
+  def impossibleToDetermineOperationType(operationIndex: Int)(worksheetName: String): String =
+    impossibleToDetermineOperationType(operationIndex, halfOfTheAttributesFromEachValidColor)(worksheetName)
+
+  private def conflictingAttribute(attributeName: String, attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
+    s"An invalid 'Group' ('$noteNumber') was found on 'Worksheet' '$worksheetName'. '$attributeName's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '$actualValue' in '$attributeAddress' is different from '$expectedValue' in '$targetAttributeAddress'."
+
+  def conflictingTradingDate(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
+    conflictingAttribute("TradingDate", attributeAddress, noteNumber, actualValue)(expectedValue, targetAttributeAddress)(worksheetName)
+
+  def conflictingNoteNumber(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
+    conflictingAttribute("NoteNumber", attributeAddress, noteNumber, actualValue)(expectedValue, targetAttributeAddress)(worksheetName)
+
+  def unexpectedNegativeAttribute(attributeName: String, attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    s"'$attributeName' ('$attributeValue') on line '$operationIndex' of 'Worksheet' '$worksheetName' cannot be negative."
+
+  private def unexpectedAttributeValue(actualValue: String, attributeName: String, attributeAddress: String, attributeType: String)(expectation: String)(worksheetName: String): String =
+    s"An invalid calculated '$attributeType' ('$attributeAddress:$attributeName') was found on 'Worksheet' '$worksheetName'. It was supposed to $expectation but, it actually contained '$actualValue'."
+
+  private val incomeTaxAtSourceForBuyingsExpectation = "be either empty or equal to '0.00'"
+  def unexpectedIncomeTaxAtSourceForBuyings(actualValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedAttributeValue(
+      actualValue, "IncomeTaxAtSource", s"K$operationIndex", "Cell"
+    )(
+      incomeTaxAtSourceForBuyingsExpectation
+    )(worksheetName)
+
+  private def calculatedAttributeExpectation(expectedValue: String, formulaDescription: String) = s"contain '$expectedValue', which is equal to '$formulaDescription'"
+  private def unexpectedValueForCalculatedAttribute(actualValue: String, attributeName: String, attributeAddress: String)(expectedValue: String, formulaDescription: String) (worksheetName: String) =
+    unexpectedAttributeValue(
+      actualValue, attributeName, attributeAddress, "Cell"
+    )(
+      calculatedAttributeExpectation(expectedValue, formulaDescription)
+    )(worksheetName)
+
+  private def volumeFormulaDescription(qty: String, price: String)(operationIndex: Int) = s"D$operationIndex:Qty * E$operationIndex:Price ($qty * $price)"
+  def unexpectedVolume(actualValue: String, operationIndex: Int)(expectedValue: String, qty: String, price: String)(worksheetName: String): String =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "Volume", s"F$operationIndex"
+    )(
+      expectedValue, volumeFormulaDescription(qty, price)(operationIndex)
+    )(worksheetName)
+
+  private def settlementFeeFormulaDescription(volume: String, settlementFeeRate: String)(operationIndex: Int) =
+    s"F$operationIndex:Volume * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' ($volume * $settlementFeeRate)"
+  def unexpectedSettlementFee(actualValue: String, operationIndex: Int)(expectedValue: String, volume: String, settlementFeeRate: String)(worksheetName: String): String =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "SettlementFee", s"G$operationIndex"
+    )(
+      expectedValue, settlementFeeFormulaDescription(volume, settlementFeeRate)(operationIndex)
+    )(worksheetName)
+
+  private def tradingFeesFormulaDescription(volume: String, tradingFeesRate: String)(operationIndex: Int): String =
+    s"F$operationIndex:Volume * 'TradingFeesRate' at 'TradingDateTime' ($volume * $tradingFeesRate)"
+  def unexpectedTradingFees(actualValue: String, operationIndex: Int)(expectedValue: String, volume: String, tradingFeesRate: String)(worksheetName: String): String =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "TradingFees", s"H$operationIndex"
+    )(
+      expectedValue, tradingFeesFormulaDescription(volume, tradingFeesRate)(operationIndex)
+    )(worksheetName)
+
+  private def serviceTaxFormulaDescription(brokerage: String, serviceTaxRate: String)(operationIndex: Int): String =
+    s"I$operationIndex:Brokerage * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' ($brokerage * $serviceTaxRate)"
+  def unexpectedServiceTax(actualValue: String, operationIndex: Int)(expectedValue: String, brokerage: String, serviceTaxRate: String)(worksheetName: String): String =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "ServiceTax", s"J$operationIndex"
+    )(
+      expectedValue, serviceTaxFormulaDescription(brokerage, serviceTaxRate)(operationIndex)
+    )(worksheetName)
+
+  private def incomeTaxAtSourceRateFormulaDescription(acquisitionCost: String, incomeTaxAtSourceRate: String)(operationIndex: Int): String =
+    s"(('F$operationIndex:Volume' - 'G$operationIndex:SettlementFee' - 'H$operationIndex:TradingFees' - 'I$operationIndex:Brokerage' - 'J$operationIndex:ServiceTax') - ('AverageStockPrice' for the 'C$operationIndex:Ticker' * 'D$operationIndex:Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' at 'TradingDate' ($acquisitionCost * $incomeTaxAtSourceRate)"
+  def unexpectedIncomeTaxAtSourceForSellings(actualValue: String, operationIndex: Int) (expectedValue: String, acquisitionCost: String, incomeTaxAtSourceRate: String) (worksheetName: String): String =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "IncomeTaxAtSource", s"K$operationIndex"
+    )(
+      expectedValue, incomeTaxAtSourceRateFormulaDescription(acquisitionCost, incomeTaxAtSourceRate)(operationIndex)
+    )(worksheetName)
+
+  private def unexpectedTotal(actualValue: String, operationIndex: Int)(expectedValue: String, formulaDescription: String)(worksheetName: String) =
+    unexpectedValueForCalculatedAttribute(
+      actualValue, "Total", s"L$operationIndex"
+    )(
+      expectedValue, formulaDescription
+    )(worksheetName)
+
+  private def buyingTotalFormulaDescription(operationIndex: Int) =
+    s"'F$operationIndex:Volume' + 'G$operationIndex:SettlementFee' + 'H$operationIndex:TradingFees' + 'I$operationIndex:Brokerage' + 'J$operationIndex:ServiceTax'"
+  def unexpectedTotalForBuyings(actualValue: String, operationIndex: Int)(expectedValue: String)(worksheetName: String): String =
+    unexpectedTotal(
+      actualValue, operationIndex
+    )(
+      expectedValue, buyingTotalFormulaDescription(operationIndex)
+    )(worksheetName)
+
+  private def sellingTotalFormulaDescription(operationIndex: Int) =
+    s"'F$operationIndex:Volume' - 'G$operationIndex:SettlementFee' - 'H$operationIndex:TradingFees' - 'I$operationIndex:Brokerage' - 'J$operationIndex:ServiceTax'"
+  def unexpectedTotalForSellings(actualValue: String, operationIndex: Int)(expectedValue: String)(worksheetName: String): String =
+    unexpectedTotal(
+      actualValue, operationIndex
+    )(
+      expectedValue, sellingTotalFormulaDescription(operationIndex)
+    )(worksheetName)
+
+  private def calculatedSummaryAttributeExpectation(expectedValue: String, formulaDescription: String) =
+    s"contain '$expectedValue', which is $formulaDescription"
+  def unexpectedValueForCalculatedSummaryAttribute(actualValue: String, attributeName: String, summaryAddress: String)(expectedValue: String, formulaDescription: String)(worksheetName: String): String =
+    unexpectedAttributeValue(
+      actualValue, attributeName, summaryAddress, "SummaryCell"
+    )(
+      calculatedSummaryAttributeExpectation(expectedValue, formulaDescription)
+    )(worksheetName)
+
+  def operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups(attributeName: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    s"the sum of all 'Operation's '$attributeName's in the 'Group' ($attributeLetter$indexOfFirstOperation...$attributeLetter$indexOfLastOperation)"
+
+  def operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups(attributeName: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int) =
+    s"the sum of all 'SellingOperation's '$attributeName's minus the sum of all 'BuyingOperation's '$attributeName's in the 'Group' ($attributeLetter$indexOfFirstOperation...$attributeLetter$indexOfLastOperation)"
+  def unexpectedOperationTypeAwareAttributeSummary(actualValue: String, attributeName: String, summaryIndex: Int)(expectedValue: String, attributeLetter: Char, formulaDescription: String)(worksheetName: String): String =
+    unexpectedValueForCalculatedSummaryAttribute(
+      actualValue, attributeName, s"$attributeLetter$summaryIndex"
+    )(
+      expectedValue, formulaDescription
+    )(worksheetName)
