@@ -963,17 +963,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "VolumeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(volumeSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(volumeSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "VolumeSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInVolumeSummary("-R$ 9.322,OO", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInVolumeSummary("-R$ 9.322,OO", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "is different than the sum of the 'Volume's of all" - {
                   "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
@@ -1005,17 +1011,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "SettlementFeeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(settlementFeeSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(settlementFeeSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "SettlementFeeSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInSettlementFeeSummary("R$ 2,S6", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInSettlementFeeSummary("R$ 2,S6", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "InvalidSettlementFeeSummary"
@@ -1034,17 +1046,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "TradingFeesSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(tradingFeesSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(tradingFeesSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TradingFeesSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInTradingFeesSummary("R$ O,65", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInTradingFeesSummary("R$ O,65", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "InvalidTradingFeesSummary"
@@ -1063,17 +1081,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "BrokerageSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(brokerageSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(brokerageSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "BrokerageSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInBrokerageSummary("R$ 4T,97", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInBrokerageSummary("R$ 4T,97", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "InvalidBrokerageSummary"
@@ -1092,17 +1116,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "ServiceTaxSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(serviceTaxSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(serviceTaxSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "ServiceTaxSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInServiceTaxSummary("R$ 2,4O", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInServiceTaxSummary("R$ 2,4O", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "InvalidServiceTaxSummary"
@@ -1121,9 +1151,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "IncomeTaxAtSourceSummExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInIncomeTaxAtSourceSummary("R$ O,OO", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInIncomeTaxAtSourceSummary("R$ O,OO", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1143,17 +1176,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "TotalSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(RequiredValueMissing(totalSummaryMissing(5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[RequiredValueMissing]),
+                    'message(totalSummaryMissing(5)(TEST_SHEET_NAME))
+                  )
                 }
                 "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                   val TEST_SHEET_NAME = "TotalSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                  errors should contain(UnexpectedContentType(unexpectedContentTypeInTotalSummary("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME)))
+                  error should have(
+                    'class(classOf[UnexpectedContentType]),
+                    'message(unexpectedContentTypeInTotalSummary("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME))
+                  )
                 }
                 "is different than the sum of the 'Total's of all" - {
                   "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
