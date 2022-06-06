@@ -905,16 +905,51 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   }
                 }
               }
-              "the impossibility of determining its type when it has exactly half of it's 'Attribute's from each of the two valid colors." in { poiWorkbook ⇒
-                val TEST_SHEET_NAME = "NoEmptyAttributeHalfOfEachColor"
-                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+              "the impossibility of determining its type when it has exactly half of it's" - { 
+                "'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                  val TEST_SHEET_NAME = "NoEmptyAttributeHalfOfEachColor"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                error should have(
-                  'class(classOf[UnexpectedContentColor]),
-                  'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
-                )
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
+                  )
+                }
+                "non-empty 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                  val TEST_SHEET_NAME = "NonEmptyAttribsHalfOfEachColor"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
+                  )
+                }
+                "valid-colored 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                  val TEST_SHEET_NAME = "ValidColoredAttribHalfEachColor"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
+                  )
+                }
+                "non-empty valid-colored 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                  val TEST_SHEET_NAME = "NEValidColorAttrHalfEachColor"
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                  error should have(
+                    'class(classOf[UnexpectedContentColor]),
+                    'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
+                  )
+                }
               }
             }
             "Not harmonic with each other, that is, contain different" - {

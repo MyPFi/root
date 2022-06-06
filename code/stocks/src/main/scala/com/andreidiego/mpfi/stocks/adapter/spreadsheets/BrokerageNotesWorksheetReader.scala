@@ -322,7 +322,7 @@ object BrokerageNotesWorksheetReader:
     // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
     val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble.getOrElse(0.0)
 
-    if line.hasMostCellsBlue then
+    if line.hasMostNonEmptyValidColoredCellsBlue then
       val tickerCell = line.cells(2)
       val qtyCell = line.cells(3)
       val volumeCell = line.cells(5)
@@ -379,7 +379,7 @@ object BrokerageNotesWorksheetReader:
     val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
     val actualTotal = totalCell.asDouble.getOrElse(0.0)
 
-    if line.hasMostCellsBlue then
+    if line.hasMostNonEmptyValidColoredCellsBlue then
       val expectedTotal = volume - settlementFee - tradingFees - brokerage - serviceTax
 
       if actualTotal !~= expectedTotal then UnexpectedContentValue(
@@ -476,7 +476,7 @@ object BrokerageNotesWorksheetReader:
     val (expectedSummaryValue, formulaDescription) = group.`type` match
       case Homogeneous => (group.nonSummaryLines.map(valueToSummarize).sum, operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLarstOperation))
       case Heterogeneous => (group.nonSummaryLines.foldLeft(0.0) { (acc, operation) ⇒
-        if operation.hasMostCellsRed then
+        if operation.hasMostNonEmptyValidColoredCellsRed then
           acc - valueToSummarize(operation)
         else
           acc + valueToSummarize(operation)
@@ -573,35 +573,38 @@ object BrokerageNotesWorksheetReader:
 
   extension (line: Line)
 
-    private def hasMostCells(fontColor: String): Boolean = nonEmptyCells.count(_.fontColor == fontColor) > nonEmptyCells.size / 2
+    private def hasMostNonEmptyValidColoredCellsFromColor(fontColor: String): Boolean = 
+      nonEmptyCells
+        .filter(_.fontColor.either(RED, BLUE))
+        .count(_.fontColor == fontColor) > nonEmptyCells.size / 2
 
-    private def hasMostCellsRed: Boolean = hasMostCells(RED)
+    private def hasMostNonEmptyValidColoredCellsRed: Boolean = hasMostNonEmptyValidColoredCellsFromColor(RED)
 
-    private def hasMostCellsBlue: Boolean = hasMostCells(BLUE)
+    private def hasMostNonEmptyValidColoredCellsBlue: Boolean = hasMostNonEmptyValidColoredCellsFromColor(BLUE)
 
-    private def allNonEmpty(fontColor: String): Boolean = nonEmptyCells.forall(_.fontColor == fontColor)
+    private def allNonEmptyCellsHave(fontColor: String): Boolean = nonEmptyCells.forall(_.fontColor == fontColor)
 
-    private def allNonEmptyBlue: Boolean = allNonEmpty(BLUE)
+    private def allNonEmptyCellsAreBlue: Boolean = allNonEmptyCellsHave(BLUE)
 
-    private def allNonEmptyRed: Boolean = allNonEmpty(RED)
+    private def allNonEmptyCellsAreRed: Boolean = allNonEmptyCellsHave(RED)
 
     private def nonEmptyCells: Seq[Cell] = cells.filter(_.isNotEmpty)
 
     private def cells: Seq[Cell] = line.cells
 
     private def toMostLikelyOperation(worksheetName: String): ErrorsOr[Operation] =
-      if hasMostCellsBlue then
+      if hasMostNonEmptyValidColoredCellsBlue then
         SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
-      else if hasMostCellsRed then
+      else if hasMostNonEmptyValidColoredCellsRed then
         BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else UnexpectedContentColor(
         impossibleToDetermineMostLikelyOperationType(line.number)(worksheetName)
       ).invalidNec
 
     private def toOperation(worksheetName: String): ErrorsOr[Operation] =
-      if allNonEmptyBlue then
+      if allNonEmptyCellsAreBlue then
         SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
-      else if allNonEmptyRed then
+      else if allNonEmptyCellsAreRed then
         BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
       else UnexpectedContentColor(
         impossibleToDetermineOperationType(line.number)(worksheetName)
@@ -668,6 +671,10 @@ object BrokerageNotesWorksheetReader:
 
     private def formatted(format: String): String = String.format(Locale.US, format, double)
 
+  extension (string: String)
+
+    private def either(left: String, right: String): Boolean = string == left || string == right
+
 object BrokerageNotesWorksheetMessages:
   private val RED = "255,0,0"
   private val BLUE = "68,114,196"
@@ -690,13 +697,13 @@ object BrokerageNotesWorksheetMessages:
   private def impossibleToDetermineOperationType(operationIndex: Int, reason: String)(worksheetName: String): String =
     s"Impossible to determine the type of 'Operation' on line '$operationIndex' of 'Worksheet' '$worksheetName' due to $reason."
 
-  private val attributesWithDivergentFontColors = "its 'Attribute's having divergent font colors"
+  private val halfOfTheAttributesFromEachValidColor = "exactly half of the non-empty valid-colored 'Attribute's of each valid color"
   def impossibleToDetermineMostLikelyOperationType(operationIndex: Int)(worksheetName: String): String =
-    impossibleToDetermineOperationType(operationIndex, attributesWithDivergentFontColors)(worksheetName)
-
-  private val halfOfTheAttributesFromEachValidColor = "exactly half of the non-empty 'Attribute's of each valid color"
-  def impossibleToDetermineOperationType(operationIndex: Int)(worksheetName: String): String =
     impossibleToDetermineOperationType(operationIndex, halfOfTheAttributesFromEachValidColor)(worksheetName)
+      
+  private val attributesWithDivergentFontColors = "its 'Attribute's having divergent font colors"
+  def impossibleToDetermineOperationType(operationIndex: Int)(worksheetName: String): String =
+    impossibleToDetermineOperationType(operationIndex, attributesWithDivergentFontColors)(worksheetName)
 
   private def conflictingAttribute(attributeName: String, attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
     s"An invalid 'Group' ('$noteNumber') was found on 'Worksheet' '$worksheetName'. '$attributeName's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '$actualValue' in '$attributeAddress' is different from '$expectedValue' in '$targetAttributeAddress'."
