@@ -26,6 +26,7 @@ object Line:
 
   extension (poiRow: XSSFRow)
 
+    // FIXME Errors aren't being combined/accumulated
     private def validated: ErrorsOr[XSSFRow] =
       if poiRow == null then
         IllegalArgument(s"Invalid line found: '$poiRow'").invalidNec

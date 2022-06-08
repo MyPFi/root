@@ -340,9 +340,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "PriceExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInPrice("R$ l5,34", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(priceNotCurrency("R$ l5,34", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(priceNotDouble("R$ l5,34", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
@@ -395,9 +398,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInVolume("R$ l534,00", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(volumeNotCurrency("R$ l534,00", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(volumeNotDouble("R$ l534,00", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than 'Qty' * 'Price'." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "VolumeDoesNotMatchQtyTimesPrice"
@@ -461,9 +467,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "SettlementFeeExtraneousChars"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInSettlementFee("R$ O,42", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(settlementFeeNotCurrency("R$ O,42", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(settlementFeeNotDouble("R$ O,42", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
                     "'Normal'." in { poiWorkbook ⇒
@@ -540,9 +549,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInTradingFees("R$ O,11", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(tradingFeesNotCurrency("R$ O,11", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(tradingFeesNotDouble("R$ O,11", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
                     "'PreOpening'." ignore { poiWorkbook ⇒
@@ -638,9 +650,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInBrokerage("R$ l5,99", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(brokerageNotCurrency("R$ l5,99", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(brokerageNotDouble("R$ l5,99", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
@@ -689,21 +704,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
                     errors should contain(RequiredValueMissing(serviceTaxMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "if negative." in { poiWorkbook ⇒
-                    val TEST_SHEET_NAME = "ServiceTaxNegative"
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
-
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
-
-                    errors should contain(UnexpectedContentValue(unexpectedNegativeServiceTax("-0.8", 2)(TEST_SHEET_NAME)))
-                  }
                   "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInServiceTax("R$ O,8O", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(serviceTaxNotCurrency("R$ O,8O", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "InvalidServiceTax"
@@ -759,9 +769,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "IncomeTaxAtSourceExtraneousChar"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInIncomeTaxAtSource("R$ O,OO", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(incomeTaxAtSourceNotCurrency("R$ O,OO", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(incomeTaxAtSourceNotDouble("R$ O,OO", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than" - {
                     "for 'SellingOperations', (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
@@ -838,9 +851,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                     val TEST_SHEET_NAME = "TotalExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    errors should contain(UnexpectedContentType(unexpectedContentTypeInTotal("R$ l551,32", 2)(TEST_SHEET_NAME)))
+                    actualErrors should contain allOf(
+                      UnexpectedContentType(totalNotCurrency("R$ l551,32", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(totalNotDouble("R$ l551,32", 2)(TEST_SHEET_NAME))
+                    )
                   }
                   "if different than" - {
                     "for 'SellingOperations', 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
@@ -981,16 +997,21 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
             }
           }
           "having more than one 'Operation'" - { 
-            "don't have a 'Summary'." in { poiWorkbook ⇒
+            "don't have a 'Summary (last 'Operation' will be taken as the 'Summary')'." in { poiWorkbook ⇒
               val TEST_SHEET_NAME = "MultiLineGroupWithNoSummary"
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-              val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
-
-              error should have(
-                'class(classOf[RequiredValueMissing]),
-                'message(summaryLineMissing("85060")(TEST_SHEET_NAME))
+              val expectedErrors = Seq(
+                UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("11600.00", 3)("11000.00", 2, 2)(TEST_SHEET_NAME)),
+                UnexpectedContentValue(unexpectedSettlementFeeSummary("2.90", 3)("2.75", 2, 2)(TEST_SHEET_NAME)),
+                UnexpectedContentValue(unexpectedTradingFeesSummary("0.58", 3)("0.55", 2, 2)(TEST_SHEET_NAME)),
+                UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("11605.60", 3)("11005.42", 2, 2)(TEST_SHEET_NAME))
               )
+
+              val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+              actualErrors should have size 4
+              actualErrors should contain theSameElementsAs expectedErrors
             }
             "have an invalid 'Summary', in which" - {
               "'VolumeSummary'" - {
@@ -1009,11 +1030,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "VolumeSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInVolumeSummary("-R$ 9.322,OO", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(volumeSummaryNotCurrency("-R$ 9.322,OO", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(volumeSummaryNotDouble("-R$ 9.322,OO", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "is different than the sum of the 'Volume's of all" - {
@@ -1057,11 +1078,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "SettlementFeeSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInSettlementFeeSummary("R$ 2,S6", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(settlementFeeSummaryNotCurrency("R$ 2,S6", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(settlementFeeSummaryNotDouble("R$ 2,S6", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1092,11 +1113,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "TradingFeesSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInTradingFeesSummary("R$ O,65", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ O,65", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(tradingFeesSummaryNotDouble("R$ O,65", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1127,11 +1148,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "BrokerageSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInBrokerageSummary("R$ 4T,97", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(brokerageSummaryNotCurrency("R$ 4T,97", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(brokerageSummaryNotDouble("R$ 4T,97", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1162,11 +1183,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "ServiceTaxSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInServiceTaxSummary("R$ 2,4O", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(serviceTaxSummaryNotCurrency("R$ 2,4O", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(serviceTaxSummaryNotDouble("R$ 2,4O", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1186,11 +1207,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "IncomeTaxAtSourceSummExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInIncomeTaxAtSourceSummary("R$ O,OO", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(incomeTaxAtSourceSummaryNotCurrency("R$ O,OO", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(incomeTaxAtSourceSummaryNotDouble("R$ O,OO", 5)(TEST_SHEET_NAME))
                   )
                 }
                 // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
@@ -1222,11 +1243,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
                   val TEST_SHEET_NAME = "TotalSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  error should have(
-                    'class(classOf[UnexpectedContentType]),
-                    'message(unexpectedContentTypeInTotalSummary("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME))
+                  actualErrors should contain allOf(
+                    UnexpectedContentType(totalSummaryNotCurrency("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME)),
+                    UnexpectedContentType(totalSummaryNotDouble("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME))
                   )
                 }
                 "is different than the sum of the 'Total's of all" - {
@@ -1258,6 +1279,266 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
           }
         }
       }
+    }
+    "accumulate errors" in { poiWorkbook ⇒
+      val TEST_SHEET_NAME = "MultipleErrors"
+      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+      val expectedErrors = Seq(
+        // Line 2
+        RequiredValueMissing(tradingDateMissing(2)(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInNoteNumber("II62", 2)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedNegativeQty("-100", 2)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInVolume(2)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedServiceTax("1.10", 2)("0.80", "15.99", "5.0%")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalForBuyings("-1517.14", 2)("-1517.44")(TEST_SHEET_NAME)),
+
+        // Line 4
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("39757", 4)(TEST_SHEET_NAME)),
+        RequiredValueMissing(noteNumberMissing(4)(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInQty("S00", 4)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentType(volumeNotCurrency("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(volumeNotDouble("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeNotCurrency("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeNotDouble("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotCurrency("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotDouble("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotCurrency("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotDouble("#VALUE!", 4)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForBuyings("0.00", 4)("16.79")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+        UnexpectedContentColor(unexpectedColorForBuyingInBrokerage(4)(TEST_SHEET_NAME)),
+
+        // Line 6
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("0S/11/2008", 6)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedNegativeNoteNumber("-1662", 6)(TEST_SHEET_NAME)),
+        RequiredValueMissing(tickerMissing(6)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInQty(6)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTradingFees("0.49", 6)("0.19", "2750.00", "0.0070%")(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInTradingFees(6)(TEST_SHEET_NAME)),
+        UnexpectedContentType(brokerageNotCurrency("R$ l5,99", 6)(TEST_SHEET_NAME)),
+        UnexpectedContentType(brokerageNotDouble("R$ l5,99", 6)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentType(totalNotCurrency("#VALUE!", 6)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotDouble("#VALUE!", 6)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForBuyings("0.00", 6)("2751.25")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+        UnexpectedContentType(serviceTaxNotCurrency("R$ O,8O", 6)(TEST_SHEET_NAME)),
+        UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 6)(TEST_SHEET_NAME)),
+
+        // Line 8
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("-39757", 8)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInTicker(8)(TEST_SHEET_NAME)),
+        RequiredValueMissing(qtyMissing(8)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedNegativeBrokerage("-15.99", 8)(TEST_SHEET_NAME)),
+        // FIXME Not true and doesn't make any sense - Investigate
+        UnexpectedContentColor(unexpectedColorForBuyingInBrokerage(8)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInTotal(8)(TEST_SHEET_NAME)),
+
+        // Line 10
+        UnexpectedContentColor(unexpectedColorForBuyingInNoteNumber(10)(TEST_SHEET_NAME)),
+        RequiredValueMissing(priceMissing(10)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInSettlementFee(10)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesNotCurrency("R$ O,11", 10)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesNotDouble("R$ O,11", 10)(TEST_SHEET_NAME)),
+        // TODO The following is not exactly CONSEQUENTIAL since it's not a formula. It is going to give reason to a Warning when warnings are implemented.
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForBuyings("16.90", 10)("16.79")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceForBuyings("0.01", 10)(TEST_SHEET_NAME)),
+
+        // Line 11
+        UnexpectedContentValue(conflictingTradingDate("A11", "1345", "05/11/2008")("06/11/2008", "A10")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(conflictingNoteNumber("B11", "1345", "1345")("1344", "B10")(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInPrice(11)(TEST_SHEET_NAME)),
+        RequiredValueMissing(volumeMissing(11)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedVolume("0.00", 11)("769.00", "100", "7.69")(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInServiceTax(11)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForBuyingInIncomeTaxAtSource(11)(TEST_SHEET_NAME)),
+
+        // Line 12
+        UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("0.30", 12)("0.00", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedSettlementFeeSummary("0.30", 12)("0.00", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTradingFeesSummary("0.30", 12)("0.00", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedBrokerageSummary("32.28", 12)("31.98", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedServiceTaxSummary("1.90", 12)("1.60", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceSummary("0.31", 12)("0.01", 10, 11)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("33.99", 12)("33.69", 10, 11)(TEST_SHEET_NAME)),
+
+        // Line 14
+        UnexpectedContentColor(unexpectedColorForBuyingInTradingDate(14)(TEST_SHEET_NAME)),
+        UnexpectedContentType(priceNotCurrency("R$ l5,34", 14)(TEST_SHEET_NAME)),
+        UnexpectedContentType(priceNotDouble("R$ l5,34", 14)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentType(volumeNotCurrency("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentType(volumeNotDouble("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotCurrency("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotDouble("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotCurrency("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotDouble("#VALUE!", 14)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForBuyings("0.00", 14)("16.79")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+        RequiredValueMissing(settlementFeeMissing(14)(TEST_SHEET_NAME)),
+
+        // Line 16
+        UnexpectedContentColor(unexpectedColorForSellingInTradingDate(16)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInQty(16)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedNegativePrice("-31.5", 16)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedVolume("3150.00", 16)("-3150.00", "100", "-31.50")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedSettlementFee("1.17", 16)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInSettlementFee(16)(TEST_SHEET_NAME)),
+        RequiredValueMissing(tradingFeesMissing(16)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.22", "3150.00", "0.0070%")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalForSellings("3132.34", 16)("3132.04")(TEST_SHEET_NAME)),
+
+        // Line 17
+        UnexpectedContentColor(unexpectedColorForSellingInNoteNumber(17)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInPrice(17)(TEST_SHEET_NAME)),
+        UnexpectedContentType(settlementFeeNotDouble("R$ O,87", 17)(TEST_SHEET_NAME)),
+        UnexpectedContentType(settlementFeeNotCurrency("R$ O,87", 17)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedSettlementFee("0.00", 17)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotCurrency("#VALUE!", 17)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalNotDouble("#VALUE!", 17)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForSellings("0.00", 17)("3149.78")(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeSummaryNotCurrency("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeSummaryNotDouble("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 20)("2.60", 16, 19)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalSummaryNotCurrency("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentType(totalSummaryNotDouble("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 20)("3132.34", 16, 19)(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+        UnexpectedContentColor(unexpectedColorForSellingInTradingFees(17)(TEST_SHEET_NAME)),
+        RequiredValueMissing(brokerageMissing(17)(TEST_SHEET_NAME)),
+        UnexpectedContentType(incomeTaxAtSourceNotCurrency("R$ O,OO", 17)(TEST_SHEET_NAME)),
+        UnexpectedContentType(incomeTaxAtSourceNotDouble("R$ O,OO", 17)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInTotal(17)(TEST_SHEET_NAME)),
+
+        // Line 18
+        UnexpectedContentColor(unexpectedColorForSellingInTicker(18)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInVolume(18)(TEST_SHEET_NAME)),
+        UnexpectedContentType(volumeNotCurrency("R$ 1770,OO", 18)(TEST_SHEET_NAME)),
+        UnexpectedContentType(volumeNotDouble("R$ 1770,OO", 18)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedVolume("0.00", 18)("1770.00", "100", "17.70")(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeNotDouble("#VALUE!", 18)(TEST_SHEET_NAME)),
+          UnexpectedContentType(settlementFeeNotCurrency("#VALUE!", 18)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotCurrency("#VALUE!", 18)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesNotDouble("#VALUE!", 18)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesSummaryNotCurrency("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentType(tradingFeesSummaryNotDouble("#VALUE!", 20)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 20)("0.59", 16, 19)(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+        UnexpectedContentColor(unexpectedColorForSellingInBrokerage(18)(TEST_SHEET_NAME)),
+        RequiredValueMissing(serviceTaxMissing(18)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedServiceTax("0.00", 18)("0.80", "15.99", "5.0%")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceForSellings("-0.50", 18)("-0.00", "-15.99", "0.0050%")(TEST_SHEET_NAME)),
+        UnexpectedContentType(totalNotCurrency("R$ l.753,43", 18)(TEST_SHEET_NAME)),
+        UnexpectedContentType(totalNotDouble("R$ l.753,43", 18)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForSellings("0.00", 18)("-15.99")(TEST_SHEET_NAME)),
+
+        // Line 19
+        UnexpectedContentColor(unexpectedColorForSellingInServiceTax(19)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceForSellings("0.05", 19)("0.26", "5201.41", "0.0050%")(TEST_SHEET_NAME)),
+        UnexpectedContentColor(unexpectedColorForSellingInIncomeTaxAtSource(19)(TEST_SHEET_NAME)),
+        RequiredValueMissing(totalMissing(19)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForSellings("0.00", 19)("5201.41")(TEST_SHEET_NAME)),
+
+        // Line 22
+        UnexpectedContentColor(invalidColorInTradingDate("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInNoteNumber("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInTicker("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInQty("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInPrice("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInVolume("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInSettlementFee("0,0,0", 22)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentColor(impossibleToDetermineMostLikelyOperationType(22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInTradingFees("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInBrokerage("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInServiceTax("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInIncomeTaxAtSource("0,0,0", 22)(TEST_SHEET_NAME)),
+        UnexpectedContentColor(invalidColorInTotal("0,0,0", 22)(TEST_SHEET_NAME)),
+
+        // Line 26
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("05/13/2008", 26)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(conflictingTradingDate("A27", "903", "25/02/2009")("05/13/2008", "A26")(TEST_SHEET_NAME)),
+
+        // Line 27
+        UnexpectedContentValue(unexpectedServiceTax("-0.80", 27)("0.80", "15.99", "5.0%")(TEST_SHEET_NAME)),
+
+        // Line 29
+        UnexpectedContentValue(unexpectedVolumeSummaryForHeterogeneousGroups("12934.00", 29)("-2494.00", 26, 28)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("12950.05", 29)("-2547.23", 26, 28)(TEST_SHEET_NAME)),
+
+        // Line 33
+        UnexpectedContentType(volumeSummaryNotCurrency("R$ 4.793,OO", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(volumeSummaryNotDouble("R$ 4.793,OO", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("0.00", 33)("4793.00", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(settlementFeeSummaryNotCurrency("R$ l,32", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(settlementFeeSummaryNotDouble("R$ l,32", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 33)("1.32", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ O,34", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesSummaryNotDouble("R$ O,34", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 33)("0.34", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(brokerageSummaryNotCurrency("R$ 3l,98", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(brokerageSummaryNotDouble("R$ 3l,98", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedBrokerageSummary("0.00", 33)("31.98", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(serviceTaxSummaryNotCurrency("R$ 1,6O", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(serviceTaxSummaryNotDouble("R$ 1,6O", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedServiceTaxSummary("0.00", 33)("1.60", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(incomeTaxAtSourceSummaryNotCurrency("R$ O,OO", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(incomeTaxAtSourceSummaryNotDouble("R$ O,OO", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(totalSummaryNotCurrency("R$ 4.828,2E", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(totalSummaryNotDouble("R$ 4.828,2E", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 33)("4828.23", 31, 32)(TEST_SHEET_NAME)),
+
+        // Line 39
+        UnexpectedContentColor(impossibleToDetermineMostLikelyOperationType(39)(TEST_SHEET_NAME)),
+        /* NECESSARY */ RequiredValueMissing(noteNumberMissing(39)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedVolumeSummaryForHeterogeneousGroups("2726.00", 41)("7714.00", 39, 40)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("2689.76", 41)("7713.06", 39, 40)(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
+
+        // Line 40
+        UnexpectedContentColor(impossibleToDetermineMostLikelyOperationType(40)(TEST_SHEET_NAME)),
+        // +NECESSARY 
+          RequiredValueMissing(noteNumberMissing(40)(TEST_SHEET_NAME)),
+          UnexpectedContentColor(invalidColorInVolume("0,0,0", 40)(TEST_SHEET_NAME)),
+          UnexpectedContentColor(invalidColorInSettlementFee("0,0,0", 40)(TEST_SHEET_NAME)),
+        // -NECESSARY 
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForBuyings("5201.41", 40)("5238.59")(TEST_SHEET_NAME)),
+
+        // Line 44
+        UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("2908.00", 44)("4290.00", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedSettlementFeeSummary("0.80", 44)("1.18", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTradingFeesSummary("0.20", 44)("0.30", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceSummary("0.14", 44)("0.21", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("2890.21", 44)("4271.73", 43, 43)(TEST_SHEET_NAME)),
+
+        // Line 48
+        RequiredValueMissing(volumeSummaryMissing(48)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("0.00", 48)("7198.00", 46, 47)(TEST_SHEET_NAME)),
+        RequiredValueMissing(settlementFeeSummaryMissing(48)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 48)("1.98", 46, 47)(TEST_SHEET_NAME)),
+        RequiredValueMissing(tradingFeesSummaryMissing(48)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 48)("0.50", 46, 47)(TEST_SHEET_NAME)),
+        RequiredValueMissing(brokerageSummaryMissing(48)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedBrokerageSummary("0.00", 48)("31.98", 46, 47)(TEST_SHEET_NAME)),
+        RequiredValueMissing(serviceTaxSummaryMissing(48)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedServiceTaxSummary("0.00", 48)("1.60", 46, 47)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceSummary("0.00", 48)("0.35", 46, 47)(TEST_SHEET_NAME)),
+        
+        // Line 52
+        RequiredValueMissing(totalSummaryMissing(52)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 52)("7161.94", 50, 51)(TEST_SHEET_NAME))
+        
+        // TODO Add Cell, Line, and, Worksheet errors once we fix the error accumulation strategy of those classes
+      )
+
+      val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+      actualErrors should have size 187
+      actualErrors should contain theSameElementsAs expectedErrors
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
@@ -1444,36 +1725,66 @@ object BrokerageNotesWorksheetTestMessages:
     unexpectedContentType(attributeValue, "NoteNumber", operationIndex)("an integer number")(worksheetName)
   def unexpectedContentTypeInQty(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "Qty", operationIndex)("an integer number")(worksheetName)
-  def unexpectedContentTypeInPrice(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def priceNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "Price", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInVolume(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def priceNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Price", operationIndex)("a double")(worksheetName)
+  def volumeNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "Volume", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInSettlementFee(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def volumeNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Volume", operationIndex)("a double")(worksheetName)
+  def settlementFeeNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "SettlementFee", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInTradingFees(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def settlementFeeNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "SettlementFee", operationIndex)("a double")(worksheetName)
+  def tradingFeesNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "TradingFees", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInBrokerage(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def tradingFeesNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TradingFees", operationIndex)("a double")(worksheetName)
+  def brokerageNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "Brokerage", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInServiceTax(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def brokerageNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Brokerage", operationIndex)("a double")(worksheetName)
+  def serviceTaxNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "ServiceTax", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInIncomeTaxAtSource(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def serviceTaxNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "ServiceTax", operationIndex)("a double")(worksheetName)
+  def incomeTaxAtSourceNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "IncomeTaxAtSource", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInTotal(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def incomeTaxAtSourceNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "IncomeTaxAtSource", operationIndex)("a double")(worksheetName)
+  def totalNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "Total", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInVolumeSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def totalNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "Total", operationIndex)("a double")(worksheetName)
+  def volumeSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "VolumeSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInSettlementFeeSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def volumeSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "VolumeSummary", operationIndex)("a double")(worksheetName)
+  def settlementFeeSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "SettlementFeeSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInTradingFeesSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def settlementFeeSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "SettlementFeeSummary", operationIndex)("a double")(worksheetName)
+  def tradingFeesSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "TradingFeesSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInBrokerageSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def tradingFeesSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TradingFeesSummary", operationIndex)("a double")(worksheetName)
+  def brokerageSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "BrokerageSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInServiceTaxSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def brokerageSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "BrokerageSummary", operationIndex)("a double")(worksheetName)
+  def serviceTaxSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "ServiceTaxSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInIncomeTaxAtSourceSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def serviceTaxSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "ServiceTaxSummary", operationIndex)("a double")(worksheetName)
+  def incomeTaxAtSourceSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "IncomeTaxAtSourceSummary", operationIndex)("a currency")(worksheetName)
-  def unexpectedContentTypeInTotalSummary(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+  def incomeTaxAtSourceSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "IncomeTaxAtSourceSummary", operationIndex)("a double")(worksheetName)
+  def totalSummaryNotCurrency(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedContentType(attributeValue, "TotalSummary", operationIndex)("a currency")(worksheetName)
+  def totalSummaryNotDouble(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
+    unexpectedContentType(attributeValue, "TotalSummary", operationIndex)("a double")(worksheetName)
 
   def invalidColorInTradingDate(attributeColor: String, operationIndex: Int)(worksheetName: String): String =
     invalidAttributeColor(attributeColor, "TradingDate", operationIndex)(worksheetName)
@@ -1562,8 +1873,6 @@ object BrokerageNotesWorksheetTestMessages:
     unexpectedNegativeAttribute("Price", attributeValue, operationIndex)(worksheetName)
   def unexpectedNegativeBrokerage(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
     unexpectedNegativeAttribute("Brokerage", attributeValue, operationIndex)(worksheetName)
-  def unexpectedNegativeServiceTax(attributeValue: String, operationIndex: Int)(worksheetName: String): String =
-    unexpectedNegativeAttribute("ServiceTax", attributeValue, operationIndex)(worksheetName)
 
   private def calculatedAttributeSummaryFormulaDescription(attributeName: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int) =
     s"the sum of all '$attributeName's in the 'Group' ($attributeLetter$indexOfFirstOperation...$attributeLetter$indexOfLastOperation)"
@@ -1631,7 +1940,7 @@ object BrokerageNotesWorksheetTestMessages:
   
   private def volumeSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
     operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups("Volume", 'F', indexOfFirstOperation, indexOfLastOperation)
-  def unexpectedVolumeSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+  def unexpectedVolumeSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
     unexpectedVolumeSummary(
       actualValue, summaryIndex
     )(
@@ -1647,7 +1956,7 @@ object BrokerageNotesWorksheetTestMessages:
 
   private def totalSummaryFormulaDescriptionForHomogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) = 
     operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups("Total", 'L', indexOfFirstOperation, indexOfLastOperation)
-  def unexpectedTotalSummaryForHomogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+  def unexpectedTotalSummaryForHomogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
     unexpectedTotalSummary(
       actualValue, summaryIndex
     )(
@@ -1656,25 +1965,9 @@ object BrokerageNotesWorksheetTestMessages:
   
   private def totalSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation: Int, indexOfLastOperation: Int) =
     operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups("Total", 'L', indexOfFirstOperation, indexOfLastOperation)
-  def unexpectedTotalSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String) =
+  def unexpectedTotalSummaryForHeterogeneousGroups(actualValue: String, summaryIndex: Int)(expectedValue: String, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
     unexpectedTotalSummary(
       actualValue, summaryIndex
     )(
       expectedValue, totalSummaryFormulaDescriptionForHeterogeneousGroups(indexOfFirstOperation, indexOfLastOperation)
     )(worksheetName)
-    
-// NOT USED
-  // def unexpectedOperationTypeAwareAttributeSummaryForHomogeneousGroups(actualValue: String, attributeName: String, summaryIndex: Int)(expectedValue: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
-  //   unexpectedOperationTypeAwareAttributeSummary(
-  //     actualValue, attributeName, summaryIndex
-  //   )(
-  //     expectedValue, attributeLetter, operationTypeAwareAttributeSummaryFormulaDescriptionForHomogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLastOperation)
-  //   )(worksheetName)
-    
-  // def unexpectedOperationTypeAwareAttributeSummaryForHeterogeneousGroups(actualValue: String, attributeName: String, summaryIndex: Int)(expectedValue: String, attributeLetter: Char, indexOfFirstOperation: Int, indexOfLastOperation: Int)(worksheetName: String): String =
-  //   unexpectedOperationTypeAwareAttributeSummary(
-  //     actualValue, attributeName, summaryIndex
-  //   )(
-  //     expectedValue, attributeLetter, operationTypeAwareAttributeSummaryFormulaDescriptionForHeterogeneousGroups(attributeName, attributeLetter, indexOfFirstOperation, indexOfLastOperation)
-  //   )(worksheetName)
-// NOT USED

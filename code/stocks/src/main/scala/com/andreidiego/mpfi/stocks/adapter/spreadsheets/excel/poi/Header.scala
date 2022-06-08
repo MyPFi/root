@@ -25,6 +25,7 @@ object Header:
 
   extension (poiHeaderRow: XSSFRow)
 
+    // FIXME Errors aren't being combined/accumulated
     private def validated: ErrorsOr[XSSFRow] =
       val INVALID_HEADER = "Worksheet does not seem to have a valid header"
       val reason = (cellType: String) ⇒ s"An illegal $cellType cell was found in the header."

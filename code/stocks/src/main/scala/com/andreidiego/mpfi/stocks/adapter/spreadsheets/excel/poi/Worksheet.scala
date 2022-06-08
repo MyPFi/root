@@ -19,6 +19,7 @@ object Worksheet:
 
   given Semigroup[Seq[Line]] = (x, y) => if x == y then x else x ++: y
 
+  // FIXME Errors aren't being combined/accumulated. It becomes clear when you have a big Worksheet full of errors and the only errors you're notified of is that there's an invalid blank cell in the header.
   def from(poiWorksheet: XSSFSheet): ErrorsOr[Worksheet] = if poiWorksheet == null then
     IllegalArgument(s"Invalid worksheet found: '$poiWorksheet'").invalidNec
   else rowZeroFrom(poiWorksheet).andThen(poiHeaderRow ⇒ {

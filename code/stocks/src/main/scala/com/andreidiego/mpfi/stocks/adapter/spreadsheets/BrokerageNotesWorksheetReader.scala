@@ -30,6 +30,7 @@ case class SellingOperation(override val volume: String, override val settlement
 // TODO Add test for turning FinancialSummary into a case class
 case class FinancialSummary(volume: String, settlementFee: String, tradingFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
 
+// TODO Add a warning system: ErrorsOr[WarningsAnd[BrokerageNotesWorksheetReader]]
 object BrokerageNotesWorksheetReader:
   enum BrokerageNoteReaderError(message: String):
     case RequiredValueMissing(message: String) extends BrokerageNoteReaderError(message)
@@ -70,14 +71,14 @@ object BrokerageNotesWorksheetReader:
         assertNoteNumber(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor),
         assertTicker(isPresent, hasAValidFontColor),
         assertQty(isPresent, isNotNegative, isAValidInteger, hasAValidFontColor),
-        assertPrice(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor),
-        assertVolume(isPresent, isAValidCurrency, hasAValidFontColor),
-        assertSettlementFee(isPresent, isAValidCurrency, hasAValidFontColor),
-        assertTradingFees(isPresent, isAValidCurrency, hasAValidFontColor),
-        assertBrokerage(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor),
-        assertServiceTax(isPresent, isNotNegative, isAValidCurrency, hasAValidFontColor),
-        assertIncomeTaxAtSource(isAValidCurrency, hasAValidFontColor),
-        assertTotal(isPresent, isAValidCurrency, hasAValidFontColor),
+        assertPrice(isPresent, isNotNegative, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertVolume(isPresent, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertSettlementFee(isPresent, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertTradingFees(isPresent, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertBrokerage(isPresent, isNotNegative, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertServiceTax(isPresent, isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertIncomeTaxAtSource(isAValidCurrency || isAValidDouble, hasAValidFontColor),
+        assertTotal(isPresent, isAValidCurrency || isAValidDouble, hasAValidFontColor),
       ), 
       attributesHarmonyChecks(
       ), 
@@ -97,14 +98,13 @@ object BrokerageNotesWorksheetReader:
         assertOperationsInBrokerageNoteHaveSameNoteNumber
       ), 
       brokerageNoteValidations(
-        assertVolumeSummary(isPresent, isAValidCurrency, isOperationTypeAwareWhenCalculated),
-        assertSettlementFeeSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
-        assertTradingFeesSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
-        assertBrokerageSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
-        assertServiceTaxSummary(isPresent, isAValidCurrency, isCorrectlyCalculated),
-        assertIncomeTaxAtSourceSummary(isAValidCurrency, isCorrectlyCalculated),
-        assertTotalSummary(isPresent, isAValidCurrency, isOperationTypeAwareWhenCalculated),
-        assertMultilineGroupHasSummary
+        assertVolumeSummary(isPresent, isAValidCurrency or isAValidDouble, isOperationTypeAwareWhenCalculated),
+        assertSettlementFeeSummary(isPresent, isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
+        assertTradingFeesSummary(isPresent, isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
+        assertBrokerageSummary(isPresent, isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
+        assertServiceTaxSummary(isPresent, isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
+        assertIncomeTaxAtSourceSummary(isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
+        assertTotalSummary(isPresent, isAValidCurrency or isAValidDouble, isOperationTypeAwareWhenCalculated)
       )
     )(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
     .reduce(_ combine _)
@@ -171,13 +171,13 @@ object BrokerageNotesWorksheetReader:
     else RequiredValueMissing(attributeMissing(attributeHeader, operationIndex)(worksheetName)).invalidNec
 
   private def isAValidDate: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
-    if attribute.asLocalDate.isDefined then attribute.validNec
+    if attribute.isEmpty || attribute.asLocalDate.isDefined then attribute.validNec
     else UnexpectedContentType(
       unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a date")(worksheetName)
     ).invalidNec
 
   private def hasAValidFontColor: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
-    if attribute.isEmpty || Seq(RED, BLUE).contains(attribute.fontColor) then attribute.validNec
+    if attribute.isEmpty || attribute.fontColor.either(RED, BLUE) then attribute.validNec
     else UnexpectedContentColor(invalidAttributeColor(attribute.fontColor, attributeHeader, operationIndex)(worksheetName)).invalidNec
 
   private def isNotNegative: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
@@ -185,7 +185,7 @@ object BrokerageNotesWorksheetReader:
     else UnexpectedContentValue(unexpectedNegativeAttribute(attributeHeader, attribute.value, operationIndex)(worksheetName)).invalidNec
 
   private def isAValidInteger: AttributeCheck = attribute => (attributeHeader, operationIndex, worksheetName) =>
-    if attribute.asInt.isDefined then attribute.validNec
+    if attribute.isEmpty || attribute.asInt.isDefined then attribute.validNec
     else UnexpectedContentType(
       unexpectedContentType(attribute.value, attributeHeader, operationIndex)("an integer number")(worksheetName)
     ).invalidNec
@@ -194,6 +194,12 @@ object BrokerageNotesWorksheetReader:
     if attribute.isEmpty || attribute.isCurrency then attribute.validNec
     else UnexpectedContentType(
       unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a currency")(worksheetName)
+    ).invalidNec
+
+  private def isAValidDouble(attribute: Cell)(attributeHeader: String, operationIndex: Int, worksheetName: String): ErrorsOr[Cell] =
+    if attribute.isEmpty || attribute.asDouble.isDefined then attribute.validNec
+    else UnexpectedContentType(
+      unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a double")(worksheetName)
     ).invalidNec
 
   private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => (Line, String) => ErrorsOr[Cell]*): OperationValidation = line ⇒ worksheetName =>
@@ -458,6 +464,9 @@ object BrokerageNotesWorksheetReader:
   private def isAValidCurrency: SummaryAttributeCheck = summaryAttribute => (_, attributeHeader, operationIndex, _, worksheetName) =>
     isAValidCurrency(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
 
+  private def isAValidDouble: SummaryAttributeCheck = summaryAttribute => (_, attributeHeader, operationIndex, _, worksheetName) =>
+    isAValidDouble(summaryAttribute)(attributeHeader, operationIndex, worksheetName)
+
   private def isCorrectlyCalculated: SummaryAttributeCheck = summaryAttribute => (attributeIndex, attributeHeader, _, group, worksheetName) =>
     val expectedSummaryValue = group.nonSummaryLines.foldLeft(0.0)((acc, line) ⇒ acc + line.cells(attributeIndex).asDouble.getOrElse(0.0))
     val actualSummaryValue = summaryAttribute.asDouble.getOrElse(0.0)
@@ -491,14 +500,6 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else summaryAttribute.validNec
 
-  private def assertMultilineGroupHasSummary: BrokerageNoteValidation = group ⇒ worksheetName =>
-    group.nonSummaryLines match
-      case Seq(_, _, _*) ⇒
-        group.summary
-          .map(_ => group.validNec)
-          .getOrElse(RequiredValueMissing(summaryLineMissing(group.head.cells(1).value)(worksheetName)).invalidNec)
-      case _ ⇒ group.validNec
-
   extension (errorsOrBrokerageNote: ErrorsOr[BrokerageNote])
 
     @targetName("accumulateBrokerageNote")
@@ -525,6 +526,15 @@ object BrokerageNotesWorksheetReader:
 
     @targetName("liftSeqOfCellToLine")
     private def liftTo(line: Line): ErrorsOr[Line] = errorsOrSeqOfCell.map(_ => line)
+
+  extension (thisAttributeCheck: AttributeCheck)
+    @targetName("orElse")
+    private def ||(thatAttributeCheck: AttributeCheck): AttributeCheck = cell ⇒ (s1, i, s2) ⇒
+      thisAttributeCheck(cell)(s1, i, s2).findValid(thatAttributeCheck(cell)(s1, i, s2))
+
+  extension (thisSummaryAttributeCheck: SummaryAttributeCheck)
+    private def or(thatSummaryAttributeCheck: SummaryAttributeCheck): SummaryAttributeCheck = cell ⇒ (i1, s1, i2, g, s3) ⇒
+      thisSummaryAttributeCheck(cell)(i1, s1, i2, g, s3).findValid(thatSummaryAttributeCheck(cell)(i1, s1, i2, g, s3))
 
   extension (group: Group)
 
@@ -565,7 +575,7 @@ object BrokerageNotesWorksheetReader:
 
     private def nonSummaryLines: Seq[Line] = summary.map(_ => group.init).getOrElse(group)
 
-    private def summary: Option[Line] = if group.size <= 1 then None else group.lastOption.filter(_.cells.count(_.isEmpty) > 1)
+    private def summary: Option[Line] = if group.size <= 1 then None else group.lastOption
 
     private def `type`: GroupType = nonSummaryLines.distinctBy(_.toMostLikelyOperation("").map(_.getClass)).size match
       case 1 => Homogeneous
@@ -708,10 +718,10 @@ object BrokerageNotesWorksheetMessages:
   private def conflictingAttribute(attributeName: String, attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
     s"An invalid 'Group' ('$noteNumber') was found on 'Worksheet' '$worksheetName'. '$attributeName's should be the same for all 'Line's in a 'Group' in order to being able to turn it into a 'BrokerageNote' but, '$actualValue' in '$attributeAddress' is different from '$expectedValue' in '$targetAttributeAddress'."
 
-  def conflictingTradingDate(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
+  def conflictingTradingDate(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String): String = 
     conflictingAttribute("TradingDate", attributeAddress, noteNumber, actualValue)(expectedValue, targetAttributeAddress)(worksheetName)
 
-  def conflictingNoteNumber(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String) = 
+  def conflictingNoteNumber(attributeAddress: String, noteNumber: String, actualValue: String)(expectedValue: String, targetAttributeAddress: String)(worksheetName: String): String = 
     conflictingAttribute("NoteNumber", attributeAddress, noteNumber, actualValue)(expectedValue, targetAttributeAddress)(worksheetName)
 
   def unexpectedNegativeAttribute(attributeName: String, attributeValue: String, operationIndex: Int)(worksheetName: String): String =
