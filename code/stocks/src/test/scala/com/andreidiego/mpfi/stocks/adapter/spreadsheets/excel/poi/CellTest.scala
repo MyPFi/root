@@ -2,28 +2,33 @@ package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.EitherValues.*
+import org.scalatest.BeforeAndAfterAll
 
-class CellTest extends FixtureAnyFreeSpec :
+class CellTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
 
   import java.io.File
-  import language.deprecated.symbolLiterals
   import org.apache.poi.openxml4j.opc.OPCPackage
   import org.apache.poi.xssf.usermodel.{XSSFRow, XSSFWorkbook, XSSFWorkbookFactory}
-  import org.scalatest.matchers.should.Matchers.*
+  import scala.language.deprecated.symbolLiterals
   import org.scalatest.Outcome
+  import org.scalatest.matchers.should.Matchers.*
   import CellType.{valueOf as _, *}
   import Cell.CellError.IllegalArgument
   import CellTest.{*, given}
 
   override protected type FixtureParam = XSSFRow
 
-  override protected def withFixture(test: OneArgTest): Outcome =
-    val testWorkbook = XSSFWorkbookFactory.createWorkbook(
-      OPCPackage.open(new File(getClass.getResource(TEST_SPREADSHEET).getPath))
+  private var testWorkbook: XSSFWorkbook = _
+  
+  override protected def beforeAll(): Unit = 
+    testWorkbook = XSSFWorkbookFactory.createWorkbook(
+      OPCPackage.open(File(getClass.getResource(TEST_SPREADSHEET).getPath))
     )
 
-    try withFixture(test.toNoArgTest(testWorkbook.getSheet(CELL_WORKSHEET).getRow(0)))
-    finally testWorkbook.close()
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withFixture(test.toNoArgTest(testWorkbook.getSheet(CELL_WORKSHEET).getRow(0)))
+    
+  override protected def afterAll(): Unit = testWorkbook.close()
 
   "A Cell" - {
     "should" - {

@@ -1,75 +1,67 @@
 package com.andreidiego.mpfi.stocks.exploratory.spreadsheets.excel.poi
 
+import java.io.File
+
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy.CREATE_NULL_AS_BLANK
 import org.apache.poi.util.LocaleUtil
-import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFCellStyle, XSSFColor}
-import org.scalatest.Outcome
-import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.wordspec.FixtureAnyWordSpec
+import org.apache.poi.xssf.usermodel.{XSSFWorkbookFactory, XSSFWorkbook, XSSFCell}
+import org.apache.poi.openxml4j.opc.OPCPackage
 
-import java.io.File
-import java.util.Locale
-import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
-class LearningApachePOIForExcelTest extends FixtureAnyWordSpec :
-  type FixtureParam = Sheet
+import org.scalatest.{BeforeAndAfterAll, Outcome}
+import org.scalatest.wordspec.FixtureAnyWordSpec
+import org.scalatest.matchers.should.Matchers.*
 
-  val TEST_SPREADSHEET = "LearningApachePOI.xlsx"
-  val TEST_SHEET = "Learning Apache POI"
-  val TRADING_DATE_COLUMN_INDEX = 0
-  val TRADING_DATE_ENCODED = "40177"
-  val TRADING_DATE_US_FORMAT = "12/30/09"
-  val TRADING_DATE_BR_FORMAT = "30/12/2009"
-  val TRADING_DATE_NOTE = "Nota de Corretagem não encontrada em meus arquivos. Informação retirada de histórico de ordens e confirmada com extrato de conta-corrente."
-  val SHORT_DATE_FORMAT_ID = 14
-  val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
-  val BROKERAGE_NOTE_COLUMN_INDEX = 1
-  val BROKERAGE_NOTE = "812"
-  val GENERAL_FORMAT_ID = 0
-  val STOCK_SYMBOL_COLUMN_INDEX = 2
-  val STOCK_SYMBOL = "MMXM3"
-  val QTY_COLUMN_INDEX = 3
-  val PRICE_COLUMN_INDEX = 4
-  val PRICE = "12.35"
-  val CURRENCY_FORMAT_ID = 8
-  val VOLUME_COLUMN_INDEX = 5
-  val VOLUME = "4940"
-  val VOLUME_FORMULA = "D2*E2"
-  val SETTLEMENT_FEE_COLUMN_INDEX = 6
-  val OPERATION_FEES_COLUMN_INDEX = 7
-  val OPERATION_FEES_FORMULA = "F2*0.007%"
-  val BROKERAGE_FEE_COLUMN_INDEX = 8
-  val SERVICES_TAX_COLUMN_INDEX = 9
-  val TAX_DEDUCTED_AT_SOURCE_COLUMN_INDEX = 10
-  val TOTAL_COLUMN_INDEX = 11
-  val EMPTY_COLUMN_INDEX = 12
-  val STRING_CONCAT_FORMULA_COLUMN_INDEX = 13
-  val STRING_CONCAT_FORMULA: String = STOCK_SYMBOL + "812"
-  val CELL_FILL_FOREGROUND_COLOR: Array[Byte] = Array(251, 228, 213).map(_.toByte)
-  val FONT_COLOR: Array[Byte] = Array(68, 114, 196).map(_.toByte)
+class LearningApachePOIForExcelTest extends FixtureAnyWordSpec, BeforeAndAfterAll :
+  override protected type FixtureParam = Sheet
 
-  val formatter = new DataFormatter(LocaleUtil.getUserLocale)
+  private val TEST_SPREADSHEET = "LearningApachePOI.xlsx"
+  private val TEST_SHEET = "Learning Apache POI"
+  private val TRADING_DATE_COLUMN_INDEX = 0
+  private val TRADING_DATE_ENCODED = "40177"
+  private val TRADING_DATE_US_FORMAT = "12/30/09"
+  private val TRADING_DATE_BR_FORMAT = "30/12/2009"
+  private val TRADING_DATE_NOTE = "Nota de Corretagem não encontrada em meus arquivos. Informação retirada de histórico de ordens e confirmada com extrato de conta-corrente."
+  private val SHORT_DATE_FORMAT_ID = 14
+  private val PT_BR_DATE_FORMAT = "dd/MM/yyyy"
+  private val BROKERAGE_NOTE_COLUMN_INDEX = 1
+  private val BROKERAGE_NOTE = "812"
+  private val GENERAL_FORMAT_ID = 0
+  private val STOCK_SYMBOL_COLUMN_INDEX = 2
+  private val STOCK_SYMBOL = "MMXM3"
+  private val QTY_COLUMN_INDEX = 3
+  private val PRICE_COLUMN_INDEX = 4
+  private val PRICE = "12.35"
+  private val CURRENCY_FORMAT_ID = 8
+  private val VOLUME_COLUMN_INDEX = 5
+  private val VOLUME = "4940"
+  private val VOLUME_FORMULA = "D2*E2"
+  private val SETTLEMENT_FEE_COLUMN_INDEX = 6
+  private val OPERATION_FEES_COLUMN_INDEX = 7
+  private val OPERATION_FEES_FORMULA = "F2*0.007%"
+  private val BROKERAGE_FEE_COLUMN_INDEX = 8
+  private val SERVICES_TAX_COLUMN_INDEX = 9
+  private val TAX_DEDUCTED_AT_SOURCE_COLUMN_INDEX = 10
+  private val TOTAL_COLUMN_INDEX = 11
+  private val EMPTY_COLUMN_INDEX = 12
+  private val STRING_CONCAT_FORMULA_COLUMN_INDEX = 13
+  private val STRING_CONCAT_FORMULA: String = STOCK_SYMBOL + "812"
+  private val CELL_FILL_FOREGROUND_COLOR: Array[Byte] = Array(251, 228, 213).map(_.toByte)
+  private val FONT_COLOR: Array[Byte] = Array(68, 114, 196).map(_.toByte)
+  private val formatter = new DataFormatter(LocaleUtil.getUserLocale)
+  private var testWorkbook: XSSFWorkbook = _
+  
+  override protected def beforeAll(): Unit = testWorkbook = XSSFWorkbookFactory.createWorkbook(
+    OPCPackage.open(File(getClass.getResource(TEST_SPREADSHEET).getPath))
+  )
 
-  override protected def withFixture(test: OneArgTest): Outcome = {
-    //    OPCPackage pkg = OPCPackage.open(new File("file.xlsx"));
-    //    XSSFWorkbook wb = new XSSFWorkbook(pkg);
-    //    ....
-    //    pkg.close();
-
-    val testWorkbook = WorkbookFactory.create(
-      new File(getClass.getResource(TEST_SPREADSHEET).getPath)
-    )
-    val sheet = testWorkbook.getSheet(TEST_SHEET)
-
-    try withFixture(test.toNoArgTest(sheet))
-    finally testWorkbook.close()
-  }
-
-  def cellAt(index: Int)(sheet: Sheet): XSSFCell =
-    sheet.getRow(1).getCell(index, CREATE_NULL_AS_BLANK).asInstanceOf[XSSFCell]
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withFixture(test.toNoArgTest(testWorkbook.getSheet(TEST_SHEET)))
+    
+  override protected def afterAll(): Unit = testWorkbook.close()
 
   "cell.getRawValue" should {
     "return the numeric encoded value for cells formatted as dates" in { sheet =>
@@ -520,3 +512,6 @@ class LearningApachePOIForExcelTest extends FixtureAnyWordSpec :
       }
     }
   }
+
+  private def cellAt(index: Int)(sheet: Sheet): XSSFCell =
+    sheet.getRow(1).getCell(index, CREATE_NULL_AS_BLANK).asInstanceOf[XSSFCell]

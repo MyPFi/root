@@ -1,38 +1,35 @@
 package com.andreidiego.mpfi.stocks.exploratory.spreadsheets.design
 
-import org.apache.poi.ss.usermodel.{CellType, Sheet, WorkbookFactory}
-import org.apache.poi.ss.usermodel.CellType.{BLANK, FORMULA, NUMERIC, STRING}
-import org.apache.poi.xssf.usermodel.{XSSFCell, XSSFSheet}
-import org.scalatest.{tagobjects, Outcome}
-import org.scalatest.Inspectors.forAll
-import org.scalatest.TryValues.*
-import org.scalatest.matchers.should.Matchers.*
-import org.scalatest.tagobjects.Slow
-import org.scalatest.wordspec.FixtureAnyWordSpec
-
 import java.io.File
-import javax.xml.crypto.Data
+
+import org.apache.poi.openxml4j.opc.OPCPackage
+import org.apache.poi.xssf.usermodel.{XSSFWorkbookFactory, XSSFWorkbook}
+
 import scala.Predef.classOf
 import scala.jdk.CollectionConverters.*
 import scala.language.deprecated.symbolLiterals
 
-class POIExcelExtractorTest extends FixtureAnyWordSpec :
-  type FixtureParam = POIExcelExtractor
+import org.scalatest.{BeforeAndAfterAll, Outcome}
+import org.scalatest.Inspectors.forAll
+import org.scalatest.TryValues.*
+import org.scalatest.wordspec.FixtureAnyWordSpec
+import org.scalatest.tagobjects.Slow
+import org.scalatest.matchers.should.Matchers.*
 
-  val TEST_SPREADSHEET = "spreadsheet.xlsx"
+class POIExcelExtractorTest extends FixtureAnyWordSpec, BeforeAndAfterAll :
+  override protected type FixtureParam = POIExcelExtractor
+
+  private val TEST_SPREADSHEET = "spreadsheet.xlsx"
+  private var testWorkbook: XSSFWorkbook = _
+  
+  override protected def beforeAll(): Unit = testWorkbook = XSSFWorkbookFactory.createWorkbook(
+    OPCPackage.open(File(getClass.getResource(TEST_SPREADSHEET).getPath))
+  )
 
   override protected def withFixture(test: OneArgTest): Outcome =
-    //    OPCPackage pkg = OPCPackage.open(new File("file.xlsx"));
-    //    XSSFWorkbook wb = new XSSFWorkbook(pkg);
-    //    ....
-    //    pkg.close();
-
-    val testWorkbook = WorkbookFactory.create(
-      new File(getClass.getResource(TEST_SPREADSHEET).getPath)
-    )
-
-    try withFixture(test.toNoArgTest(POIExcelExtractor(testWorkbook)))
-    finally testWorkbook.close()
+    withFixture(test.toNoArgTest(POIExcelExtractor(testWorkbook)))
+    
+  override protected def afterAll(): Unit = testWorkbook.close()
 
   "headerOf" should {
     "return all the header cells" when {

@@ -1,31 +1,35 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
 
-import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
-import org.scalatest.Outcome
-import org.scalatest.matchers.should.Matchers.*
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.EitherValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
-import org.scalatest.Inspectors.forAll
+import org.scalatest.matchers.should.Matchers.*
 
-import java.io.File
-import scala.language.deprecated.symbolLiterals
+class WorksheetTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
 
-class WorksheetTest extends FixtureAnyFreeSpec :
-
+  import java.io.File
+  import org.apache.poi.openxml4j.opc.OPCPackage
+  import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
+  import scala.language.deprecated.symbolLiterals
+  import org.scalatest.Outcome
+  import org.scalatest.Inspectors.forAll
   import CellType.*
   import Worksheet.WorksheetError.IllegalArgument
   import WorksheetTest.*
 
   override protected type FixtureParam = XSSFWorkbook
 
-  override protected def withFixture(test: OneArgTest): Outcome =
-    val testWorkbook = XSSFWorkbookFactory.createWorkbook(
+  private var testWorkbook: XSSFWorkbook = _
+  
+  override protected def beforeAll(): Unit = 
+    testWorkbook = XSSFWorkbookFactory.createWorkbook(
       OPCPackage.open(File(getClass.getResource(TEST_SPREADSHEET).getPath))
     )
 
-    try withFixture(test.toNoArgTest(testWorkbook))
-    finally testWorkbook.close()
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withFixture(test.toNoArgTest(testWorkbook))
+    
+  override protected def afterAll(): Unit = testWorkbook.close()
 
   "A Worksheet should" - {
     "be built from a POI Worksheet" in { poiWorkbook ⇒

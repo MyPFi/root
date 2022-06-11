@@ -1,17 +1,19 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import excel.poi.Worksheet
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.freespec.FixtureAnyFreeSpec
 
-class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
+import excel.poi.Worksheet
+
+class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
 
   import java.io.File
   import org.apache.poi.openxml4j.opc.OPCPackage
   import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
   import scala.language.deprecated.symbolLiterals
   import org.scalatest.Outcome
-  import org.scalatest.matchers.should.Matchers.*
   import org.scalatest.Inspectors.{forAll, forExactly}
+  import org.scalatest.matchers.should.Matchers.*
   import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.{RequiredValueMissing, UnexpectedContentColor, UnexpectedContentType, UnexpectedContentValue}
   import BrokerageNotesWorksheetMessages.*
   import BrokerageNotesWorksheetTestMessages.*
@@ -19,13 +21,17 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec :
 
   override protected type FixtureParam = XSSFWorkbook
 
-  override protected def withFixture(test: OneArgTest): Outcome =
-    val testWorkbook = XSSFWorkbookFactory.createWorkbook(
+  private var testWorkbook: XSSFWorkbook = _
+  
+  override protected def beforeAll(): Unit = 
+    testWorkbook = XSSFWorkbookFactory.createWorkbook(
       OPCPackage.open(File(getClass.getResource(TEST_SPREADSHEET).getPath))
     )
 
-    try withFixture(test.toNoArgTest(testWorkbook))
-    finally testWorkbook.close()
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withFixture(test.toNoArgTest(testWorkbook))
+    
+  override protected def afterAll(): Unit = testWorkbook.close()
 
   "A BrokerageNotesWorksheetReader should" - {
     "be built from a Worksheet" in { poiWorkbook ⇒
