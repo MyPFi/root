@@ -57,7 +57,7 @@ object BrokerageNotesWorksheetReader:
   private type SummaryAttributeCheck = Cell ⇒ (Int, String, Int, Group, String) ⇒ ErrorsOr[Cell]
 
   private val RED = "255,0,0"
-  private val BLUE = "68,114,196"
+  private val BLUE = "91,155,213"
   private val UPPERCASE_A_ASCII = 65
 
   given comparisonPrecision: Double = 0.02
@@ -687,7 +687,7 @@ object BrokerageNotesWorksheetReader:
 
 object BrokerageNotesWorksheetMessages:
   private val RED = "255,0,0"
-  private val BLUE = "68,114,196"
+  private val BLUE = "91,155,213"
 
   def attributeMissing(attributeName: String, operationIndex: Int)(worksheetName: String): String =
     s"A required attribute ('$attributeName') is missing on line '$operationIndex' of 'Worksheet' '$worksheetName'."

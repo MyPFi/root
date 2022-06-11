@@ -91,7 +91,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "TradingDateBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -163,7 +163,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "NoteNumberBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -213,7 +213,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "TickerBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -282,7 +282,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     errors should contain(UnexpectedContentType(unexpectedContentTypeInQty("l00", 2)(TEST_SHEET_NAME)))
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "QtyBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -354,7 +354,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "PriceBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -423,7 +423,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "VolumeBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -505,7 +505,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "SettlementFeeBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -598,7 +598,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "TradingFeesBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -664,7 +664,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "BrokerageBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -733,7 +733,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "ServiceTaxBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -807,7 +807,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "IncomeTaxAtSourceBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -889,7 +889,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (68,114,196)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
                       val TEST_SHEET_NAME = "TotalBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -1338,8 +1338,6 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentColor(unexpectedColorForBuyingInTicker(8)(TEST_SHEET_NAME)),
         RequiredValueMissing(qtyMissing(8)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedNegativeBrokerage("-15.99", 8)(TEST_SHEET_NAME)),
-        // FIXME Not true and doesn't make any sense - Investigate
-        UnexpectedContentColor(unexpectedColorForBuyingInBrokerage(8)(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInTotal(8)(TEST_SHEET_NAME)),
 
         // Line 10
@@ -1543,7 +1541,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
       val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-      actualErrors should have size 187
+      actualErrors should have size 186
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "turn every" - {
@@ -1632,7 +1630,7 @@ object BrokerageNotesWorksheetReaderTest:
   private val TEST_SPREADSHEET = "BrokerageNotes.xlsx"
 
   private val RED = "255,0,0"
-  private val BLUE = "68,114,196"
+  private val BLUE = "91,155,213"
 
   extension (errorsOrBrokerageNotesWorksheetReader: ErrorsOr[BrokerageNotesWorksheetReader])
 
@@ -1686,7 +1684,7 @@ object BrokerageNotesWorksheetReaderTest:
 
 object BrokerageNotesWorksheetTestMessages:
   private val RED = "255,0,0"
-  private val BLUE = "68,114,196"
+  private val BLUE = "91,155,213"
 
   import BrokerageNotesWorksheetMessages.*
 
