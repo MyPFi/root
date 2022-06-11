@@ -36,7 +36,8 @@ object SettlementFeeRate:
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
-    LocalDate.MIN -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
+    LocalDate.MIN -> Map(Normal -> 0.000079, DayTrade -> 0.000063),
+    LocalDate.parse("04/05/2009", dateFormatter) -> Map(Normal -> 0.00006, DayTrade -> 0.000275),
     LocalDate.parse("30/12/2009", dateFormatter) -> Map(Normal -> 0.000275, DayTrade -> 0.0002),
     LocalDate.parse("02/02/2021", dateFormatter) -> Map(Normal -> 0.00025, DayTrade -> 0.00018)
   )

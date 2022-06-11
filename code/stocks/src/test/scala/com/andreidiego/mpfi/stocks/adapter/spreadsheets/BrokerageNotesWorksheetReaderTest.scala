@@ -50,44 +50,40 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     val TEST_SHEET_NAME = "TradingDateMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    error should have(
-                      'class(classOf[RequiredValueMissing]),
-                      'message(tradingDateMissing(2)(TEST_SHEET_NAME))
+                    errors should contain(
+                      RequiredValueMissing(tradingDateMissing(2)(TEST_SHEET_NAME))
                     )
                   }
                   "if negative." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "TradingDateNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    error should have(
-                      'class(classOf[UnexpectedContentType]),
-                      'message(unexpectedContentTypeInTradingDate("-39757", 2)(TEST_SHEET_NAME))
+                    errors should contain(
+                      UnexpectedContentType(unexpectedContentTypeInTradingDate("-39757", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "TradingDateExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    error should have(
-                      'class(classOf[UnexpectedContentType]),
-                      'message(unexpectedContentTypeInTradingDate("O5/11/2008", 2)(TEST_SHEET_NAME))
+                    errors should contain(
+                      UnexpectedContentType(unexpectedContentTypeInTradingDate("3O/12/2009", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "when containing an invalid date." in { poiWorkbook ⇒
                     val TEST_SHEET_NAME = "TradingDateInvalidDate"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    error should have(
-                      'class(classOf[UnexpectedContentType]),
-                      'message(unexpectedContentTypeInTradingDate("05/13/2008", 2)(TEST_SHEET_NAME))
+                    errors should contain(
+                      UnexpectedContentType(unexpectedContentTypeInTradingDate("30/13/2009", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -489,7 +485,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedSettlementFee("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
+                        'message(unexpectedSettlementFee("3.04", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
                       )
                     }
                     "'DayTrade'." ignore { poiWorkbook ⇒
@@ -500,7 +496,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedSettlementFee("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
+                        'message(unexpectedSettlementFee("3.04", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -558,20 +554,20 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
                     actualErrors should contain allOf(
-                      UnexpectedContentType(tradingFeesNotCurrency("R$ O,11", 2)(TEST_SHEET_NAME)),
-                      UnexpectedContentType(tradingFeesNotDouble("R$ O,11", 2)(TEST_SHEET_NAME))
+                      UnexpectedContentType(tradingFeesNotCurrency("R$ O,44", 2)(TEST_SHEET_NAME)),
+                      UnexpectedContentType(tradingFeesNotDouble("R$ O,44", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
                     "'PreOpening'." ignore { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET_NAME = "InvalidTradingFees"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTradingFees("2.76", 2)("2.75", "11000.00", "0.0250%")(TEST_SHEET_NAME))
+                        'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%")(TEST_SHEET_NAME))
                       )
                     }
                     "'Trading'." in { poiWorkbook ⇒
@@ -582,18 +578,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTradingFees("0.56", 2)("0.55", "11000.00", "0.0050%")(TEST_SHEET_NAME))
+                        'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%")(TEST_SHEET_NAME))
                       )
                     }
                     "'ClosingCall'." ignore { poiWorkbook ⇒
-                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
+                      val TEST_SHEET_NAME = "InvalidTradingFees"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
                       val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTradingFees("0.56", 2)("0.55", "11000.00", "0.0050%")(TEST_SHEET_NAME))
+                        'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -729,7 +725,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(unexpectedServiceTax("0.12", 2)("0.13", "1.99", "6.5%")(TEST_SHEET_NAME))
+                      'message(unexpectedServiceTax("0.11", 2)("0.10", "1.99", "5.0%")(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
@@ -791,7 +787,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedIncomeTaxAtSourceForSellings("0.19", 2)("0.09", "1803.47", "0.0050%")(TEST_SHEET_NAME))
+                        'message(unexpectedIncomeTaxAtSourceForSellings("0.19", 2)("0.09", "1801.75", "0.0050%")(TEST_SHEET_NAME))
                       )
                     }
                     "for 'BuyingOperations, if not empty, zero." in { poiWorkbook ⇒
@@ -873,7 +869,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTotalForSellings("7010.81", 2)("7010.78")(TEST_SHEET_NAME))
+                        'message(unexpectedTotalForSellings("7009.25", 2)("7009.27")(TEST_SHEET_NAME))
                       )
                     }
                     "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
@@ -884,7 +880,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTotalForBuyings("11005.45", 2)("11005.42")(TEST_SHEET_NAME))
+                        'message(unexpectedTotalForBuyings("11008.22", 2)("11008.25")(TEST_SHEET_NAME))
                       )
                     }
                   }
@@ -985,7 +981,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 error should have(
                   'class(classOf[UnexpectedContentValue]),
                   // TODO Replace the 'NoteNumber' below by the 'GroupIndex' after it has been added to the 'Group' class
-                  'message(conflictingTradingDate("A3", "1662", "06/11/2008")("05/11/2008", "A2")(TEST_SHEET_NAME))
+                  'message(conflictingTradingDate("A3", "1662", "31/12/2009")("30/12/2009", "A2")(TEST_SHEET_NAME))
                 )
               }
               "'NoteNumbers's." in { poiWorkbook ⇒
@@ -1009,9 +1005,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
               val expectedErrors = Seq(
                 UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("11600.00", 3)("11000.00", 2, 2)(TEST_SHEET_NAME)),
-                UnexpectedContentValue(unexpectedSettlementFeeSummary("2.90", 3)("2.75", 2, 2)(TEST_SHEET_NAME)),
-                UnexpectedContentValue(unexpectedTradingFeesSummary("0.58", 3)("0.55", 2, 2)(TEST_SHEET_NAME)),
-                UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("11605.60", 3)("11005.42", 2, 2)(TEST_SHEET_NAME))
+                UnexpectedContentValue(unexpectedSettlementFeeSummary("3.19", 3)("3.03", 2, 2)(TEST_SHEET_NAME)),
+                UnexpectedContentValue(unexpectedTradingFeesSummary("3.31", 3)("3.14", 2, 2)(TEST_SHEET_NAME)),
+                UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("11608.59", 3)("11008.25", 2, 2)(TEST_SHEET_NAME))
               )
 
               val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
@@ -1099,7 +1095,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(unexpectedSettlementFeeSummary("5.68", 4)("5.65", 2, 3)(TEST_SHEET_NAME))
+                    'message(unexpectedSettlementFeeSummary("6.25", 4)("6.22", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1134,7 +1130,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(unexpectedTradingFeesSummary("1.10", 4)("1.13", 2, 3)(TEST_SHEET_NAME))
+                    'message(unexpectedTradingFeesSummary("6.41", 4)("6.44", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1204,7 +1200,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
-                    'message(unexpectedServiceTaxSummary("0.29", 4)("0.26", 2, 3)(TEST_SHEET_NAME))
+                    'message(unexpectedServiceTaxSummary("0.23", 4)("0.20", 2, 3)(TEST_SHEET_NAME))
                   )
                 }
               }
@@ -1265,7 +1261,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(unexpectedTotalSummaryForHomogeneousGroups("-2110.69", 4)("16820.69", 2, 3)(TEST_SHEET_NAME))
+                      'message(unexpectedTotalSummaryForHomogeneousGroups("-2111.18", 4)("16824.64", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                   "'SellingOperation's minus the sum of the 'Total's of all 'BuyingOperation's, for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
@@ -1276,7 +1272,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
-                      'message(unexpectedTotalSummaryForHeterogeneousGroups("16820.69", 4)("-2110.69", 2, 3)(TEST_SHEET_NAME))
+                      'message(unexpectedTotalSummaryForHeterogeneousGroups("16824.64", 4)("-2111.18", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
                 }
@@ -1293,14 +1289,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
       val expectedErrors = Seq(
         // Line 2
         RequiredValueMissing(tradingDateMissing(2)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedSettlementFee("-0.42", 2)("-0.12", "-1534.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTradingFees("-0.44", 2)("-0.41", "-1534.00", "0.0270%")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
         UnexpectedContentType(unexpectedContentTypeInNoteNumber("II62", 2)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedNegativeQty("-100", 2)(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInVolume(2)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedServiceTax("1.10", 2)("0.80", "15.99", "5.0%")(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedTotalForBuyings("-1517.14", 2)("-1517.44")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalForBuyings("-1517.47", 2)("-1517.77")(TEST_SHEET_NAME)),
 
         // Line 4
-        UnexpectedContentType(unexpectedContentTypeInTradingDate("39757", 4)(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("40177", 4)(TEST_SHEET_NAME)),
         RequiredValueMissing(noteNumberMissing(4)(TEST_SHEET_NAME)),
         UnexpectedContentType(unexpectedContentTypeInQty("S00", 4)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
@@ -1317,24 +1317,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentColor(unexpectedColorForBuyingInBrokerage(4)(TEST_SHEET_NAME)),
 
         // Line 6
-        UnexpectedContentType(unexpectedContentTypeInTradingDate("0S/11/2008", 6)(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("3O/12/2009", 6)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedSettlementFee("0.76", 6)("0.22", "2750.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTradingFees("1.08", 6)("0.74", "2750.00", "0.0270%")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
         UnexpectedContentValue(unexpectedNegativeNoteNumber("-1662", 6)(TEST_SHEET_NAME)),
         RequiredValueMissing(tickerMissing(6)(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInQty(6)(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedTradingFees("0.49", 6)("0.19", "2750.00", "0.0070%")(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInTradingFees(6)(TEST_SHEET_NAME)),
         UnexpectedContentType(brokerageNotCurrency("R$ l5,99", 6)(TEST_SHEET_NAME)),
         UnexpectedContentType(brokerageNotDouble("R$ l5,99", 6)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
           UnexpectedContentType(totalNotCurrency("#VALUE!", 6)(TEST_SHEET_NAME)),
           UnexpectedContentType(totalNotDouble("#VALUE!", 6)(TEST_SHEET_NAME)),
-          UnexpectedContentValue(unexpectedTotalForBuyings("0.00", 6)("2751.25")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForBuyings("0.00", 6)("2751.84")(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
         UnexpectedContentType(serviceTaxNotCurrency("R$ O,8O", 6)(TEST_SHEET_NAME)),
         UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 6)(TEST_SHEET_NAME)),
 
         // Line 8
-        UnexpectedContentType(unexpectedContentTypeInTradingDate("-39757", 8)(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("-40177", 8)(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInTicker(8)(TEST_SHEET_NAME)),
         RequiredValueMissing(qtyMissing(8)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedNegativeBrokerage("-15.99", 8)(TEST_SHEET_NAME)),
@@ -1344,14 +1347,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentColor(unexpectedColorForBuyingInNoteNumber(10)(TEST_SHEET_NAME)),
         RequiredValueMissing(priceMissing(10)(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInSettlementFee(10)(TEST_SHEET_NAME)),
-        UnexpectedContentType(tradingFeesNotCurrency("R$ O,11", 10)(TEST_SHEET_NAME)),
-        UnexpectedContentType(tradingFeesNotDouble("R$ O,11", 10)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesNotCurrency("R$ O,OO", 10)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesNotDouble("R$ O,OO", 10)(TEST_SHEET_NAME)),
         // TODO The following is not exactly CONSEQUENTIAL since it's not a formula. It is going to give reason to a Warning when warnings are implemented.
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForBuyings("16.90", 10)("16.79")(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedIncomeTaxAtSourceForBuyings("0.01", 10)(TEST_SHEET_NAME)),
 
         // Line 11
-        UnexpectedContentValue(conflictingTradingDate("A11", "1345", "05/11/2008")("06/11/2008", "A10")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(conflictingTradingDate("A11", "1345", "31/12/2009")("30/12/2009", "A10")(TEST_SHEET_NAME)),
         UnexpectedContentValue(conflictingNoteNumber("B11", "1345", "1345")("1344", "B10")(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForBuyingInPrice(11)(TEST_SHEET_NAME)),
         RequiredValueMissing(volumeMissing(11)(TEST_SHEET_NAME)),
@@ -1391,7 +1394,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentValue(unexpectedSettlementFee("1.17", 16)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForSellingInSettlementFee(16)(TEST_SHEET_NAME)),
         RequiredValueMissing(tradingFeesMissing(16)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.22", "3150.00", "0.0070%")(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.90", "3150.00", "0.0285%")(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedTotalForSellings("3132.34", 16)("3132.04")(TEST_SHEET_NAME)),
 
         // Line 17
@@ -1403,7 +1406,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentValue(unexpectedSettlementFee("0.00", 17)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
           UnexpectedContentType(totalNotCurrency("#VALUE!", 17)(TEST_SHEET_NAME)),
           UnexpectedContentType(totalNotDouble("#VALUE!", 17)(TEST_SHEET_NAME)),
-          UnexpectedContentValue(unexpectedTotalForSellings("0.00", 17)("3149.78")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalForSellings("0.00", 17)("3149.10")(TEST_SHEET_NAME)),
           UnexpectedContentType(settlementFeeSummaryNotCurrency("#VALUE!", 20)(TEST_SHEET_NAME)),
           UnexpectedContentType(settlementFeeSummaryNotDouble("#VALUE!", 20)(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 20)("2.60", 16, 19)(TEST_SHEET_NAME)),
@@ -1430,7 +1433,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentType(tradingFeesNotDouble("#VALUE!", 18)(TEST_SHEET_NAME)),
           UnexpectedContentType(tradingFeesSummaryNotCurrency("#VALUE!", 20)(TEST_SHEET_NAME)),
           UnexpectedContentType(tradingFeesSummaryNotDouble("#VALUE!", 20)(TEST_SHEET_NAME)),
-          UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 20)("0.59", 16, 19)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 20)("2.39", 16, 19)(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
         UnexpectedContentColor(unexpectedColorForSellingInBrokerage(18)(TEST_SHEET_NAME)),
         RequiredValueMissing(serviceTaxMissing(18)(TEST_SHEET_NAME)),
@@ -1442,10 +1445,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
         // Line 19
         UnexpectedContentColor(unexpectedColorForSellingInServiceTax(19)(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedIncomeTaxAtSourceForSellings("0.05", 19)("0.26", "5201.41", "0.0050%")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedIncomeTaxAtSourceForSellings("0.05", 19)("0.26", "5200.29", "0.0050%")(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForSellingInIncomeTaxAtSource(19)(TEST_SHEET_NAME)),
         RequiredValueMissing(totalMissing(19)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForSellings("0.00", 19)("5201.41")(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForSellings("0.00", 19)("5200.29")(TEST_SHEET_NAME)),
 
         // Line 22
         UnexpectedContentColor(invalidColorInTradingDate("0,0,0", 22)(TEST_SHEET_NAME)),
@@ -1463,15 +1466,19 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentColor(invalidColorInTotal("0,0,0", 22)(TEST_SHEET_NAME)),
 
         // Line 26
-        UnexpectedContentType(unexpectedContentTypeInTradingDate("05/13/2008", 26)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(conflictingTradingDate("A27", "903", "25/02/2009")("05/13/2008", "A26")(TEST_SHEET_NAME)),
+        UnexpectedContentType(unexpectedContentTypeInTradingDate("30/13/2009", 26)(TEST_SHEET_NAME)),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(conflictingTradingDate("A27", "903", "30/12/2009")("30/13/2009", "A26")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFee("0.69", 26)("0.20", "2494.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTradingFees("0.71", 26)("0.67", "2494.00", "0.0270%")(TEST_SHEET_NAME)),
+        // -CONSEQUENTIAL
 
         // Line 27
         UnexpectedContentValue(unexpectedServiceTax("-0.80", 27)("0.80", "15.99", "5.0%")(TEST_SHEET_NAME)),
 
         // Line 29
         UnexpectedContentValue(unexpectedVolumeSummaryForHeterogeneousGroups("12934.00", 29)("-2494.00", 26, 28)(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("12950.05", 29)("-2547.23", 26, 28)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("12950.59", 29)("-2550.01", 26, 28)(TEST_SHEET_NAME)),
 
         // Line 33
         UnexpectedContentType(volumeSummaryNotCurrency("R$ 4.793,OO", 33)(TEST_SHEET_NAME)),
@@ -1480,9 +1487,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentType(settlementFeeSummaryNotCurrency("R$ l,32", 33)(TEST_SHEET_NAME)),
         UnexpectedContentType(settlementFeeSummaryNotDouble("R$ l,32", 33)(TEST_SHEET_NAME)),
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 33)("1.32", 31, 32)(TEST_SHEET_NAME)),
-        UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ O,34", 33)(TEST_SHEET_NAME)),
-        UnexpectedContentType(tradingFeesSummaryNotDouble("R$ O,34", 33)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 33)("0.34", 31, 32)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ l,37", 33)(TEST_SHEET_NAME)),
+        UnexpectedContentType(tradingFeesSummaryNotDouble("R$ l,37", 33)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 33)("1.37", 31, 32)(TEST_SHEET_NAME)),
         UnexpectedContentType(brokerageSummaryNotCurrency("R$ 3l,98", 33)(TEST_SHEET_NAME)),
         UnexpectedContentType(brokerageSummaryNotDouble("R$ 3l,98", 33)(TEST_SHEET_NAME)),
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedBrokerageSummary("0.00", 33)("31.98", 31, 32)(TEST_SHEET_NAME)),
@@ -1493,14 +1500,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentType(incomeTaxAtSourceSummaryNotDouble("R$ O,OO", 33)(TEST_SHEET_NAME)),
         UnexpectedContentType(totalSummaryNotCurrency("R$ 4.828,2E", 33)(TEST_SHEET_NAME)),
         UnexpectedContentType(totalSummaryNotDouble("R$ 4.828,2E", 33)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 33)("4828.23", 31, 32)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 33)("4829.26", 31, 32)(TEST_SHEET_NAME)),
 
         // Line 39
         UnexpectedContentColor(impossibleToDetermineMostLikelyOperationType(39)(TEST_SHEET_NAME)),
         /* NECESSARY */ RequiredValueMissing(noteNumberMissing(39)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
           UnexpectedContentValue(unexpectedVolumeSummaryForHeterogeneousGroups("2726.00", 41)("7714.00", 39, 40)(TEST_SHEET_NAME)),
-          UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("2689.76", 41)("7713.06", 39, 40)(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedTotalSummaryForHeterogeneousGroups("2688.10", 41)("7712.47", 39, 40)(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
 
         // Line 40
@@ -1510,14 +1517,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentColor(invalidColorInVolume("0,0,0", 40)(TEST_SHEET_NAME)),
           UnexpectedContentColor(invalidColorInSettlementFee("0,0,0", 40)(TEST_SHEET_NAME)),
         // -NECESSARY 
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForBuyings("5201.41", 40)("5238.59")(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalForBuyings("5200.29", 40)("5239.71")(TEST_SHEET_NAME)),
 
         // Line 44
         UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("2908.00", 44)("4290.00", 43, 43)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedSettlementFeeSummary("0.80", 44)("1.18", 43, 43)(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedTradingFeesSummary("0.20", 44)("0.30", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTradingFeesSummary("0.83", 44)("1.22", 43, 43)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedIncomeTaxAtSourceSummary("0.14", 44)("0.21", 43, 43)(TEST_SHEET_NAME)),
-        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("2890.21", 44)("4271.73", 43, 43)(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("2889.58", 44)("4270.81", 43, 43)(TEST_SHEET_NAME)),
 
         // Line 48
         RequiredValueMissing(volumeSummaryMissing(48)(TEST_SHEET_NAME)),
@@ -1525,7 +1532,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         RequiredValueMissing(settlementFeeSummaryMissing(48)(TEST_SHEET_NAME)),
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedSettlementFeeSummary("0.00", 48)("1.98", 46, 47)(TEST_SHEET_NAME)),
         RequiredValueMissing(tradingFeesSummaryMissing(48)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 48)("0.50", 46, 47)(TEST_SHEET_NAME)),
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFeesSummary("0.00", 48)("2.05", 46, 47)(TEST_SHEET_NAME)),
         RequiredValueMissing(brokerageSummaryMissing(48)(TEST_SHEET_NAME)),
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedBrokerageSummary("0.00", 48)("31.98", 46, 47)(TEST_SHEET_NAME)),
         RequiredValueMissing(serviceTaxSummaryMissing(48)(TEST_SHEET_NAME)),
@@ -1534,14 +1541,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         
         // Line 52
         RequiredValueMissing(totalSummaryMissing(52)(TEST_SHEET_NAME)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 52)("7161.94", 50, 51)(TEST_SHEET_NAME))
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 52)("7160.39", 50, 51)(TEST_SHEET_NAME))
         
         // TODO Add Cell, Line, and, Worksheet errors once we fix the error accumulation strategy of those classes
       )
 
       val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-      actualErrors should have size 186
+      actualErrors should have size 191
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "turn every" - {

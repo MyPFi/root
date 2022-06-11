@@ -13,10 +13,11 @@ object TradingFeesRate:
   val CLOSING_CALL: LocalTime = LocalTime.parse("16:55")
 
   private val ratesHistory: SortedMap[LocalDate, SortedMap[LocalTime, Double]] = SortedMap(
-    LocalDate.MIN -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00007, CLOSING_CALL -> 0.00007),
+    LocalDate.MIN -> SortedMap(PRE_OPENING -> 0.000205, TRADING -> 0.00027, CLOSING_CALL -> 0.000205),
+    LocalDate.parse("04/05/2009", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.000285, CLOSING_CALL -> 0.00007),
     LocalDate.parse("26/11/2013", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
-    LocalDate.parse("28/10/2019", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00004, TRADING -> 0.000032, CLOSING_CALL -> 0.00004),
-    LocalDate.parse("02/02/2021", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00007, TRADING -> 0.00005, CLOSING_CALL -> 0.00007),
+    LocalDate.parse("15/03/2020", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00005, TRADING -> 0.000032, CLOSING_CALL -> 0.00005),
+    LocalDate.parse("12/05/2021", dateFormatter) -> SortedMap(PRE_OPENING -> 0.00005, TRADING -> 0.00005, CLOSING_CALL -> 0.00005)
   )
 
   def at(tradingDateTime: LocalDateTime): Double = ratesHistory
