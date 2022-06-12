@@ -47,11 +47,12 @@ object BrokerageNotesWorksheetReader:
 
   type Error = BrokerageNoteReaderError | Worksheet.Error
   type ErrorsOr[A] = ValidatedNec[Error, A]
+  type ServiceDependencies = (AverageStockPriceService, SettlementFeeRateService, TradingFeesRateService, ServiceTaxRateService, IncomeTaxAtSourceRateService)
   private type Group = Seq[Line]
   private type AttributeValidation = Cell => (String, Int) ⇒ ErrorsOr[Cell]
   private type AttributeCheck = Cell ⇒ (String, Int, String) ⇒ ErrorsOr[Cell]
   private type AttributesHarmonyCheck = (Cell, Cell) ⇒ String ⇒ ErrorsOr[Cell]
-  private type OperationValidation = Line ⇒ String => ErrorsOr[Line]
+  private type OperationValidation = Line ⇒ ServiceDependencies => String => ErrorsOr[Line]
   private type OperationsHarmonyCheck = (Line, Line) => String ⇒ ErrorsOr[Line]
   private type BrokerageNoteValidation = Group ⇒ String => ErrorsOr[Group]
   private type SummaryAttributeCheck = Cell ⇒ (Int, String, Int, Group, String) ⇒ ErrorsOr[Cell]
@@ -64,7 +65,7 @@ object BrokerageNotesWorksheetReader:
 
   given Semigroup[Group] = (x, y) => if x == y then x else x ++: y
 
-  def from(worksheet: Worksheet): ErrorsOr[BrokerageNotesWorksheetReader] = worksheet.groups
+  def from(worksheet: Worksheet)(serviceDependencies: ServiceDependencies): ErrorsOr[BrokerageNotesWorksheetReader] = worksheet.groups
     .map(_.validatedWith(
       attributeValidations(
         assertTradingDate(isPresent, isAValidDate, hasAValidFontColor),
@@ -106,7 +107,7 @@ object BrokerageNotesWorksheetReader:
         assertIncomeTaxAtSourceSummary(isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
         assertTotalSummary(isPresent, isAValidCurrency or isAValidDouble, isOperationTypeAwareWhenCalculated)
       )
-    )(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
+    )(serviceDependencies)(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
     .reduce(_ combine _)
     .map(BrokerageNotesWorksheetReader(_))
 
@@ -202,7 +203,7 @@ object BrokerageNotesWorksheetReader:
       unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a double")(worksheetName)
     ).invalidNec
 
-  private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => (Line, String) => ErrorsOr[Cell]*): OperationValidation = line ⇒ worksheetName =>
+  private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => (Line, String) => ErrorsOr[Cell]*): OperationValidation = line ⇒ serviceDependencies => worksheetName =>
     line.toMostLikelyOperation(worksheetName)
       .andThen{operation =>
         attributeColorChecks
@@ -261,7 +262,7 @@ object BrokerageNotesWorksheetReader:
           if attribute.fontColor != BLUE then attribute.validNec
           else UnexpectedContentColor(errorMessage("Buying", s"blue($BLUE)", "Selling")).invalidNec
 
-  private def assertVolumeIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertVolumeIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
     val qtyCell = line.cells(3)
     val priceCell = line.cells(4)
     val volumeCell = line.cells(5)
@@ -277,14 +278,15 @@ object BrokerageNotesWorksheetReader:
     else line.validNec
 
   // TODO Think about adding a reason to the errors for the cases where the requirements for the validation are not present. For instance, in the case below, any one of the following, if missing or having any other problem, would result in an impossible validation: tradingDate, volume and, actualSettlementFee. For now, we'll choose default values for them in case of problem and the validation will fail because of them. Hopefully, the original cause will be caught by other validation.
-  private def assertSettlementFeeIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertSettlementFeeIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    val settlementFeeRateService = serviceDependencies(1)
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
-    val settlementFeeRate = SettlementFeeRate.forOperationalMode(Normal).at(tradingDate).value
+    val settlementFeeRate = settlementFeeRateService.forOperationalMode(Normal).at(tradingDate).value
     val expectedSettlementFee = (volume * settlementFeeRate).formatted("%.2f")
 
     if actualSettlementFee != expectedSettlementFee then UnexpectedContentValue(
@@ -292,15 +294,16 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    val tradingFeesRateService = serviceDependencies(2)
     val volumeCell = line.cells(5)
     val tradingFeesCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
-    val tradingTime = TradingFeesRate.TRADING
+    val tradingPeriod = TradingPeriod.TRADING
     val volume = volumeCell.asDouble.getOrElse(0.0)
     val actualTradingFees = tradingFeesCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO Same challenge here since 'TradingFees' is also dependent on the time of order execution which is not part of the brokerage note document.
-    val tradingFeesRate = TradingFeesRate.at(LocalDateTime.of(tradingDate, tradingTime))
+    val tradingFeesRate = tradingFeesRateService.at(tradingDate, tradingPeriod)
     val expectedTradingFees = (volume * tradingFeesRate).formatted("%.2f")
 
     if actualTradingFees != expectedTradingFees then UnexpectedContentValue(
@@ -308,14 +311,15 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertServiceTaxIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertServiceTaxIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    val serviceTaxRateService = serviceDependencies(3)
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val brokerage = brokerageCell.asDouble.getOrElse(0.0)
     val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0).formatted("%.2f")
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
-    val serviceTaxRate = ServiceTaxRate.at(tradingDate).value
+    val serviceTaxRate = serviceTaxRateService.at(tradingDate).value
     val expectedServiceTax = (brokerage * serviceTaxRate).formatted("%.2f")
 
     if actualServiceTax != expectedServiceTax then UnexpectedContentValue(
@@ -323,7 +327,9 @@ object BrokerageNotesWorksheetReader:
     ).invalidNec
     else line.validNec
 
-  private def assertIncomeTaxAtSourceIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertIncomeTaxAtSourceIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    val averageStockPriceService = serviceDependencies(0)
+    val incomeTaxAtSourceRateService = serviceDependencies(4)
     val incomeTaxAtSourceCell = line.cells(10)
     // TODO IncomeTaxAtSource can never be negative. It is not like I can restitute it if I have a loss. Restitutions do not occur at the source
     val actualIncomeTaxAtSource = incomeTaxAtSourceCell.asDouble.getOrElse(0.0)
@@ -345,10 +351,10 @@ object BrokerageNotesWorksheetReader:
       val brokerage = brokerageCell.asDouble.getOrElse(0.0)
       val serviceTax = serviceTaxCell.asDouble.getOrElse(0.0)
       val operationNetResult = volume - settlementFee - tradingFees - brokerage - serviceTax
-      val operationAverageCost = AverageStockPrice.forTicker(tickerCell.value) * qty
+      val operationAverageCost = averageStockPriceService.forTicker(tickerCell.value) * qty
       // TODO When the ticker cannot be found in the portfolio, 0.0 is returned which should trigger an exception since I'm trying to sell something I do not posses. For now, I'll tweak TEST_SPREADSHEET so that all BuyingOperations refer to VALE5 and have the appropriate calculation for the IncomeTaxAtSource.
       val operationProfit = operationNetResult - operationAverageCost
-      val incomeTaxAtSourceRate = IncomeTaxAtSourceRate.forOperationalMode(Normal).at(tradingDate).value
+      val incomeTaxAtSourceRate = incomeTaxAtSourceRateService.forOperationalMode(Normal).at(tradingDate).value
       val expectedIncomeTaxAtSource = operationProfit * incomeTaxAtSourceRate
 
       if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
@@ -371,7 +377,7 @@ object BrokerageNotesWorksheetReader:
       }
       else line.validNec
 
-  private def assertTotalIsCalculatedCorrectly: OperationValidation = line ⇒ worksheetName =>
+  private def assertTotalIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingFeesCell = line.cells(7)
@@ -544,7 +550,7 @@ object BrokerageNotesWorksheetReader:
       operationValidations: Seq[OperationValidation] = Seq(),
       operationsHarmonyChecks: Seq[OperationsHarmonyCheck] = Seq(),
       brokerageNoteValidations: Seq[BrokerageNoteValidation] = Seq()
-    )(worksheetName: String): ErrorsOr[Group] =
+    )(serviceDependencies: ServiceDependencies)(worksheetName: String): ErrorsOr[Group] =
       given Semigroup[Group] = (x, _) => x
       given Semigroup[Line] = (x, _) => x
       val appliedBrokerageNoteValidations: ErrorsOr[Group] = brokerageNoteValidations.map(_ (group)(worksheetName)).reduce(_ combine _)
@@ -554,7 +560,7 @@ object BrokerageNotesWorksheetReader:
 
       appliedBrokerageNoteValidations.combine{
         validateAndHarmonize{ line =>
-          line.validatedWith(operationValidations)(worksheetName).accumulate.combine{
+          line.validatedWith(operationValidations)(serviceDependencies)(worksheetName).accumulate.combine{
             line.harmonizedWith(attributesHarmonyChecks)(worksheetName).accumulate.combine{
               line.withCellsValidated(attributeValidations)(worksheetName).accumulate
             }
@@ -623,9 +629,9 @@ object BrokerageNotesWorksheetReader:
     private def toFinancialSummary: FinancialSummary =
       FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
 
-    private def validatedWith(operationValidations: Seq[OperationValidation])(worksheetName: String): ErrorsOr[Line] =
+    private def validatedWith(operationValidations: Seq[OperationValidation])(serviceDependencies: ServiceDependencies)(worksheetName: String): ErrorsOr[Line] =
       given Semigroup[Line] = (x, _) => x
-      operationValidations.map(_ (line)(worksheetName)).reduce(_ combine _)
+      operationValidations.map(_ (line)(serviceDependencies)(worksheetName)).reduce(_ combine _)
 
     private def withCellsValidated(attributeValidations: Seq[AttributeValidation])(worksheetName: String): ErrorsOr[Line] =
       cells.map(_.validatedWith(attributeValidations)(worksheetName, line.number).accumulate).reduce(_ combine _).liftTo(line)

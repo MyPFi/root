@@ -1,24 +1,22 @@
 package com.andreidiego.mpfi.stocks.adapter.services
 
-import OperationalMode.*
-
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import scala.collection.SortedMap
 
-// TODO This will become a separate service soon
-class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]):
+import OperationalMode.*
 
-  import SettlementFeeRate.*
+class DummySettlementFeeRateService private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]) extends SettlementFeeRateService:
 
-  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate =
-    SettlementFeeRate(
+  import DummySettlementFeeRateService.*
+
+  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRateService =
+    DummySettlementFeeRateService(
       ratesHistory
         .map((rateRecord: (LocalDate, Map[OperationalMode, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == operationalMode))
     )
 
-  def at(tradingDate: LocalDate): SettlementFeeRate =
-    SettlementFeeRate(
+  def at(tradingDate: LocalDate): SettlementFeeRateService =
+    DummySettlementFeeRateService(
       SortedMap(
         ratesHistory
           .filter(_._1.isNotAfter(tradingDate))
@@ -32,7 +30,9 @@ class SettlementFeeRate private(val ratesHistory: SortedMap[LocalDate, Map[Opera
     if ratesByOperationalModes.size == 1 then ratesByOperationalModes.last._2
     else ratesByOperationalModes.getOrElse(Normal, 0.0)
 
-object SettlementFeeRate:
+object DummySettlementFeeRateService extends SettlementFeeRateService:
+  import java.time.format.DateTimeFormatter
+  
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
   private val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]] = SortedMap(
@@ -42,9 +42,11 @@ object SettlementFeeRate:
     LocalDate.parse("02/02/2021", dateFormatter) -> Map(Normal -> 0.00025, DayTrade -> 0.00018)
   )
 
-  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRate = SettlementFeeRate(ratesHistory).forOperationalMode(operationalMode)
+  def forOperationalMode(operationalMode: OperationalMode): SettlementFeeRateService = DummySettlementFeeRateService(ratesHistory).forOperationalMode(operationalMode)
 
-  def at(tradingDate: LocalDate): SettlementFeeRate = SettlementFeeRate(ratesHistory).at(tradingDate)
+  def at(tradingDate: LocalDate): SettlementFeeRateService = DummySettlementFeeRateService(ratesHistory).at(tradingDate)
+
+  def value: Double = 0.0
 
   extension (date: LocalDate)
     private def isNotAfter(other: LocalDate): Boolean = date.isBefore(other) || date.equals(other)

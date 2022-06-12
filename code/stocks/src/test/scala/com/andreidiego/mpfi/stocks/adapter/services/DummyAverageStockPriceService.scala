@@ -3,10 +3,9 @@ package com.andreidiego.mpfi.stocks.adapter.services
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-// TODO This will become a separate service soon
-object AverageStockPrice:
+object DummyAverageStockPriceService extends AverageStockPriceService:
   enum OperationType:
-    case Buying, Selling
+    case BUYING, SELLING
 
   import OperationType.*
 
@@ -28,10 +27,10 @@ object AverageStockPrice:
   given Conversion[String, LocalDate] = LocalDate.parse(_, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
   private val operations: Seq[Operation] = Seq(
-    Operation(Buying, "05/11/2008", 1662, "VALE5", 100, 27.5, 2750.0, 0.22, 0.74, 15.99, 0.8, 0.0, 2766.95),
-    Operation(Buying, "27/04/2009", 1443, "VALE5", 200, 29.7, 5940.0, 0.47, 1.6, 15.99, 0.8, 0.0, 5958.06),
-    Operation(Selling, "04/05/2009", 2060, "VALE5", 200, 33.15, 6630.0, 0.39, 1.89, 15.99, 0.8, 0.29, 6611.73),
-    Operation(Buying, "11/05/2009", 1315, "VALE5", 200, 32.0, 6400.0, 0.38, 1.82, 15.99, 0.8, 0.0, 6418.19)
+    Operation(BUYING, "05/11/2008", 1662, "VALE5", 100, 27.5, 2750.0, 0.22, 0.74, 15.99, 0.8, 0.0, 2766.95),
+    Operation(BUYING, "27/04/2009", 1443, "VALE5", 200, 29.7, 5940.0, 0.47, 1.6, 15.99, 0.8, 0.0, 5958.06),
+    Operation(SELLING, "04/05/2009", 2060, "VALE5", 200, 33.15, 6630.0, 0.39, 1.89, 15.99, 0.8, 0.29, 6611.73),
+    Operation(BUYING, "11/05/2009", 1315, "VALE5", 200, 32.0, 6400.0, 0.38, 1.82, 15.99, 0.8, 0.0, 6418.19)
   )
 
   private val operationCost: Operation ⇒ Double = operation ⇒ operation.volume - operation.settlementFee - operation.negotiationsFee - operation.brokerage - operation.serviceTax
@@ -41,10 +40,10 @@ object AverageStockPrice:
       .filter(_.ticker.equals(ticker))
       .foldLeft((0.0, 0)) { (acc: (Volume, Qty), operation: Operation) ⇒
         operation.operationType match {
-          case Buying ⇒ (acc._1 + operationCost(operation), acc._2 + operation.qty)
-          case Selling ⇒ (acc._1 - ((acc._1 / acc._2) * operation.qty), acc._2 - operation.qty)
+          case BUYING ⇒ (acc._1 + operationCost(operation), acc._2 + operation.qty)
+          case SELLING ⇒ (acc._1 - ((acc._1 / acc._2) * operation.qty), acc._2 - operation.qty)
         }
       }
     if totalQtyForTicker > 0 then totalCostForTicker / totalQtyForTicker
-    // TODO If the ticker can't be found, it means we don't have it on our portfolio so, just returning '0.0' is not the most appropriate thing going further. It should for now, though.
+    // TODO If the ticker can't be found, it means we don't have it on our portfolio so, just returning '0.0' is not the most appropriate thing going further. It should suffice for now, though.
     else 0.0

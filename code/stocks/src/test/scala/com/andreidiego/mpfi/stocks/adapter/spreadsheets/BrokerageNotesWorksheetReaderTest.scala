@@ -14,14 +14,23 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
   import org.scalatest.Outcome
   import org.scalatest.Inspectors.{forAll, forExactly}
   import org.scalatest.matchers.should.Matchers.*
-  import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.{RequiredValueMissing, UnexpectedContentColor, UnexpectedContentType, UnexpectedContentValue}
+  import com.andreidiego.mpfi.stocks.adapter.services.*
+  import BrokerageNotesWorksheetReader.ServiceDependencies
+  import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.*
   import BrokerageNotesWorksheetMessages.*
   import BrokerageNotesWorksheetTestMessages.*
   import BrokerageNotesWorksheetReaderTest.*
 
-  override protected type FixtureParam = XSSFWorkbook
+  override protected type FixtureParam = (XSSFWorkbook, ServiceDependencies)
 
   private var testWorkbook: XSSFWorkbook = _
+  private val serviceDependencies: ServiceDependencies = (
+    DummyAverageStockPriceService, 
+    DummySettlementFeeRateService, 
+    DummyTradingFeesRateService, 
+    DummyServiceTaxRateService, 
+    DummyIncomeTaxAtSourceRateService
+  )
   
   override protected def beforeAll(): Unit = 
     testWorkbook = XSSFWorkbookFactory.createWorkbook(
@@ -29,15 +38,15 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
     )
 
   override protected def withFixture(test: OneArgTest): Outcome =
-    withFixture(test.toNoArgTest(testWorkbook))
+    withFixture(test.toNoArgTest((testWorkbook, serviceDependencies)))
     
   override protected def afterAll(): Unit = testWorkbook.close()
 
   "A BrokerageNotesWorksheetReader should" - {
-    "be built from a Worksheet" in { poiWorkbook ⇒
+    "be built from a Worksheet" in { (poiWorkbook, serviceDependencies) =>
       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NotUsed")).get
 
-      "BrokerageNotesWorksheetReader.from(TEST_SHEET)" should compile
+      "BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies)" should compile
     }
     "fail to be built when" - {
       "given a 'Worksheet'" - {
@@ -46,52 +55,52 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
             "Invalid, due to" - { 
               "invalid 'Attribute's, like:" - {
                 "'TradingDate'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingDateMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(
                       RequiredValueMissing(tradingDateMissing(2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if negative." in { poiWorkbook ⇒
+                  "if negative." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingDateNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(
                       UnexpectedContentType(unexpectedContentTypeInTradingDate("-39757", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers and the  '/' symbol)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingDateExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(
                       UnexpectedContentType(unexpectedContentTypeInTradingDate("3O/12/2009", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "when containing an invalid date." in { poiWorkbook ⇒
+                  "when containing an invalid date." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingDateInvalidDate"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(
                       UnexpectedContentType(unexpectedContentTypeInTradingDate("30/13/2009", 2)(TEST_SHEET_NAME))
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "TradingDateBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -99,22 +108,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TradingDateRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInTradingDate(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TradingDateBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -125,33 +134,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'NoteNumber'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "NoteNumberMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
                       'message(noteNumberMissing(2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if negative." in { poiWorkbook ⇒
+                  "if negative." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "NoteNumberNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
                       'message(unexpectedNegativeNoteNumber("-1662", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "NoteNumberExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentType]),
@@ -159,11 +168,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "NoteNumberBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -171,22 +180,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "NoteNumberRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInNoteNumber(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "NoteNumberBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -197,11 +206,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Ticker'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TickerMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
@@ -209,11 +218,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "TickerBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -221,22 +230,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TickerRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInTicker(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TickerBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -247,42 +256,42 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Qty'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "QtyMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
                       'message(qtyMissing(2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if negative." in { poiWorkbook ⇒
+                  "if negative." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "QtyNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
                       'message(unexpectedNegativeQty("-100", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "when containing extraneous characters (anything other than numbers)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "QtyExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(UnexpectedContentType(unexpectedContentTypeInQty("l00", 2)(TEST_SHEET_NAME)))
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "QtyBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -290,22 +299,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "QtyRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInQty(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "QtyBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -316,33 +325,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Price'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "PriceMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[RequiredValueMissing]),
                       'message(priceMissing(2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if negative." in { poiWorkbook ⇒
+                  "if negative." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "PriceNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
                       'message(unexpectedNegativePrice("-15.34", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "PriceExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(priceNotCurrency("R$ l5,34", 2)(TEST_SHEET_NAME)),
@@ -350,11 +359,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "PriceBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -362,22 +371,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "PriceRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInPrice(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "PriceBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -388,30 +397,30 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Volume'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "VolumeMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(volumeMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "VolumeExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(volumeNotCurrency("R$ l534,00", 2)(TEST_SHEET_NAME)),
                       UnexpectedContentType(volumeNotDouble("R$ l534,00", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if different than 'Qty' * 'Price'." in { poiWorkbook ⇒
+                  "if different than 'Qty' * 'Price'." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "VolumeDoesNotMatchQtyTimesPrice"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
@@ -419,11 +428,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "VolumeBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -431,22 +440,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "VolumeRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInVolume(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "VolumeBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -457,19 +466,19 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'SettlementFee'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "SettlementFeeMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(settlementFeeMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "SettlementFeeExtraneousChars"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(settlementFeeNotCurrency("R$ O,42", 2)(TEST_SHEET_NAME)),
@@ -477,22 +486,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
-                    "'Normal'." in { poiWorkbook ⇒
+                    "'Normal'." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
                         'message(unexpectedSettlementFee("3.04", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
                       )
                     }
-                    "'DayTrade'." ignore { poiWorkbook ⇒
+                    "'DayTrade'." ignore { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
@@ -501,11 +510,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "SettlementFeeBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -513,22 +522,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "SettlementFeeRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInSettlementFee(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "SettlementFeeBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -539,19 +548,19 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'TradingFees'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingFeesMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(tradingFeesMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TradingFeesExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(tradingFeesNotCurrency("R$ O,44", 2)(TEST_SHEET_NAME)),
@@ -559,33 +568,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' when 'TradingTime' falls within" - {
-                    "'PreOpening'." ignore { poiWorkbook ⇒
+                    "'PreOpening'." ignore { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidTradingFees"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
                         'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%")(TEST_SHEET_NAME))
                       )
                     }
-                    "'Trading'." in { poiWorkbook ⇒
+                    "'Trading'." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidTradingFees"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
                         'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%")(TEST_SHEET_NAME))
                       )
                     }
-                    "'ClosingCall'." ignore { poiWorkbook ⇒
+                    "'ClosingCall'." ignore { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidTradingFees"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
@@ -594,11 +603,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "TradingFeesBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -606,22 +615,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TradingFeesRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInTradingFees(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TradingFeesBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -632,27 +641,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Brokerage'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "BrokerageMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(brokerageMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "if negative." in { poiWorkbook ⇒
+                  "if negative." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "BrokerageNegative"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(UnexpectedContentValue(unexpectedNegativeBrokerage("-15.99", 2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "BrokerageExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(brokerageNotCurrency("R$ l5,99", 2)(TEST_SHEET_NAME)),
@@ -660,11 +669,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "BrokerageBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -672,22 +681,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "BrokerageRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInBrokerage(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "BrokerageBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -698,30 +707,30 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'ServiceTax'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "ServiceTaxMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(serviceTaxMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "ServiceTaxExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(serviceTaxNotCurrency("R$ O,8O", 2)(TEST_SHEET_NAME)),
                       UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { poiWorkbook ⇒
+                  "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "InvalidServiceTax"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
@@ -729,11 +738,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "ServiceTaxBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -741,22 +750,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "ServiceTaxRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInServiceTax(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "ServiceTaxBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -767,11 +776,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'IncomeTaxAtSource'" - {
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "IncomeTaxAtSourceExtraneousChar"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(incomeTaxAtSourceNotCurrency("R$ O,OO", 2)(TEST_SHEET_NAME)),
@@ -779,22 +788,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if different than" - {
-                    "for 'SellingOperations', (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { poiWorkbook ⇒
+                    "for 'SellingOperations', (('Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax') - ('AverageStockPrice' for the 'Ticker' * 'Qty')) * 'IncomeTaxAtSourceRate' for the 'OperationalMode' when 'OperationalMode' is 'Normal'" in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidIncomeTaxAtSource"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
                         'message(unexpectedIncomeTaxAtSourceForSellings("0.19", 2)("0.09", "1801.75", "0.0050%")(TEST_SHEET_NAME))
                       )
                     }
-                    "for 'BuyingOperations, if not empty, zero." in { poiWorkbook ⇒
+                    "for 'BuyingOperations, if not empty, zero." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "NonZeroIncomeTaxAtSourceBuying"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
@@ -803,11 +812,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "IncomeTaxAtSourceBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -815,22 +824,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "IncomeTaxAtSourceRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInIncomeTaxAtSource(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "IncomeTaxAtSourceBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -841,19 +850,19 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   }
                 }
                 "'Total'" - {
-                  "when missing." in { poiWorkbook ⇒
+                  "when missing." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TotalMissing"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     errors should contain(RequiredValueMissing(totalMissing(2)(TEST_SHEET_NAME)))
                   }
-                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                  "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "TotalExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                     actualErrors should contain allOf(
                       UnexpectedContentType(totalNotCurrency("R$ l551,32", 2)(TEST_SHEET_NAME)),
@@ -861,22 +870,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     )
                   }
                   "if different than" - {
-                    "for 'SellingOperations', 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { poiWorkbook ⇒
+                    "for 'SellingOperations', 'Volume' - 'SettlementFee' - 'TradingFees' - 'Brokerage' - 'ServiceTax'." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidTotalForSelling"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
                         'message(unexpectedTotalForSellings("7009.25", 2)("7009.27")(TEST_SHEET_NAME))
                       )
                     }
-                    "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook ⇒
+                    "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "InvalidTotalForBuying"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
@@ -885,11 +894,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     }
                   }
                   "if displayed with an invalid font-color" - {
-                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { poiWorkbook ⇒
+                    "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "TotalBlack"
                       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                       error should have(
                         'class(classOf[UnexpectedContentColor]),
@@ -897,22 +906,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       )
                     }
                     "for the operation type:" - { 
-                      "Red for 'Sellings'." in { poiWorkbook ⇒
+                      "Red for 'Sellings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TotalRedForSelling"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
                           'message(unexpectedColorForSellingInTotal(2)(TEST_SHEET_NAME))
                         )
                       }
-                      "Blue for 'Buyings'." in { poiWorkbook ⇒
+                      "Blue for 'Buyings'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "TotalBlueForBuying"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentColor]),
@@ -924,44 +933,44 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "the impossibility of determining its type when it has exactly half of it's" - { 
-                "'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                "'Attribute's from each of the two valid colors." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "NoEmptyAttributeHalfOfEachColor"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentColor]),
                     'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
                   )
                 }
-                "non-empty 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                "non-empty 'Attribute's from each of the two valid colors." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "NonEmptyAttribsHalfOfEachColor"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentColor]),
                     'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
                   )
                 }
-                "valid-colored 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                "valid-colored 'Attribute's from each of the two valid colors." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "ValidColoredAttribHalfEachColor"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentColor]),
                     'message(impossibleToDetermineMostLikelyOperationType(2)(TEST_SHEET_NAME))
                   )
                 }
-                "non-empty valid-colored 'Attribute's from each of the two valid colors." in { poiWorkbook =>
+                "non-empty valid-colored 'Attribute's from each of the two valid colors." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "NEValidColorAttrHalfEachColor"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentColor]),
@@ -971,12 +980,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
               }
             }
             "Not harmonic with each other, that is, contain different" - {
-              "'TradingDate's." in { poiWorkbook ⇒
+              "'TradingDate's." in { (poiWorkbook, serviceDependencies) =>
                 val TEST_SHEET_NAME = "GroupWithDifferentTradingDates"
                 val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
                 assume(TEST_SHEET.groups.size == 4)
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                 error should have(
                   'class(classOf[UnexpectedContentValue]),
@@ -984,12 +993,12 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   'message(conflictingTradingDate("A3", "1662", "31/12/2009")("30/12/2009", "A2")(TEST_SHEET_NAME))
                 )
               }
-              "'NoteNumbers's." in { poiWorkbook ⇒
+              "'NoteNumbers's." in { (poiWorkbook, serviceDependencies) =>
                 val TEST_SHEET_NAME = "GroupWithDifferentNoteNumbers"
                 val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
                 assume(TEST_SHEET.groups.size == 4)
 
-                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                 error should have(
                   'class(classOf[UnexpectedContentValue]),
@@ -999,7 +1008,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
             }
           }
           "having more than one 'Operation'" - { 
-            "don't have a 'Summary (last 'Operation' will be taken as the 'Summary')'." in { poiWorkbook ⇒
+            "don't have a 'Summary (last 'Operation' will be taken as the 'Summary')'." in { (poiWorkbook, serviceDependencies) =>
               val TEST_SHEET_NAME = "MultiLineGroupWithNoSummary"
               val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -1010,29 +1019,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("11608.59", 3)("11008.25", 2, 2)(TEST_SHEET_NAME))
               )
 
-              val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+              val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
               actualErrors should have size 4
               actualErrors should contain theSameElementsAs expectedErrors
             }
             "have an invalid 'Summary', in which" - {
               "'VolumeSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "VolumeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(volumeSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "VolumeSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(volumeSummaryNotCurrency("-R$ 9.322,OO", 5)(TEST_SHEET_NAME)),
@@ -1040,22 +1049,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   )
                 }
                 "is different than the sum of the 'Volume's of all" - {
-                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
+                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "InvalidVolumeSummaryHomogGroups"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
                       'message(unexpectedVolumeSummaryForHomogeneousGroups("-2110.00", 4)("16810.00", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
-                  "'SellingOperation's minus the sum of the 'Volume's of all 'BuyingOperation's for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
+                  "'SellingOperation's minus the sum of the 'Volume's of all 'BuyingOperation's for mixed groups (comprised of 'Operation's from different types)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "InvalidVolumeSummaryMixedGroups"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
@@ -1065,33 +1074,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'SettlementFeeSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "SettlementFeeSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(settlementFeeSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "SettlementFeeSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(settlementFeeSummaryNotCurrency("R$ 2,S6", 5)(TEST_SHEET_NAME)),
                     UnexpectedContentType(settlementFeeSummaryNotDouble("R$ 2,S6", 5)(TEST_SHEET_NAME))
                   )
                 }
-                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "InvalidSettlementFeeSummary"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
@@ -1100,33 +1109,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'TradingFeesSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "TradingFeesSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(tradingFeesSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "TradingFeesSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ O,65", 5)(TEST_SHEET_NAME)),
                     UnexpectedContentType(tradingFeesSummaryNotDouble("R$ O,65", 5)(TEST_SHEET_NAME))
                   )
                 }
-                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "InvalidTradingFeesSummary"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
@@ -1135,33 +1144,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'BrokerageSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "BrokerageSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(brokerageSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "BrokerageSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(brokerageSummaryNotCurrency("R$ 4T,97", 5)(TEST_SHEET_NAME)),
                     UnexpectedContentType(brokerageSummaryNotDouble("R$ 4T,97", 5)(TEST_SHEET_NAME))
                   )
                 }
-                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "InvalidBrokerageSummary"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
@@ -1170,33 +1179,33 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'ServiceTaxSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "ServiceTaxSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(serviceTaxSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "ServiceTaxSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(serviceTaxSummaryNotCurrency("R$ 2,4O", 5)(TEST_SHEET_NAME)),
                     UnexpectedContentType(serviceTaxSummaryNotDouble("R$ 2,4O", 5)(TEST_SHEET_NAME))
                   )
                 }
-                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "InvalidServiceTaxSummary"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
@@ -1205,11 +1214,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'IncomeTaxAtSourceSummary'" - {
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "IncomeTaxAtSourceSummExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(incomeTaxAtSourceSummaryNotCurrency("R$ O,OO", 5)(TEST_SHEET_NAME)),
@@ -1217,11 +1226,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   )
                 }
                 // TODO There are a few of special cases when it comes to IncomeTaxAtSourceSummary: It could be either empty or zero for Buyings and, empty, zero, or have a greater than zero value for Sellings
-                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { poiWorkbook ⇒
+                "does not equal the sum of the corresponding field for all 'Operation's in the 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "InvalidIncomeTaxAtSourceSummary"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[UnexpectedContentValue]),
@@ -1230,22 +1239,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 }
               }
               "'TotalSummary'" - {
-                "is missing." in { poiWorkbook ⇒
+                "is missing." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "TotalSummaryMissing"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                  val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                   error should have(
                     'class(classOf[RequiredValueMissing]),
                     'message(totalSummaryMissing(5)(TEST_SHEET_NAME))
                   )
                 }
-                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { poiWorkbook ⇒
+                "when containing extraneous characters (anything other than numbers, a dot or comma, and currency symbols $ or R$)." in { (poiWorkbook, serviceDependencies) =>
                   val TEST_SHEET_NAME = "TotalSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
                   actualErrors should contain allOf(
                     UnexpectedContentType(totalSummaryNotCurrency("-R$ 9.37S,S9", 5)(TEST_SHEET_NAME)),
@@ -1253,22 +1262,22 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   )
                 }
                 "is different than the sum of the 'Total's of all" - {
-                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { poiWorkbook ⇒
+                  "'Operation's, for homogenoues groups (comprised exclusively of 'Operation's of the same type)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "InvalidTotalSummaryHomogGroups"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
                       'message(unexpectedTotalSummaryForHomogeneousGroups("-2111.18", 4)("16824.64", 2, 3)(TEST_SHEET_NAME))
                     )
                   }
-                  "'SellingOperation's minus the sum of the 'Total's of all 'BuyingOperation's, for mixed groups (comprised of 'Operation's from different types)." in { poiWorkbook ⇒
+                  "'SellingOperation's minus the sum of the 'Total's of all 'BuyingOperation's, for mixed groups (comprised of 'Operation's from different types)." in { (poiWorkbook, serviceDependencies) =>
                     val TEST_SHEET_NAME = "InvalidTotalSummaryMixedGroups"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                     error should have(
                       'class(classOf[UnexpectedContentValue]),
@@ -1282,7 +1291,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         }
       }
     }
-    "accumulate errors" in { poiWorkbook ⇒
+    "accumulate errors" in { (poiWorkbook, serviceDependencies) =>
       val TEST_SHEET_NAME = "MultipleErrors"
       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -1546,70 +1555,70 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         // TODO Add Cell, Line, and, Worksheet errors once we fix the error accumulation strategy of those classes
       )
 
-      val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+      val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
       actualErrors should have size 191
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "turn every" - {
-      "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { poiWorkbook ⇒
+      "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>
         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSameTradingDate&Note")).get
         assume(TEST_SHEET.groups.size == 4)
 
-        val brokerageNotes = BrokerageNotesWorksheetReader.from(TEST_SHEET).brokerageNotes
+        val brokerageNotes = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).brokerageNotes
 
         brokerageNotes should have size 4
 
         forAll(brokerageNotes)(_ shouldBe a[BrokerageNote])
       }
-      "non-'SummaryLine' into an 'Operation'." in { poiWorkbook ⇒
+      "non-'SummaryLine' into an 'Operation'." in { (poiWorkbook, serviceDependencies) =>
         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSameTradingDate&Note")).get
         assume(TEST_SHEET.nonSummaryLines.size == 7)
 
-        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
+        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations
 
         operations should have size 7
 
         forAll(operations)(_ shouldBe a[Operation])
       }
-      "'SummaryLine' into a 'FinancialSummary'." in { poiWorkbook ⇒
+      "'SummaryLine' into a 'FinancialSummary'." in { (poiWorkbook, serviceDependencies) =>
         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("GroupsWithSummary")).get
         assume(TEST_SHEET.summaryLines.size == 2)
 
-        val financialSummaries = BrokerageNotesWorksheetReader.from(TEST_SHEET).financialSummaries
+        val financialSummaries = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).financialSummaries
 
         financialSummaries should have size 2
 
         forAll(financialSummaries)(_ shouldBe a[FinancialSummary])
       }
-      "red non-'SummaryLine' into a 'BuyingOperation'." in { poiWorkbook ⇒
+      "red non-'SummaryLine' into a 'BuyingOperation'." in { (poiWorkbook, serviceDependencies) =>
         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("BuyingAndSellingOperations")).get
         assume(TEST_SHEET.redNonSummaryLines.size == 6)
 
-        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
+        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations
 
         operations should have size 11
 
         forExactly(6, operations)(_ shouldBe a[BuyingOperation])
       }
-      "blue non-'SummaryLine' into a 'SellingOperation'." in { poiWorkbook ⇒
+      "blue non-'SummaryLine' into a 'SellingOperation'." in { (poiWorkbook, serviceDependencies) =>
         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("BuyingAndSellingOperations")).get
         assume(TEST_SHEET.blueNonSummaryLines.size == 5)
 
-        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
+        val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations
 
         operations should have size 11
 
         forExactly(5, operations)(_ shouldBe a[SellingOperation])
       }
     }
-    "generate a 'FinancialSummary', for 'Groups' of one 'Line', whose fields would replicate the corresponding ones from the one 'Line' in the 'Group'." in { poiWorkbook ⇒
+    "generate a 'FinancialSummary', for 'Groups' of one 'Line', whose fields would replicate the corresponding ones from the one 'Line' in the 'Group'." in { (poiWorkbook, serviceDependencies) =>
       val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SingleLineGroups")).get
       assume(TEST_SHEET.groups.size == 3)
       assume(TEST_SHEET.groups.forall(_.size == 1))
 
-      val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET).operations
-      val financialSummaries = BrokerageNotesWorksheetReader.from(TEST_SHEET).financialSummaries
+      val operations = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations
+      val financialSummaries = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).financialSummaries
 
       financialSummaries should have size 3
 
