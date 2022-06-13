@@ -726,16 +726,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'." in { (poiWorkbook, serviceDependencies) =>
-                    val TEST_SHEET_NAME = "InvalidServiceTax"
-                    val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                  "if different than 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity' + a tolerance of:" - {
+                    "+ '0.01'." in { (poiWorkbook, serviceDependencies) =>
+                      val TEST_SHEET_NAME = "ServiceTaxAboveTolerance"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
-                    error should have(
-                      'class(classOf[UnexpectedContentValue]),
-                      'message(unexpectedServiceTax("0.11", 2)("0.10", "1.99", "5.0%")(TEST_SHEET_NAME))
-                    )
+                      error should have(
+                        'class(classOf[UnexpectedContentValue]),
+                        'message(unexpectedServiceTax("0.12", 2)("0.10", "1.99", "5.0%")(TEST_SHEET_NAME))
+                      )
+                    }
+                    "- '0.01'." in { (poiWorkbook, serviceDependencies) =>
+                      val TEST_SHEET_NAME = "ServiceTaxBelowTolerance"
+                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+
+                      error should have(
+                        'class(classOf[UnexpectedContentValue]),
+                        'message(unexpectedServiceTax("0.08", 2)("0.10", "1.99", "5.0%")(TEST_SHEET_NAME))
+                      )
+                    }
                   }
                   "if displayed with an invalid font-color" - {
                     "one that is neither red (255,0,0) nor blue (91,155,213)." in { (poiWorkbook, serviceDependencies) =>
@@ -1559,6 +1572,29 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
       actualErrors should have size 191
       actualErrors should contain theSameElementsAs expectedErrors
+    }
+    "be successfully built when given a" -{
+      "'ServiceTax'" - {
+        "that matches 'Brokerage' * 'ServiceTaxRate' at 'TradingDate' in 'BrokerCity'" - {
+          "exactly." in { (poiWorkbook, serviceDependencies) =>
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("ServiceTaxExactMatch")).get
+
+            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+          }
+          "with a tolerance of:" - {
+            "+ '0.01'." in { (poiWorkbook, serviceDependencies) =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("ServiceTaxWithinTolerance+")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+            }
+            "- '0.01'." in { (poiWorkbook, serviceDependencies) =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("ServiceTaxWithinTolerance-")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+            }
+          }
+        }
+      }
     }
     "turn every" - {
       "'Group' into a 'BrokerageNote' when all 'Lines' in the 'Group' have the same 'TradingDate' and 'BrokerageNote'." in { (poiWorkbook, serviceDependencies) =>

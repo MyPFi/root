@@ -312,18 +312,19 @@ object BrokerageNotesWorksheetReader:
     else line.validNec
 
   private def assertServiceTaxIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    given tolerance: Double = 0.01
     val serviceTaxRateService = serviceDependencies(3)
     val brokerageCell = line.cells(8)
     val serviceTaxCell = line.cells(9)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val brokerage = brokerageCell.asDouble.getOrElse(0.0)
-    val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0).formatted("%.2f")
+    val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0)
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
     val serviceTaxRate = serviceTaxRateService.at(tradingDate).value
-    val expectedServiceTax = (brokerage * serviceTaxRate).formatted("%.2f")
+    val expectedServiceTax = (brokerage * serviceTaxRate)
 
-    if actualServiceTax != expectedServiceTax then UnexpectedContentValue(
-      unexpectedServiceTax(actualServiceTax, line.number)(expectedServiceTax, brokerage.formatted("%.2f"), (serviceTaxRate * 100).formatted("%.1f%%"))(worksheetName)
+    if actualServiceTax !~= expectedServiceTax then UnexpectedContentValue(
+      unexpectedServiceTax(actualServiceTax.formatted("%.2f"), line.number)(expectedServiceTax.formatted("%.2f"), brokerage.formatted("%.2f"), (serviceTaxRate * 100).formatted("%.1f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
