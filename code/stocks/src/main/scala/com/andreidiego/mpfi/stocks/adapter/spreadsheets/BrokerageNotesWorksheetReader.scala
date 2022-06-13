@@ -295,19 +295,20 @@ object BrokerageNotesWorksheetReader:
     else line.validNec
 
   private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    given tolerance: Double = 0.01
     val tradingFeesRateService = serviceDependencies(2)
     val volumeCell = line.cells(5)
     val tradingFeesCell = line.cells(7)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val tradingPeriod = TradingPeriod.TRADING
     val volume = volumeCell.asDouble.getOrElse(0.0)
-    val actualTradingFees = tradingFeesCell.asDouble.getOrElse(0.0).formatted("%.2f")
+    val actualTradingFees = tradingFeesCell.asDouble.getOrElse(0.0)
     // TODO Same challenge here since 'TradingFees' is also dependent on the time of order execution which is not part of the brokerage note document.
     val tradingFeesRate = tradingFeesRateService.at(tradingDate, tradingPeriod)
-    val expectedTradingFees = (volume * tradingFeesRate).formatted("%.2f")
+    val expectedTradingFees = volume * tradingFeesRate
 
-    if actualTradingFees != expectedTradingFees then UnexpectedContentValue(
-      unexpectedTradingFees(actualTradingFees, line.number)(expectedTradingFees, volume.formatted("%.2f"), (tradingFeesRate * 100).formatted("%.4f%%"))(worksheetName)
+    if actualTradingFees !~= expectedTradingFees then UnexpectedContentValue(
+      unexpectedTradingFees(actualTradingFees.formatted("%.2f"), line.number)(expectedTradingFees.formatted("%.2f"), volume.formatted("%.2f"), (tradingFeesRate * 100).formatted("%.4f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
@@ -321,7 +322,7 @@ object BrokerageNotesWorksheetReader:
     val actualServiceTax = serviceTaxCell.asDouble.getOrElse(0.0)
     // TODO The city used to calculate the ServiceTax can be determined, in the future, by looking into the Broker information present in the brokerage note document.
     val serviceTaxRate = serviceTaxRateService.at(tradingDate).value
-    val expectedServiceTax = (brokerage * serviceTaxRate)
+    val expectedServiceTax = brokerage * serviceTaxRate
 
     if actualServiceTax !~= expectedServiceTax then UnexpectedContentValue(
       unexpectedServiceTax(actualServiceTax.formatted("%.2f"), line.number)(expectedServiceTax.formatted("%.2f"), brokerage.formatted("%.2f"), (serviceTaxRate * 100).formatted("%.1f%%"))(worksheetName)
@@ -686,7 +687,17 @@ object BrokerageNotesWorksheetReader:
     @targetName("differentBeyondPrecision")
     private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
 
-    private def formatted(format: String): String = String.format(Locale.US, format, double)
+    /*
+     This is necessary to compensate for a shortcoming of Java formatting that will look only to the first number
+     to be discarded when deciding about rounding, resulting in, for example, a number like 3.1149, when formatted
+     with 2 decimal places, showing up as 3.11 instead of the expected 3.12.
+     TODO We should use the number of decimal places in the format string to generate the 'compensator'.
+    */
+    private def formatted(format: String): String =
+      if format == "%.2f" then
+        String.format(Locale.US, format, double + 0.0005)
+      else
+        String.format(Locale.US, format, double)
 
   extension (string: String)
 
