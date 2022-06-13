@@ -485,17 +485,30 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                       UnexpectedContentType(settlementFeeNotDouble("R$ O,42", 2)(TEST_SHEET_NAME))
                     )
                   }
-                  "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' when 'OperationalMode' is" - {
-                    "'Normal'." in { (poiWorkbook, serviceDependencies) =>
-                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                  "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate', when 'OperationalMode' is" - {
+                    "'Normal', + a tolerance of:" - {
+                      "+'0.01'." in { (poiWorkbook, serviceDependencies) =>
+                        val TEST_SHEET_NAME = "SettlementFeeAboveTolerance"
+                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedSettlementFee("3.04", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
-                      )
+                        error should have(
+                          'class(classOf[UnexpectedContentValue]),
+                          'message(unexpectedSettlementFee("3.05", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
+                        )
+                      }
+                      "-'0.01'." in { (poiWorkbook, serviceDependencies) =>
+                        val TEST_SHEET_NAME = "SettlementFeeBelowTolerance"
+                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+
+                        error should have(
+                          'class(classOf[UnexpectedContentValue]),
+                          'message(unexpectedSettlementFee("3.01", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
+                        )
+                      }
                     }
                     "'DayTrade'." ignore { (poiWorkbook, serviceDependencies) =>
                       val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
@@ -1587,6 +1600,27 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "be successfully built when given a" -{
+      "'SettlementFee'" - {
+        "that matches 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate', when 'OperationalMode' is 'Normal'," - {
+          "exactly." in { (poiWorkbook, serviceDependencies) =>
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeExactMatch")).get
+
+            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+          }
+          "with a tolerance of:" - {
+            "+'0.01'." in { (poiWorkbook, serviceDependencies) =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance+")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+            }
+            "-'0.01'." in { (poiWorkbook, serviceDependencies) =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance-")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).isValid)
+            }
+          }
+        }
+      }
       "'TradingFees'" - {
         "that matches 'Volume' * 'TradingFeesRate' at 'TradingDateTime', when 'TradingTime' falls within 'Trading'," - {
           "exactly." in { (poiWorkbook, serviceDependencies) =>

@@ -279,18 +279,19 @@ object BrokerageNotesWorksheetReader:
 
   // TODO Think about adding a reason to the errors for the cases where the requirements for the validation are not present. For instance, in the case below, any one of the following, if missing or having any other problem, would result in an impossible validation: tradingDate, volume and, actualSettlementFee. For now, we'll choose default values for them in case of problem and the validation will fail because of them. Hopefully, the original cause will be caught by other validation.
   private def assertSettlementFeeIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+    given tolerance: Double = 0.01
     val settlementFeeRateService = serviceDependencies(1)
     val volumeCell = line.cells(5)
     val settlementFeeCell = line.cells(6)
     val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
     val volume = volumeCell.asDouble.getOrElse(0.0)
-    val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0).formatted("%.2f")
+    val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
     // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
     val settlementFeeRate = settlementFeeRateService.forOperationalMode(Normal).at(tradingDate).value
-    val expectedSettlementFee = (volume * settlementFeeRate).formatted("%.2f")
+    val expectedSettlementFee = volume * settlementFeeRate
 
-    if actualSettlementFee != expectedSettlementFee then UnexpectedContentValue(
-      unexpectedSettlementFee(actualSettlementFee, line.number)(expectedSettlementFee, volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%"))(worksheetName)
+    if actualSettlementFee !~= expectedSettlementFee then UnexpectedContentValue(
+      unexpectedSettlementFee(actualSettlementFee.formatted("%.2f"), line.number)(expectedSettlementFee.formatted("%.2f"), volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%"))(worksheetName)
     ).invalidNec
     else line.validNec
 
