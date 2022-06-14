@@ -491,35 +491,48 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                         val TEST_SHEET_NAME = "SettlementFeeAboveTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+                        val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
-                        error should have(
-                          'class(classOf[UnexpectedContentValue]),
-                          'message(unexpectedSettlementFee("3.05", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
+                        actualErrors should contain allOf(
+                          UnexpectedContentValue(unexpectedSettlementFee("3.05", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME)),
+                          UnexpectedContentValue(unexpectedSettlementFee("3.05", 2)("2.20", "11000.00", "0.0200%")(TEST_SHEET_NAME))
                         )
                       }
                       "-'0.01'." in { (poiWorkbook, serviceDependencies) =>
                         val TEST_SHEET_NAME = "SettlementFeeBelowTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
+                        val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
+
+                        actualErrors should contain allOf(
+                          UnexpectedContentValue(unexpectedSettlementFee("3.01", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME)),
+                          UnexpectedContentValue(unexpectedSettlementFee("3.01", 2)("2.20", "11000.00", "0.0200%")(TEST_SHEET_NAME))
+                        )
+                      }
+                    }
+                    "'DayTrade', + a tolerance of:" - {
+                      "+'0.01'." in { (poiWorkbook, serviceDependencies) =>
+                        val TEST_SHEET_NAME = "HDTSettlementFeeAboveTolerance"
+                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
                         val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
                         error should have(
                           'class(classOf[UnexpectedContentValue]),
-                          'message(unexpectedSettlementFee("3.01", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
+                          'message(unexpectedSettlementFee("2.22", 2)("2.20", "11000.00", "0.0200%")(TEST_SHEET_NAME))
                         )
                       }
-                    }
-                    "'DayTrade'." ignore { (poiWorkbook, serviceDependencies) =>
-                      val TEST_SHEET_NAME = "SettlementFeeNotVolumeTimesRate"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                      "-'0.01'." in { (poiWorkbook, serviceDependencies) =>
+                        val TEST_SHEET_NAME = "HDTSettlementFeeBelowTolerance"
+                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
+                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).error
 
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedSettlementFee("3.04", 2)("3.03", "11000.00", "0.0275%")(TEST_SHEET_NAME))
-                      )
+                        error should have(
+                          'class(classOf[UnexpectedContentValue]),
+                          'message(unexpectedSettlementFee("2.18", 2)("2.20", "11000.00", "0.0200%")(TEST_SHEET_NAME))
+                        )
+                      }
                     }
                   }
                   "if displayed with an invalid font-color" - {
@@ -1339,6 +1352,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         RequiredValueMissing(tradingDateMissing(2)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
           UnexpectedContentValue(unexpectedSettlementFee("-0.42", 2)("-0.12", "-1534.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFee("-0.42", 2)("-0.10", "-1534.00", "0.0063%")(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedTradingFees("-0.44", 2)("-0.41", "-1534.00", "0.0270%")(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
         UnexpectedContentType(unexpectedContentTypeInNoteNumber("II62", 2)(TEST_SHEET_NAME)),
@@ -1368,6 +1382,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentType(unexpectedContentTypeInTradingDate("3O/12/2009", 6)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
           UnexpectedContentValue(unexpectedSettlementFee("0.76", 6)("0.22", "2750.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFee("0.76", 6)("0.17", "2750.00", "0.0063%")(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedTradingFees("1.08", 6)("0.74", "2750.00", "0.0270%")(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
         UnexpectedContentValue(unexpectedNegativeNoteNumber("-1662", 6)(TEST_SHEET_NAME)),
@@ -1440,6 +1455,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentValue(unexpectedNegativePrice("-31.5", 16)(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedVolume("3150.00", 16)("-3150.00", "100", "-31.50")(TEST_SHEET_NAME)),
         UnexpectedContentValue(unexpectedSettlementFee("1.17", 16)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
+        UnexpectedContentValue(unexpectedSettlementFee("1.17", 16)("0.63", "3150.00", "0.0200%")(TEST_SHEET_NAME)),
         UnexpectedContentColor(unexpectedColorForSellingInSettlementFee(16)(TEST_SHEET_NAME)),
         RequiredValueMissing(tradingFeesMissing(16)(TEST_SHEET_NAME)),
         /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.90", "3150.00", "0.0285%")(TEST_SHEET_NAME)),
@@ -1452,6 +1468,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentType(settlementFeeNotCurrency("R$ O,87", 17)(TEST_SHEET_NAME)),
         // +CONSEQUENTIAL
           UnexpectedContentValue(unexpectedSettlementFee("0.00", 17)("0.87", "3150.00", "0.0275%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFee("0.00", 17)("0.63", "3150.00", "0.0200%")(TEST_SHEET_NAME)),
           UnexpectedContentType(totalNotCurrency("#VALUE!", 17)(TEST_SHEET_NAME)),
           UnexpectedContentType(totalNotDouble("#VALUE!", 17)(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedTotalForSellings("0.00", 17)("3149.10")(TEST_SHEET_NAME)),
@@ -1518,6 +1535,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         // +CONSEQUENTIAL
           UnexpectedContentValue(conflictingTradingDate("A27", "903", "30/12/2009")("30/13/2009", "A26")(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedSettlementFee("0.69", 26)("0.20", "2494.00", "0.0079%")(TEST_SHEET_NAME)),
+          UnexpectedContentValue(unexpectedSettlementFee("0.69", 26)("0.16", "2494.00", "0.0063%")(TEST_SHEET_NAME)),
           UnexpectedContentValue(unexpectedTradingFees("0.71", 26)("0.67", "2494.00", "0.0270%")(TEST_SHEET_NAME)),
         // -CONSEQUENTIAL
 
@@ -1596,7 +1614,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
       val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors
 
-      actualErrors should have size 191
+      actualErrors should have size 196
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "be successfully built when given a" -{
@@ -1662,6 +1680,18 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
             }
           }
         }
+      }
+    }
+    "mark the 'Operation' as 'DayTrade' when its 'SettlementFee' is verified to be correct when using the 'DayTrade's rate" - {
+      "for 'Operation's whose 'SettlementFee' is highlighted with an orange('252, 228, 214') background-color." in { (poiWorkbook, serviceDependencies) =>
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightedDTradeSettlementFee")).get
+
+        assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations.head.isDayTrade)
+      }
+      "after failing to do so using the 'Normal' rate for 'Operation's with no visual cue whatsoever." in { (poiWorkbook, serviceDependencies) =>
+        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCueDTradeSettlementFee")).get
+
+        assert(BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).operations.head.isDayTrade)
       }
     }
     "turn every" - {

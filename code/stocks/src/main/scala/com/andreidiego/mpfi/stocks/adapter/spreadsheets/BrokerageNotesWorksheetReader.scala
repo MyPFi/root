@@ -5,7 +5,7 @@ import cats.implicits.*
 import cats.kernel.Semigroup
 import cats.syntax.validated.*
 import com.andreidiego.mpfi.stocks.adapter.services.*
-import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.Normal
+import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.{Normal, DayTrade}
 import excel.poi.{Cell, Line, Worksheet}
 
 import java.time.{LocalDate, LocalDateTime}
@@ -17,15 +17,16 @@ class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
 class BrokerageNote(val operations: Seq[Operation], val financialSummary: FinancialSummary)
 
-abstract sealed class Operation(val volume: String, val settlementFee: String, val tradingFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String)
+abstract sealed class Operation(val volume: String, val settlementFee: String, val tradingFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String, operationalMode: OperationalMode = Normal):
+  def isDayTrade: Boolean = operationalMode == DayTrade
 
 // TODO Add test for turning BuyingOperation into a case class
-case class BuyingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
-  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total)
+case class BuyingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, operationalMode: OperationalMode = Normal)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode)
 
 // TODO Add test for turning SellingOperation into a case class
-case class SellingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String)
-  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total)
+case class SellingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, operationalMode: OperationalMode = Normal)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode)
 
 // TODO Add test for turning FinancialSummary into a case class
 case class FinancialSummary(volume: String, settlementFee: String, tradingFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
@@ -53,12 +54,14 @@ object BrokerageNotesWorksheetReader:
   private type AttributeCheck = Cell ⇒ (String, Int) => String ⇒ ErrorsOr[Cell]
   private type AttributesHarmonyCheck = (Cell, Cell) ⇒ String ⇒ ErrorsOr[Cell]
   private type OperationValidation = Line ⇒ ServiceDependencies => String => ErrorsOr[Line]
+  private type AttributeColorCheck = Operation => Line => String => ErrorsOr[Cell]
   private type OperationsHarmonyCheck = (Line, Line) => String ⇒ ErrorsOr[Line]
   private type BrokerageNoteValidation = Group ⇒ String => ErrorsOr[Group]
   private type SummaryAttributeCheck = Cell ⇒ (Int, String, Int, Group) => String ⇒ ErrorsOr[Cell]
 
   private val RED = "255,0,0"
   private val BLUE = "91,155,213"
+  private val ORANGE = "252,228,214"
   private val UPPERCASE_A_ASCII = 65
 
   given comparisonPrecision: Double = 0.02
@@ -107,7 +110,7 @@ object BrokerageNotesWorksheetReader:
         assertIncomeTaxAtSourceSummary(isAValidCurrency or isAValidDouble, isCorrectlyCalculated),
         assertTotalSummary(isPresent, isAValidCurrency or isAValidDouble, isOperationTypeAwareWhenCalculated)
       )
-    )(serviceDependencies)(worksheet.name).andThen(_.toBrokerageNote(worksheet.name).accumulate))
+    )(serviceDependencies)(worksheet.name).andThen(_.toBrokerageNote(serviceDependencies)(worksheet.name).accumulate))
     .reduce(_ combine _)
     .map(BrokerageNotesWorksheetReader(_))
 
@@ -203,7 +206,7 @@ object BrokerageNotesWorksheetReader:
       unexpectedContentType(attribute.value, attributeHeader, operationIndex)("a double")(worksheetName)
     ).invalidNec
 
-  private def assertFontColorReflectsOperationType(attributeColorChecks: Operation => Line => String => ErrorsOr[Cell]*): OperationValidation = line ⇒ serviceDependencies => worksheetName =>
+  private def assertFontColorReflectsOperationType(attributeColorChecks: AttributeColorCheck*): OperationValidation = line ⇒ serviceDependencies => worksheetName =>
     line.toMostLikelyOperation(worksheetName)
       .andThen{operation =>
         attributeColorChecks
@@ -212,40 +215,40 @@ object BrokerageNotesWorksheetReader:
           .map(_=> line)
       }
 
-  private def onTradingDate(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onTradingDate: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells.head)("TradingDate", operation, line.number)(worksheetName)
 
-  private def onNoteNumber(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onNoteNumber: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(1))("NoteNumber", operation, line.number)(worksheetName)
 
-  private def onTicker(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onTicker: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(2))("Ticker", operation, line.number)(worksheetName)
 
-  private def onQty(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onQty: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(3))("Qty", operation, line.number)(worksheetName)
 
-  private def onPrice(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onPrice: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(4))("Price", operation, line.number)(worksheetName)
 
-  private def onVolume(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onVolume: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(5))("Volume", operation, line.number)(worksheetName)
 
-  private def onSettlementFee(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onSettlementFee: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(6))("SettlementFee", operation, line.number)(worksheetName)
 
-  private def onTradingFees(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onTradingFees: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(7))("TradingFees", operation, line.number)(worksheetName)
 
-  private def onBrokerage(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onBrokerage: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(8))("Brokerage", operation, line.number)(worksheetName)
 
-  private def onServiceTax(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onServiceTax: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(9))("ServiceTax", operation, line.number)(worksheetName)
 
-  private def onIncomeTaxAtSource(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onIncomeTaxAtSource: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(10))("IncomeTaxAtSource", operation, line.number)(worksheetName)
 
-  private def onTotal(operation: Operation)(line: Line)(worksheetName: String): ErrorsOr[Cell] =
+  private def onTotal: AttributeColorCheck = operation => line => worksheetName =>
     onAttribute(line.cells(11))("Total", operation, line.number)(worksheetName)
 
   private def onAttribute(attribute: Cell)(attributeHeader: String, operation: Operation, operationIndex: Int)(worksheetName: String): ErrorsOr[Cell] =
@@ -279,21 +282,34 @@ object BrokerageNotesWorksheetReader:
 
   // TODO Think about adding a reason to the errors for the cases where the requirements for the validation are not present. For instance, in the case below, any one of the following, if missing or having any other problem, would result in an impossible validation: tradingDate, volume and, actualSettlementFee. For now, we'll choose default values for them in case of problem and the validation will fail because of them. Hopefully, the original cause will be caught by other validation.
   private def assertSettlementFeeIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
-    given tolerance: Double = 0.01
-    val settlementFeeRateService = serviceDependencies(1)
-    val volumeCell = line.cells(5)
+    given Semigroup[Line] = (x, _) => x
     val settlementFeeCell = line.cells(6)
-    val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
-    val volume = volumeCell.asDouble.getOrElse(0.0)
-    val actualSettlementFee = settlementFeeCell.asDouble.getOrElse(0.0)
-    // TODO Actually detecting the correct 'OperationalMode' may prove challenging when creating a 'BrokerageNote', unless it happens in real-time, since the difference between 'Normal' and 'DayTrade' is actually time-related. A 'BrokerageNote' instance is supposed to be created when a brokerage note document is detected in the filesystem or is provided to the system by any other means. That document contains only the 'TradingDate' and not the time so, unless the system is provided with information about the brokerage note document as soon as an 'Order' gets executed (the moment that gives birth to a brokerage note), that won't be possible. It is important to note that, generally, brokerage notes are not made available by 'Broker's until the day after the fact ('Operation's for the whole day are grouped in a brokerage note, that's why). Maybe we should try a different try and error approach when ingesting a brokerage note document: First we try to check the calculation of the 'SettlementFee' assuming the 'Normal' 'OperationMode' and if that does not work, than we switch it to 'DayTrade' and try again. If that does not work, then we have found a problem with the calculation applied by the 'Broker'.
-    val settlementFeeRate = settlementFeeRateService.forOperationalMode(Normal).at(tradingDate).value
-    val expectedSettlementFee = volume * settlementFeeRate
 
-    if actualSettlementFee !~= expectedSettlementFee then UnexpectedContentValue(
-      unexpectedSettlementFee(actualSettlementFee.formatted("%.2f"), line.number)(expectedSettlementFee.formatted("%.2f"), volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%"))(worksheetName)
-    ).invalidNec
-    else line.validNec
+    if settlementFeeCell.hasOrangeBackground then
+      assertSettlementFeeCalculatedCorrectlyFor(DayTrade)(line, serviceDependencies)(worksheetName)
+    else assertSettlementFeeCalculatedCorrectlyFor(Normal)(line, serviceDependencies)(worksheetName) findValid {
+      assertSettlementFeeCalculatedCorrectlyFor(DayTrade)(line, serviceDependencies)(worksheetName)
+    }
+
+  private def assertSettlementFeeCalculatedCorrectlyFor(operationalMode: OperationalMode)(line: Line, serviceDependencies: ServiceDependencies)(worksheetName: String): ErrorsOr[Line] = 
+    if line.calculationSucceedsFor(operationalMode)(serviceDependencies) then line.validNec
+    else 
+      val SettlementFeeRate = serviceDependencies(1)
+
+      val tradingDate = line.cells(0).asLocalDate.getOrElse(LocalDate.MIN)
+      val volume = line.cells(5).asDouble.getOrElse(0.0)
+      val actualSettlementFee = line.cells(6).asDouble.getOrElse(0.0)
+
+      val settlementFeeRate = SettlementFeeRate.forOperationalMode(operationalMode).at(tradingDate).value
+      val expectedSettlementFee = volume * settlementFeeRate
+      
+      UnexpectedContentValue(
+        unexpectedSettlementFee(
+          actualSettlementFee.formatted("%.2f"), line.number
+        )(
+          expectedSettlementFee.formatted("%.2f"), volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%")
+        )(worksheetName)
+      ).invalidNec
 
   private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒ serviceDependencies => worksheetName =>
     given tolerance: Double = 0.01
@@ -576,9 +592,9 @@ object BrokerageNotesWorksheetReader:
         }
       }
 
-    private def toBrokerageNote(worksheetName: String): ErrorsOr[BrokerageNote] =
+    private def toBrokerageNote(serviceDependencies: ServiceDependencies)(worksheetName: String): ErrorsOr[BrokerageNote] =
       nonSummaryLines
-        .map(_.toOperation(worksheetName).map(Seq(_)))
+        .map(_.toOperation(serviceDependencies)(worksheetName).map(Seq(_)))
         .reduce(_ combine _)
         .map(BrokerageNote(_, group.head.toFinancialSummary))
 
@@ -620,14 +636,44 @@ object BrokerageNotesWorksheetReader:
         impossibleToDetermineMostLikelyOperationType(line.number)(worksheetName)
       ).invalidNec
 
-    private def toOperation(worksheetName: String): ErrorsOr[Operation] =
+    private def toOperation(serviceDependencies: ServiceDependencies)(worksheetName: String): ErrorsOr[Operation] =
+      val volume = cells(5).value
+      val settlementFee = cells(6).value
+      val tradingFees = cells(7).value
+      val brokerage = cells(8).value
+      val serviceTax = cells(9).value
+      val incomeTaxAtSource = cells(10).value
+      val total = cells(11).value
+
       if allNonEmptyCellsAreBlue then
-        SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
+        SellingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode(serviceDependencies)).validNec
+
       else if allNonEmptyCellsAreRed then
-        BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
-      else UnexpectedContentColor(
-        impossibleToDetermineOperationType(line.number)(worksheetName)
-      ).invalidNec
+        BuyingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total).validNec
+
+      else UnexpectedContentColor(impossibleToDetermineOperationType(line.number)(worksheetName)).invalidNec
+
+    private def operationalMode(serviceDependencies: ServiceDependencies): OperationalMode =
+      val settlementFeeCell = cells(6)
+
+      if settlementFeeCell.hasOrangeBackground ||
+        (calculationFailsFor(Normal)(serviceDependencies) && calculationSucceedsFor(DayTrade)(serviceDependencies)) then DayTrade
+      else Normal
+
+    private def calculationFailsFor(operationalMode: OperationalMode)(serviceDependencies: ServiceDependencies): Boolean =
+      !calculationSucceedsFor(operationalMode)(serviceDependencies)
+
+    private def calculationSucceedsFor(operationalMode: OperationalMode)(serviceDependencies: ServiceDependencies): Boolean =
+      val SettlementFeeRate = serviceDependencies(1)
+
+      val tradingDate = cells.head.asLocalDate.getOrElse(LocalDate.MIN)
+      val volume = cells(5).asDouble.getOrElse(0.0)
+      val actualSettlementFee = cells(6).asDouble.getOrElse(0.0)
+
+      val settlementFeeRate = SettlementFeeRate.forOperationalMode(operationalMode).at(tradingDate).value
+      val expectedSettlementFee = volume * settlementFeeRate
+
+      actualSettlementFee ~= expectedSettlementFee
 
     private def toFinancialSummary: FinancialSummary =
       FinancialSummary(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value)
@@ -683,10 +729,15 @@ object BrokerageNotesWorksheetReader:
 
     private def index: Int = cell.address.charAt(0) - UPPERCASE_A_ASCII
 
-  extension (double: Double)
+    private def hasOrangeBackground: Boolean = cell.backgroundColor == ORANGE
+
+  extension (thisDouble: Double)
+
+    @targetName("approximatelly")
+    private def ~=(otherDouble: Double)(using precision: Double): Boolean = (thisDouble - otherDouble).abs <= precision
 
     @targetName("differentBeyondPrecision")
-    private def !~=(other: Double)(using precision: Double): Boolean = (double - other).abs > precision
+    private def !~=(otherDouble: Double)(using precision: Double): Boolean = !(~=(otherDouble))
 
     /*
      This is necessary to compensate for a shortcoming of Java formatting that will look only to the first number
@@ -696,9 +747,9 @@ object BrokerageNotesWorksheetReader:
     */
     private def formatted(format: String): String =
       if format == "%.2f" then
-        String.format(Locale.US, format, double + 0.0005)
+        String.format(Locale.US, format, thisDouble + 0.0005)
       else
-        String.format(Locale.US, format, double)
+        String.format(Locale.US, format, thisDouble)
 
   extension (string: String)
 
