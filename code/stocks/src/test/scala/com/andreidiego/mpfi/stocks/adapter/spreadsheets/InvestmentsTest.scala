@@ -17,10 +17,10 @@ class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
   import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.*
   import InvestmentsTest.*
 
-  override protected type FixtureParam = (XSSFWorkbook, ServiceDependencies)
+  override protected type FixtureParam = XSSFWorkbook
 
   private var testWorkbook: XSSFWorkbook = _
-  private val serviceDependencies: ServiceDependencies = (
+  private given serviceDependencies: ServiceDependencies = (
     ProvisionalAverageStockPriceService, 
     ProvisionalSettlementFeeRateService, 
     ProvisionalTradingFeesRateService, 
@@ -34,15 +34,15 @@ class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
     )
 
   override protected def withFixture(test: OneArgTest): Outcome =
-    withFixture(test.toNoArgTest((testWorkbook, serviceDependencies)))
+    withFixture(test.toNoArgTest(testWorkbook))
     
   override protected def afterAll(): Unit = testWorkbook.close()
 
-  "Print errors in 'Notas de Corretagem'" in { (poiWorkbook, serviceDependencies) =>
+  "Print errors in 'Notas de Corretagem'" in { poiWorkbook =>
     val TEST_SHEET_NAME = "Notas de Corretagem"
     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-    BrokerageNotesWorksheetReader.from(TEST_SHEET)(serviceDependencies).errors.foreach(println)
+    BrokerageNotesWorksheetReader.from(TEST_SHEET).errors.foreach(println)
   }
 
 object InvestmentsTest:
