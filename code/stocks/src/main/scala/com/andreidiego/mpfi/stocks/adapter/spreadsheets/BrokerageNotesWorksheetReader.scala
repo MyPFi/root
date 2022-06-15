@@ -273,11 +273,11 @@ object BrokerageNotesWorksheetReader:
     val qty = qtyCell.asInt.getOrElse(0)
     val price = priceCell.asDouble.getOrElse(0.0)
 
-    val actualVolume = volumeCell.asDouble.getOrElse(0.0).formatted("%.2f")
-    val expectedVolume = (qty * price).formatted("%.2f")
+    val actualVolume = volumeCell.asDouble.getOrElse(0.0).withTwoDecimalPlaces
+    val expectedVolume = (qty * price).withTwoDecimalPlaces
 
     if actualVolume != expectedVolume then UnexpectedContentValue(
-      unexpectedVolume(actualVolume, line.number)(expectedVolume, qtyCell.value, price.formatted("%.2f"))
+      unexpectedVolume(actualVolume, line.number)(expectedVolume, qtyCell.value, price.withTwoDecimalPlaces)
     ).invalidNec
     else line.validNec
 
@@ -306,9 +306,9 @@ object BrokerageNotesWorksheetReader:
       
       UnexpectedContentValue(
         unexpectedSettlementFee(
-          actualSettlementFee.formatted("%.2f"), line.number
+          actualSettlementFee.withTwoDecimalPlaces, line.number
         )(
-          expectedSettlementFee.formatted("%.2f"), volume.formatted("%.2f"), (settlementFeeRate * 100).formatted("%.4f%%")
+          expectedSettlementFee.withTwoDecimalPlaces, volume.withTwoDecimalPlaces, (settlementFeeRate * 100).percentageWithFourDecimalPlaces
         )
       ).invalidNec
 
@@ -329,9 +329,9 @@ object BrokerageNotesWorksheetReader:
 
     if actualTradingFees !~= expectedTradingFees then UnexpectedContentValue(
       unexpectedTradingFees(
-        actualTradingFees.formatted("%.2f"), line.number
+        actualTradingFees.withTwoDecimalPlaces, line.number
       )(
-        expectedTradingFees.formatted("%.2f"), volume.formatted("%.2f"), (tradingFeesRate * 100).formatted("%.4f%%")
+        expectedTradingFees.withTwoDecimalPlaces, volume.withTwoDecimalPlaces, (tradingFeesRate * 100).percentageWithFourDecimalPlaces
       )
     ).invalidNec
     else line.validNec
@@ -352,9 +352,9 @@ object BrokerageNotesWorksheetReader:
 
     if actualServiceTax !~= expectedServiceTax then UnexpectedContentValue(
       unexpectedServiceTax(
-        actualServiceTax.formatted("%.2f"), line.number
+        actualServiceTax.withTwoDecimalPlaces, line.number
       )(
-        expectedServiceTax.formatted("%.2f"), brokerage.formatted("%.2f"), (serviceTaxRate * 100).formatted("%.1f%%")
+        expectedServiceTax.withTwoDecimalPlaces, brokerage.withTwoDecimalPlaces, (serviceTaxRate * 100).percentageWithOneDecimalPlace
       )
     ).invalidNec
     else line.validNec
@@ -393,9 +393,9 @@ object BrokerageNotesWorksheetReader:
 
       if actualIncomeTaxAtSource !~= expectedIncomeTaxAtSource then UnexpectedContentValue(
         unexpectedIncomeTaxAtSourceForSellings(
-          actualIncomeTaxAtSource.formatted("%.2f"), line.number
+          actualIncomeTaxAtSource.withTwoDecimalPlaces, line.number
         )(
-          expectedIncomeTaxAtSource.formatted("%.2f"), operationProfit.formatted("%.2f"), (incomeTaxAtSourceRate * 100).formatted("%.4f%%")
+          expectedIncomeTaxAtSource.withTwoDecimalPlaces, operationProfit.withTwoDecimalPlaces, (incomeTaxAtSourceRate * 100).percentageWithFourDecimalPlaces
         )
       ).invalidNec
       else line.validNec
@@ -433,14 +433,14 @@ object BrokerageNotesWorksheetReader:
       val expectedTotal = volume - settlementFee - tradingFees - brokerage - serviceTax
 
       if actualTotal !~= expectedTotal then UnexpectedContentValue(
-        unexpectedTotalForSellings(actualTotal.formatted("%.2f"), line.number)(expectedTotal.formatted("%.2f"))
+        unexpectedTotalForSellings(actualTotal.withTwoDecimalPlaces, line.number)(expectedTotal.withTwoDecimalPlaces)
       ).invalidNec
       else line.validNec
     else
       val expectedTotal = volume + settlementFee + tradingFees + brokerage + serviceTax
 
       if actualTotal !~= expectedTotal then UnexpectedContentValue(
-        unexpectedTotalForBuyings(actualTotal.formatted("%.2f"), line.number)(expectedTotal.formatted("%.2f"))
+        unexpectedTotalForBuyings(actualTotal.withTwoDecimalPlaces, line.number)(expectedTotal.withTwoDecimalPlaces)
       ).invalidNec
       else line.validNec
 
@@ -520,9 +520,9 @@ object BrokerageNotesWorksheetReader:
 
     if actualSummaryValue !~= expectedSummaryValue then UnexpectedContentValue(
       unexpectedValueForCalculatedSummaryAttribute(
-        actualSummaryValue.formatted("%.2f"), attributeHeader, summaryAttribute.address
+        actualSummaryValue.withTwoDecimalPlaces, attributeHeader, summaryAttribute.address
       )(
-        expectedSummaryValue.formatted("%.2f"), 
+        expectedSummaryValue.withTwoDecimalPlaces, 
         s"the sum of all '${attributeHeader.replace("Summary", "")}'s in the 'Group' (${group.head.cells(attributeIndex).address}...${group.takeRight(2).head.cells(attributeIndex).address})"
       )
     ).invalidNec
@@ -549,9 +549,9 @@ object BrokerageNotesWorksheetReader:
 
     if actualSummaryValue.abs !~= expectedSummaryValue.abs then UnexpectedContentValue(
       unexpectedOperationTypeAwareAttributeSummary(
-        actualSummaryValue.formatted("%.2f"), attributeHeader, operationIndex
+        actualSummaryValue.withTwoDecimalPlaces, attributeHeader, operationIndex
       )(
-        expectedSummaryValue.formatted("%.2f"), attributeLetter, formulaDescription
+        expectedSummaryValue.withTwoDecimalPlaces, attributeLetter, formulaDescription
       )
     ).invalidNec
     else summaryAttribute.validNec
@@ -770,6 +770,12 @@ object BrokerageNotesWorksheetReader:
 
     @targetName("differentBeyondPrecision")
     private def !~=(otherDouble: Double)(using precision: Double): Boolean = !(~=(otherDouble))
+
+    private def withTwoDecimalPlaces: String = formatted("%.2f")
+
+    private def percentageWithOneDecimalPlace: String = formatted("%.1f%%")
+
+    private def percentageWithFourDecimalPlaces: String = formatted("%.4f%%")
 
     /*
      This is necessary to compensate for a shortcoming of Java formatting that will look only to the first number
