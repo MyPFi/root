@@ -1587,10 +1587,13 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
         // Line 44
         UnexpectedContentValue(unexpectedVolumeSummaryForHomogeneousGroups("2908.00", 44)("4290.00", 43, 43)),
-        UnexpectedContentValue(unexpectedSettlementFeeSummary("0.80", 44)("1.18", 43, 43)),
+        UnexpectedContentValue(unexpectedSettlementFeeSummary("0.80", 44)("0.86", 43, 43)),
         UnexpectedContentValue(unexpectedTradingFeesSummary("0.83", 44)("1.22", 43, 43)),
         UnexpectedContentValue(unexpectedIncomeTaxAtSourceSummary("0.14", 44)("0.21", 43, 43)),
-        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("2889.58", 44)("4270.81", 43, 43)),
+        UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("2889.58", 44)("4271.13", 43, 43)),
+
+        // Line 46
+        UnexpectedContentValue(unexpectedSettlementFee("1.18", 46)("0.86", "4290.00", "0.0200%")),
 
         // Line 48
         RequiredValueMissing(volumeSummaryMissing(48)),
@@ -1607,14 +1610,14 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         
         // Line 52
         RequiredValueMissing(totalSummaryMissing(52)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 52)("7160.39", 50, 51))
+        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("0.00", 52)("7160.71", 50, 51))
         
         // TODO Add Cell, Line, and, Worksheet errors once we fix the error accumulation strategy of those classes
       )
 
       val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-      actualErrors should have size 196
+      actualErrors should have size 197
       actualErrors should contain theSameElementsAs expectedErrors
     }
     "be successfully built when given a" -{
