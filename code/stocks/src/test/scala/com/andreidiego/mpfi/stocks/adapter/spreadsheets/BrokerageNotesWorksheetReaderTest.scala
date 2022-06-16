@@ -14,10 +14,11 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
   import org.scalatest.Outcome
   import org.scalatest.Inspectors.{forAll, forExactly}
   import org.scalatest.matchers.should.Matchers.*
-  import com.andreidiego.mpfi.stocks.adapter.services.*
+  import BrokerageNotesWorksheetMessages.*
   import BrokerageNotesWorksheetReader.ServiceDependencies
   import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.*
-  import BrokerageNotesWorksheetMessages.*
+  import com.andreidiego.mpfi.stocks.adapter.services.*
+  import com.andreidiego.mpfi.stocks.adapter.services.TradingPeriod.*
   import BrokerageNotesWorksheetTestMessages.*
   import BrokerageNotesWorksheetReaderTest.*
 
@@ -351,9 +352,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "PriceExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(priceNotCurrency("R$ l5,34", 2)),
                       UnexpectedContentType(priceNotDouble("R$ l5,34", 2))
                     )
@@ -409,9 +410,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "VolumeExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(volumeNotCurrency("R$ l534,00", 2)),
                       UnexpectedContentType(volumeNotDouble("R$ l534,00", 2))
                     )
@@ -478,60 +479,86 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "SettlementFeeExtraneousChars"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(settlementFeeNotCurrency("R$ O,42", 2)),
                       UnexpectedContentType(settlementFeeNotDouble("R$ O,42", 2))
                     )
                   }
-                  "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate', when 'OperationalMode' is" - {
-                    "'Normal', + a tolerance of:" - {
-                      "+'0.01'." in { poiWorkbook =>
+                  "if different than 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate' + a tolerance of:" - {
+                    "+'0.01', when 'OperationalMode' is" - {
+                      "'Normal'." in { poiWorkbook =>
                         given TEST_SHEET_NAME: String = "SettlementFeeAboveTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                        val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                        actualErrors should contain allOf(
+                        errors should contain allOf(
                           UnexpectedContentValue(unexpectedSettlementFee("3.05", 2)("3.03", "11000.00", "0.0275%")),
                           UnexpectedContentValue(unexpectedSettlementFee("3.05", 2)("2.20", "11000.00", "0.0200%"))
                         )
                       }
-                      "-'0.01'." in { poiWorkbook =>
+                      "'DayTrade', be it" - {
+                        "highlighted." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HDTSettlementFeeAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedSettlementFee("2.22", 2)("2.20", "11000.00", "0.0200%"))
+                          )
+                        }
+                        "or not." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCDTSettlementFeeAboveToleranc"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedSettlementFee("2.22", 2)("3.03", "11000.00", "0.0275%")),
+                            UnexpectedContentValue(unexpectedSettlementFee("2.22", 2)("2.20", "11000.00", "0.0200%"))
+                          )
+                        }
+                      }
+                    }
+                    "-'0.01', when 'OperationalMode' is" - {
+                      "'Normal'." in { poiWorkbook =>
                         given TEST_SHEET_NAME: String = "SettlementFeeBelowTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                        val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                        actualErrors should contain allOf(
+                        errors should contain allOf(
                           UnexpectedContentValue(unexpectedSettlementFee("3.01", 2)("3.03", "11000.00", "0.0275%")),
                           UnexpectedContentValue(unexpectedSettlementFee("3.01", 2)("2.20", "11000.00", "0.0200%"))
                         )
                       }
-                    }
-                    "'DayTrade', + a tolerance of:" - {
-                      "+'0.01'." in { poiWorkbook =>
-                        given TEST_SHEET_NAME: String = "HDTSettlementFeeAboveTolerance"
-                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                      "'DayTrade', be it" - {
+                        "highlighted." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HDTSettlementFeeBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                        error should have(
-                          'class(classOf[UnexpectedContentValue]),
-                          'message(unexpectedSettlementFee("2.22", 2)("2.20", "11000.00", "0.0200%"))
-                        )
-                      }
-                      "-'0.01'." in { poiWorkbook =>
-                        given TEST_SHEET_NAME: String = "HDTSettlementFeeBelowTolerance"
-                        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedSettlementFee("2.18", 2)("2.20", "11000.00", "0.0200%"))
+                          )
+                        }
+                        "or not." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCDTSettlementFeeBelowToleranc"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                        val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                        error should have(
-                          'class(classOf[UnexpectedContentValue]),
-                          'message(unexpectedSettlementFee("2.18", 2)("2.20", "11000.00", "0.0200%"))
-                        )
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedSettlementFee("2.18", 2)("3.03", "11000.00", "0.0275%")),
+                            UnexpectedContentValue(unexpectedSettlementFee("2.18", 2)("2.20", "11000.00", "0.0200%"))
+                          )
+                        }
                       }
                     }
                   }
@@ -586,27 +613,51 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "TradingFeesExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(tradingFeesNotCurrency("R$ O,44", 2)),
                       UnexpectedContentType(tradingFeesNotDouble("R$ O,44", 2))
                     )
                   }
-                  "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime', when 'TradingTime' falls within" - {
-                    "'PreOpening'." ignore { poiWorkbook =>
-                      given TEST_SHEET_NAME: String = "InvalidTradingFees"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                  "if different than 'Volume' * 'TradingFeesRate' at 'TradingDateTime' + a tolerance of:" - {
+                    "+'0.01', when 'TradingTime' falls within" - {
+                      "'PreOpening', be it" - {
+                        "highlighted." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HPreOpTradingFeesAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%"))
-                      )
-                    }
-                    "'Trading', + a tolerance of:" - {
-                      "+'0.01'." in { poiWorkbook =>
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "containing a note." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NPreOTradingFeesAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "with no visual clue whatsoever." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCPOTradingFeesAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedTradingFees("0.79", 2)("3.14", "11000.00", "0.0285%")),
+                            UnexpectedContentValue(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                      }
+                      "'Trading'." in { poiWorkbook =>
                         given TEST_SHEET_NAME: String = "TradingFeesAboveTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -617,7 +668,79 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                           'message(unexpectedTradingFees("3.16", 2)("3.14", "11000.00", "0.0285%"))
                         )
                       }
-                      "-'0.01'." in { poiWorkbook =>
+                      "'ClosingCall', be it" - {
+                        "highlighted." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HCCallTradingFeesAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "containing a note." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NCCTradingFeesAboveTolererance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "with no visual clue whatsoever." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCCCTradingFeesAboveTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedTradingFees("0.79", 2)("3.14", "11000.00", "0.0285%")),
+                            UnexpectedContentValue(unexpectedTradingFees("0.79", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                      }
+                    }
+                    "-'0.01', when 'TradingTime' falls within" - {
+                      "'PreOpening', be it" - {
+                        "highlighted." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HPreOpTradingFeesBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "containing a note." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NPreOTradingFeesBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "with no visual clue whatsoever." in { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCPOTradingFeesBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedTradingFees("0.75", 2)("3.14", "11000.00", "0.0285%")),
+                            UnexpectedContentValue(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                      }
+                      "'Trading'." in { poiWorkbook =>
                         given TEST_SHEET_NAME: String = "TradingFeesBelowTolerance"
                         val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
@@ -628,17 +751,41 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                           'message(unexpectedTradingFees("3.12", 2)("3.14", "11000.00", "0.0285%"))
                         )
                       }
-                    }
-                    "'ClosingCall'." ignore { poiWorkbook =>
-                      given TEST_SHEET_NAME: String = "InvalidTradingFees"
-                      val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+                      "'ClosingCall', be it" - {
+                        "highlighted." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "HCCallTradingFeesBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                      val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
 
-                      error should have(
-                        'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTradingFees("3.13", 2)("3.14", "11000.00", "0.0285%"))
-                      )
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "containing a note." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NCCTradingFeesBelowTolererance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val error = BrokerageNotesWorksheetReader.from(TEST_SHEET).error
+
+                          error should have(
+                            'class(classOf[UnexpectedContentValue]),
+                            'message(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                        "with no visual clue whatsoever." ignore { poiWorkbook =>
+                          given TEST_SHEET_NAME: String = "NVCCCTradingFeesBelowTolerance"
+                          val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
+
+                          val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+
+                          errors should contain allOf(
+                            UnexpectedContentValue(unexpectedTradingFees("0.75", 2)("3.14", "11000.00", "0.0285%")),
+                            UnexpectedContentValue(unexpectedTradingFees("0.75", 2)("0.77", "11000.00", "0.0070%"))
+                          )
+                        }
+                      }
                     }
                   }
                   "if displayed with an invalid font-color" - {
@@ -700,9 +847,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "BrokerageExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(brokerageNotCurrency("R$ l5,99", 2)),
                       UnexpectedContentType(brokerageNotDouble("R$ l5,99", 2))
                     )
@@ -758,9 +905,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "ServiceTaxExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(serviceTaxNotCurrency("R$ O,8O", 2)),
                       UnexpectedContentType(serviceTaxNotDouble("R$ O,8O", 2))
                     )
@@ -832,9 +979,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "IncomeTaxAtSourceExtraneousChar"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(incomeTaxAtSourceNotCurrency("R$ O,OO", 2)),
                       UnexpectedContentType(incomeTaxAtSourceNotDouble("R$ O,OO", 2))
                     )
@@ -914,9 +1061,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                     given TEST_SHEET_NAME: String = "TotalExtraneousCharacters"
                     val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                    val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                    val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                    actualErrors should contain allOf(
+                    errors should contain allOf(
                       UnexpectedContentType(totalNotCurrency("R$ l551,32", 2)),
                       UnexpectedContentType(totalNotDouble("R$ l551,32", 2))
                     )
@@ -930,7 +1077,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
 
                       error should have(
                         'class(classOf[UnexpectedContentValue]),
-                        'message(unexpectedTotalForSellings("7009.25", 2)("7009.27"))
+                        'message(unexpectedTotalForSellings("7009.24", 2)("7009.27"))
                       )
                     }
                     "for 'BuyingOperations', 'Volume' + 'SettlementFee' + 'TradingFees' + 'Brokerage' + 'ServiceTax'." in { poiWorkbook =>
@@ -1071,10 +1218,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                 UnexpectedContentValue(unexpectedTotalSummaryForHomogeneousGroups("11608.59", 3)("11008.25", 2, 2))
               )
 
-              val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+              val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-              actualErrors should have size 4
-              actualErrors should contain theSameElementsAs expectedErrors
+              errors should have size 4
+              errors should contain theSameElementsAs expectedErrors
             }
             "have an invalid 'Summary', in which" - {
               "'VolumeSummary'" - {
@@ -1093,9 +1240,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "VolumeSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(volumeSummaryNotCurrency("-R$ 9.322,OO", 5)),
                     UnexpectedContentType(volumeSummaryNotDouble("-R$ 9.322,OO", 5))
                   )
@@ -1141,9 +1288,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "SettlementFeeSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(settlementFeeSummaryNotCurrency("R$ 2,S6", 5)),
                     UnexpectedContentType(settlementFeeSummaryNotDouble("R$ 2,S6", 5))
                   )
@@ -1176,9 +1323,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "TradingFeesSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(tradingFeesSummaryNotCurrency("R$ O,65", 5)),
                     UnexpectedContentType(tradingFeesSummaryNotDouble("R$ O,65", 5))
                   )
@@ -1211,9 +1358,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "BrokerageSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(brokerageSummaryNotCurrency("R$ 4T,97", 5)),
                     UnexpectedContentType(brokerageSummaryNotDouble("R$ 4T,97", 5))
                   )
@@ -1246,9 +1393,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "ServiceTaxSummaryExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(serviceTaxSummaryNotCurrency("R$ 2,4O", 5)),
                     UnexpectedContentType(serviceTaxSummaryNotDouble("R$ 2,4O", 5))
                   )
@@ -1270,9 +1417,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "IncomeTaxAtSourceSummExtrChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(incomeTaxAtSourceSummaryNotCurrency("R$ O,OO", 5)),
                     UnexpectedContentType(incomeTaxAtSourceSummaryNotDouble("R$ O,OO", 5))
                   )
@@ -1306,9 +1453,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
                   given TEST_SHEET_NAME: String = "TotalSummaryExtraneousChars"
                   val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet(TEST_SHEET_NAME)).get
 
-                  val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+                  val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-                  actualErrors should contain allOf(
+                  errors should contain allOf(
                     UnexpectedContentType(totalSummaryNotCurrency("-R$ 9.37S,S9", 5)),
                     UnexpectedContentType(totalSummaryNotDouble("-R$ 9.37S,S9", 5))
                   )
@@ -1354,6 +1501,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentValue(unexpectedSettlementFee("-0.42", 2)("-0.12", "-1534.00", "0.0079%")),
           UnexpectedContentValue(unexpectedSettlementFee("-0.42", 2)("-0.10", "-1534.00", "0.0063%")),
           UnexpectedContentValue(unexpectedTradingFees("-0.44", 2)("-0.41", "-1534.00", "0.0270%")),
+          UnexpectedContentValue(unexpectedTradingFees("-0.44", 2)("-0.31", "-1534.00", "0.0205%")),
         // -CONSEQUENTIAL
         UnexpectedContentType(unexpectedContentTypeInNoteNumber("II62", 2)),
         UnexpectedContentValue(unexpectedNegativeQty("-100", 2)),
@@ -1384,6 +1532,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentValue(unexpectedSettlementFee("0.76", 6)("0.22", "2750.00", "0.0079%")),
           UnexpectedContentValue(unexpectedSettlementFee("0.76", 6)("0.17", "2750.00", "0.0063%")),
           UnexpectedContentValue(unexpectedTradingFees("1.08", 6)("0.74", "2750.00", "0.0270%")),
+          UnexpectedContentValue(unexpectedTradingFees("1.08", 6)("0.56", "2750.00", "0.0205%")),
         // -CONSEQUENTIAL
         UnexpectedContentValue(unexpectedNegativeNoteNumber("-1662", 6)),
         RequiredValueMissing(tickerMissing(6)),
@@ -1458,7 +1607,10 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         UnexpectedContentValue(unexpectedSettlementFee("1.17", 16)("0.63", "3150.00", "0.0200%")),
         UnexpectedContentColor(unexpectedColorForSellingInSettlementFee(16)),
         RequiredValueMissing(tradingFeesMissing(16)),
-        /* CONSEQUENTIAL */ UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.90", "3150.00", "0.0285%")),
+        // +CONSEQUENTIAL
+          UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.90", "3150.00", "0.0285%")),
+          UnexpectedContentValue(unexpectedTradingFees("0.00", 16)("0.22", "3150.00", "0.0070%")),
+        // -CONSEQUENTIAL
         UnexpectedContentValue(unexpectedTotalForSellings("3132.34", 16)("3132.04")),
 
         // Line 17
@@ -1537,6 +1689,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
           UnexpectedContentValue(unexpectedSettlementFee("0.69", 26)("0.20", "2494.00", "0.0079%")),
           UnexpectedContentValue(unexpectedSettlementFee("0.69", 26)("0.16", "2494.00", "0.0063%")),
           UnexpectedContentValue(unexpectedTradingFees("0.71", 26)("0.67", "2494.00", "0.0270%")),
+          UnexpectedContentValue(unexpectedTradingFees("0.71", 26)("0.51", "2494.00", "0.0205%")),
         // -CONSEQUENTIAL
 
         // Line 27
@@ -1615,50 +1768,200 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         // TODO Add Cell, Line, and, Worksheet errors once we fix the error accumulation strategy of those classes
       )
 
-      val actualErrors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
+      val errors = BrokerageNotesWorksheetReader.from(TEST_SHEET).errors
 
-      actualErrors should have size 197
-      actualErrors should contain theSameElementsAs expectedErrors
+      errors should have size 201
+      errors should contain theSameElementsAs expectedErrors
     }
     "be successfully built when given a" -{
       "'SettlementFee'" - {
-        "that matches 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate', when 'OperationalMode' is 'Normal'," - {
-          "exactly." in { poiWorkbook =>
-            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeExactMatch")).get
-
-            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
-          }
-          "with a tolerance of:" - {
-            "+'0.01'." in { poiWorkbook =>
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance+")).get
+        "that matches 'Volume' * 'SettlementFeeRate' for the 'OperationalMode' at 'TradingDate'" - {
+          "exactly, when 'OperationalMode' is" - {
+            "'Normal'." in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeExactMatch")).get
 
               assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
             }
-            "-'0.01'." in { poiWorkbook =>
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance-")).get
+            "'DayTrade', be it" -{ 
+              "highlighted." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightedDTradeSettlementFee")).get
 
-              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "or not." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCueDTradeSettlementFee")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+            }
+          }
+          "with a tolerance of:" - {
+            "+'0.01', when 'OperationalMode' is" - {
+              "'Normal'." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance+")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "'DayTrade', be it" -{ 
+                "highlighted." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HDTSettlementFeeWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "or not." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCDTSettlementFeeWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
+            }
+            "-'0.01', when 'OperationalMode' is" - {
+              "'Normal'." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("SettlementFeeWithinTolerance-")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "'DayTrade', be it" -{ 
+                "highlighted." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HDTSettlementFeeWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "or not." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCDTSettlementFeeWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
             }
           }
         }
       }
       "'TradingFees'" - {
-        "that matches 'Volume' * 'TradingFeesRate' at 'TradingDateTime', when 'TradingTime' falls within 'Trading'," - {
-          "exactly." in { poiWorkbook =>
-            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesExactMatch")).get
-
-            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
-          }
-          "with a tolerance of:" - {
-            "+'0.01'." in { poiWorkbook =>
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesWithinTolerance+")).get
+        "that matches 'Volume' * 'TradingFeesRate' at 'TradingDateTime'" - {
+          "exactly, when 'TradingTime' falls within" - {
+            "'Trading'." in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesExactMatch")).get
 
               assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
             }
-            "-'0.01'." in { poiWorkbook =>
-              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesWithinTolerance-")).get
+            "'PreOpening', be it" -{ 
+              "highlighted." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightPreOpeningTradingFees")).get
 
-              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "containing a note." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NotePreOpeningTradingFees")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "with no visual clue whatsoever." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCuePOpeningTradingFees")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+            }
+            "'ClosingCall', be it" -{ 
+              "highlighted." ignore { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightClosingCallTradingFees")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "containing a note." ignore { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoteClosingCallTradingFees")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "with no visual clue whatsoever." ignore { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCueCCallTradingFees")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+            }
+          }
+          "with a tolerance of:" - {
+            "+'0.01', when 'TradingTime' falls within" - {
+              "'Trading'." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesWithinTolerance+")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "'PreOpening', be it" -{ 
+                "highlighted." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HPreOpenTradingFeesWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "containing a note." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NPreOpenTradingFeesWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "with no visual clue whatsoever." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCPOTradingFeesWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
+              "'ClosingCall', be it" -{ 
+                "highlighted." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HCCallTradingFeesWTolererance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "containing a note." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NCCTradingFeesWTolererance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "with no visual clue whatsoever." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCCCTradingFeesWTolerance+")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
+            }
+            "-'0.01', when 'TradingTime' falls within" - {
+              "'Trading'." in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("TradingFeesWithinTolerance-")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+              }
+              "'PreOpening', be it" -{ 
+                "highlighted." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HPreOpenTradingFeesWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "containing a note." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NPreOpenTradingFeesWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "with no visual clue whatsoever." in { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCPOTradingFeesWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
+              "'ClosingCall', be it" -{ 
+                "highlighted." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HCCallTradingFeesWTolererance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "containing a note." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NCCTradingFeesWTolererance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+                "with no visual clue whatsoever." ignore { poiWorkbook =>
+                  val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCCCTradingFeesWTolerance-")).get
+
+                  assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).isValid)
+                }
+              }
             }
           }
         }
@@ -1685,16 +1988,107 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
         }
       }
     }
-    "mark the 'Operation' as 'DayTrade' when its 'SettlementFee' is verified to be correct when using the 'DayTrade's rate" - {
-      "for 'Operation's whose 'SettlementFee' is highlighted with an orange('252, 228, 214') background-color." in { poiWorkbook =>
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightedDTradeSettlementFee")).get
+    "mark the 'Operation' as" - { 
+      "'DayTrade' when its 'SettlementFee' is verified to be correct when using the 'DayTrade's rate" - {
+        "for 'Operation's whose 'SettlementFee' is highlighted with an orange('252, 228, 214') background-color, be it" - { 
+          "an exact match." in { poiWorkbook =>
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightedDTradeSettlementFee")).get
 
-        assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+          }
+          "an approximate match with a tolerance of" - { 
+            "+'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HDTSettlementFeeWTolerance+")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+            }
+            "-'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HDTSettlementFeeWTolerance-")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+            }
+          }
+        }
+        "after failing to do so using the 'Normal' rate for 'Operation's with no visual cue whatsoever, be it" - { 
+          "an exact match." in { poiWorkbook =>
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCueDTradeSettlementFee")).get
+
+            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+          }
+          "an approximate match with a tolerance of" - { 
+            "+'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCDTSettlementFeeWTolerance+")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+            }
+            "-'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCDTSettlementFeeWTolerance-")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+            }
+          }
+        }
       }
-      "after failing to do so using the 'Normal' rate for 'Operation's with no visual cue whatsoever." in { poiWorkbook =>
-        val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCueDTradeSettlementFee")).get
+      "carried out at market 'PreOpening' when its 'TradingFees' is verified to be correct when using the 'PreOpening's rate" - {
+        "for 'Operation's whose 'TradingFees'" - { 
+          "is highlighted with an orange('252, 228, 214') background-color, be it" - { 
+            "an exact match." in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HighlightPreOpeningTradingFees")).get
 
-        assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isDayTrade)
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+            }
+            "an approximate match with a tolerance of" - { 
+              "+'0.01'" in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HPreOpenTradingFeesWTolerance+")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+              }
+              "-'0.01'" in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("HPreOpenTradingFeesWTolerance-")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+              }
+            }
+          }
+          "contains a note, be it" - { 
+            "an exact match." in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NotePreOpeningTradingFees")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+            }
+            "an approximate match with a tolerance of" - { 
+              "+'0.01'" in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NPreOpenTradingFeesWTolerance+")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+              }
+              "-'0.01'" in { poiWorkbook =>
+                val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NPreOpenTradingFeesWTolerance-")).get
+
+                assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+              }
+            }
+          }
+        }
+        "after failing to do so using the 'Trading' rate for 'Operation's with no visual cue whatsoever, be it" - { 
+          "an exact match." in { poiWorkbook =>
+            val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NoVisualCuePOpeningTradingFees")).get
+
+            assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+          }
+          "an approximate match with a tolerance of" - { 
+            "+'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCPOTradingFeesWTolerance+")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+            }
+            "-'0.01'" in { poiWorkbook =>
+              val TEST_SHEET = Worksheet.from(poiWorkbook.getSheet("NVCPOTradingFeesWTolerance-")).get
+
+              assert(BrokerageNotesWorksheetReader.from(TEST_SHEET).operations.head.isCarriedOutAt(PRE_OPENING))
+            }
+          }
+        }
       }
     }
     "turn every" - {

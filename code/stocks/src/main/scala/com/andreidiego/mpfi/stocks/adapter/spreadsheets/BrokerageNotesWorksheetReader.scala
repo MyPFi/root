@@ -1,32 +1,33 @@
 package com.andreidiego.mpfi.stocks.adapter.spreadsheets
 
-import cats.data.ValidatedNec
-import cats.implicits.*
-import cats.kernel.Semigroup
-import cats.syntax.validated.*
-import com.andreidiego.mpfi.stocks.adapter.services.*
-import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.{Normal, DayTrade}
-import excel.poi.{Cell, Line, Worksheet}
-
-import java.time.{LocalDate, LocalDateTime}
 import java.util.Locale
+import java.time.{LocalDate, LocalDateTime}
 import scala.annotation.targetName
 import scala.math.Ordering.Implicits.*
+import cats.implicits.*
+import cats.kernel.Semigroup
+import cats.data.ValidatedNec
+import cats.syntax.validated.*
+import excel.poi.{Cell, Line, Worksheet}
+import com.andreidiego.mpfi.stocks.adapter.services.*
+import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.*
+import com.andreidiego.mpfi.stocks.adapter.services.TradingPeriod.*
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
 class BrokerageNote(val operations: Seq[Operation], val financialSummary: FinancialSummary)
 
-abstract sealed class Operation(val volume: String, val settlementFee: String, val tradingFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String, operationalMode: OperationalMode = Normal):
+abstract sealed class Operation(val volume: String, val settlementFee: String, val tradingFees: String, val brokerage: String, val serviceTax: String, val incomeTaxAtSource: String, val total: String, tradingPeriod: TradingPeriod, operationalMode: OperationalMode):
   def isDayTrade: Boolean = operationalMode == DayTrade
+  def isCarriedOutAt(tradingPeriod: TradingPeriod): Boolean = this.tradingPeriod == tradingPeriod
 
 // TODO Add test for turning BuyingOperation into a case class
-case class BuyingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, operationalMode: OperationalMode = Normal)
-  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode)
+case class BuyingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, tradingPeriod: TradingPeriod = TRADING, operationalMode: OperationalMode = Normal)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, tradingPeriod, operationalMode)
 
 // TODO Add test for turning SellingOperation into a case class
-case class SellingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, operationalMode: OperationalMode = Normal)
-  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode)
+case class SellingOperation(override val volume: String, override val settlementFee: String, override val tradingFees: String, override val brokerage: String, override val serviceTax: String, override val incomeTaxAtSource: String, override val total: String, tradingPeriod: TradingPeriod = TRADING, operationalMode: OperationalMode = Normal)
+  extends Operation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, tradingPeriod, operationalMode)
 
 // TODO Add test for turning FinancialSummary into a case class
 case class FinancialSummary(volume: String, settlementFee: String, tradingFees: String, brokerage: String, serviceTax: String, incomeTaxAtSource: String, total: String)
@@ -293,11 +294,11 @@ object BrokerageNotesWorksheetReader:
     }
 
   private def assertSettlementFeeCalculatedCorrectlyFor(operationalMode: OperationalMode)(line: Line)(using serviceDependencies: ServiceDependencies, worksheetName: String): ErrorsOr[Line] = 
-    if line.calculationSucceedsFor(operationalMode) then line.validNec
+    if line.settlementFeesCalculationSucceedsFor(operationalMode) then line.validNec
     else 
       val SettlementFeeRate = serviceDependencies(1)
 
-      val tradingDate = line.cells(0).asLocalDate.getOrElse(LocalDate.MIN)
+      val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
       val volume = line.cells(5).asDouble.getOrElse(0.0)
       val actualSettlementFee = line.cells(6).asDouble.getOrElse(0.0)
 
@@ -313,28 +314,34 @@ object BrokerageNotesWorksheetReader:
       ).invalidNec
 
   private def assertTradingFeesIsCalculatedCorrectly: OperationValidation = line ⇒
-    given tolerance: Double = 0.01
-    val serviceDependencies = summon[ServiceDependencies]
-    val TradingFeesRate = serviceDependencies(2)
-
-    val volumeCell = line.cells(5)
+    given Semigroup[Line] = (x, _) => x
     val tradingFeesCell = line.cells(7)
-    val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
-    val tradingPeriod = TradingPeriod.TRADING
-    val volume = volumeCell.asDouble.getOrElse(0.0)
-    val actualTradingFees = tradingFeesCell.asDouble.getOrElse(0.0)
-    // TODO Same challenge here since 'TradingFees' is also dependent on the time of order execution which is not part of the brokerage note document.
-    val tradingFeesRate = TradingFeesRate.at(tradingDate, tradingPeriod)
-    val expectedTradingFees = volume * tradingFeesRate
 
-    if actualTradingFees !~= expectedTradingFees then UnexpectedContentValue(
-      unexpectedTradingFees(
-        actualTradingFees.withTwoDecimalPlaces, line.number
-      )(
-        expectedTradingFees.withTwoDecimalPlaces, volume.withTwoDecimalPlaces, (tradingFeesRate * 100).percentageWithFourDecimalPlaces
-      )
-    ).invalidNec
-    else line.validNec
+    if tradingFeesCell.either(hasOrangeBackground, hasNote) then
+      assertTradingFeesCalculatedCorrectlyFor(PRE_OPENING)(line)
+    else assertTradingFeesCalculatedCorrectlyFor(TRADING)(line) findValid {
+      assertTradingFeesCalculatedCorrectlyFor(PRE_OPENING)(line)
+    }
+
+  private def assertTradingFeesCalculatedCorrectlyFor(tradingPeriod: TradingPeriod)(line: Line)(using serviceDependencies: ServiceDependencies, worksheetName: String): ErrorsOr[Line] = 
+    if line.tradingFeesCalculationSucceedsFor(tradingPeriod) then line.validNec
+    else 
+      val TradingFeesRate = serviceDependencies(2)
+
+      val tradingDate = line.cells.head.asLocalDate.getOrElse(LocalDate.MIN)
+      val volume = line.cells(5).asDouble.getOrElse(0.0)
+      val actualTradingFees = line.cells(7).asDouble.getOrElse(0.0)
+
+      val tradingFeesRate = TradingFeesRate.at(tradingDate, tradingPeriod)
+      val expectedTradingFees = volume * tradingFeesRate
+      
+      UnexpectedContentValue(
+        unexpectedTradingFees(
+          actualTradingFees.withTwoDecimalPlaces, line.number
+        )(
+          expectedTradingFees.withTwoDecimalPlaces, volume.withTwoDecimalPlaces, (tradingFeesRate * 100).percentageWithFourDecimalPlaces
+        )
+      ).invalidNec
 
   private def assertServiceTaxIsCalculatedCorrectly: OperationValidation = line ⇒
     given tolerance: Double = 0.01
@@ -660,11 +667,19 @@ object BrokerageNotesWorksheetReader:
     private def cells: Seq[Cell] = line.cells
 
     private def toMostLikelyOperation(using worksheetName: String): ErrorsOr[Operation] =
+      val volume = cells(5).value
+      val settlementFee = cells(6).value
+      val tradingFees = cells(7).value
+      val brokerage = cells(8).value
+      val serviceTax = cells(9).value
+      val incomeTaxAtSource = cells(10).value
+      val total = cells(11).value
+
       if hasMostNonEmptyValidColoredCellsBlue then
-        SellingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
-      
+        SellingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total).validNec
+
       else if hasMostNonEmptyValidColoredCellsRed then
-        BuyingOperation(cells(5).value, cells(6).value, cells(7).value, cells(8).value, cells(9).value, cells(10).value, cells(11).value).validNec
+        BuyingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total).validNec
       
       else UnexpectedContentColor(impossibleToDetermineMostLikelyOperationType(line.number)).invalidNec
 
@@ -678,24 +693,48 @@ object BrokerageNotesWorksheetReader:
       val total = cells(11).value
 
       if allNonEmptyCellsAreBlue then
-        SellingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, operationalMode).validNec
+        SellingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, tradingPeriod, operationalMode).validNec
 
       else if allNonEmptyCellsAreRed then
-        BuyingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total).validNec
+        BuyingOperation(volume, settlementFee, tradingFees, brokerage, serviceTax, incomeTaxAtSource, total, tradingPeriod).validNec
 
       else UnexpectedContentColor(impossibleToDetermineOperationType(line.number)).invalidNec
+
+    private def tradingPeriod: ServiceDependencies ?=> TradingPeriod =
+      val tradingFeesCell = cells(7)
+
+      if tradingFeesCell.hasOrangeBackground || tradingFeesCell.hasNote ||
+        (tradingFeesCalculationFailsFor(TRADING) && tradingFeesCalculationSucceedsFor(PRE_OPENING)) then PRE_OPENING
+      else TRADING
+
+    private def tradingFeesCalculationFailsFor: TradingPeriod => ServiceDependencies ?=> Boolean = tradingPeriod =>
+      !tradingFeesCalculationSucceedsFor(tradingPeriod)
+
+    private def tradingFeesCalculationSucceedsFor(tradingPeriod: TradingPeriod)(using serviceDependencies: ServiceDependencies): Boolean =
+      given tolerance: Double = 0.01
+      val TradingFeesRate = serviceDependencies(2)
+
+      val tradingDate = cells.head.asLocalDate.getOrElse(LocalDate.MIN)
+      val volume = cells(5).asDouble.getOrElse(0.0)
+      val actualTradingFees = cells(7).asDouble.getOrElse(0.0)
+
+      val tradingFeesRate = TradingFeesRate.at(tradingDate, tradingPeriod)
+      val expectedTradingFees = volume * tradingFeesRate
+
+      actualTradingFees ~= expectedTradingFees
 
     private def operationalMode: ServiceDependencies ?=> OperationalMode =
       val settlementFeeCell = cells(6)
 
       if settlementFeeCell.hasOrangeBackground ||
-        (calculationFailsFor(Normal) && calculationSucceedsFor(DayTrade)) then DayTrade
+        (settlementFeeCalculationFailsFor(Normal) && settlementFeesCalculationSucceedsFor(DayTrade)) then DayTrade
       else Normal
 
-    private def calculationFailsFor: OperationalMode => ServiceDependencies ?=> Boolean = operationalMode =>
-      !calculationSucceedsFor(operationalMode)
+    private def settlementFeeCalculationFailsFor: OperationalMode => ServiceDependencies ?=> Boolean = operationalMode =>
+      !settlementFeesCalculationSucceedsFor(operationalMode)
 
-    private def calculationSucceedsFor(operationalMode: OperationalMode)(using serviceDependencies: ServiceDependencies): Boolean =
+    private def settlementFeesCalculationSucceedsFor(operationalMode: OperationalMode)(using serviceDependencies: ServiceDependencies): Boolean =
+      given tolerance: Double = 0.01
       val SettlementFeeRate = serviceDependencies(1)
 
       val tradingDate = cells.head.asLocalDate.getOrElse(LocalDate.MIN)
@@ -763,13 +802,23 @@ object BrokerageNotesWorksheetReader:
 
     private def hasOrangeBackground: Boolean = cell.backgroundColor == ORANGE
 
+    private def hasNote: Boolean = cell.note.nonEmpty
+
+    private def either(left: Cell => Boolean, right: Cell => Boolean): Boolean =
+      left(cell) || right(cell)
+
   extension (thisDouble: Double)
 
     @targetName("approximatelly")
-    private def ~=(otherDouble: Double)(using precision: Double): Boolean = (thisDouble - otherDouble).abs <= precision
+    private def ~=(otherDouble: Double)(using precision: Double): Boolean = 
+      (thisDouble - otherDouble).abs.roundAt(2) <= precision
 
     @targetName("differentBeyondPrecision")
     private def !~=(otherDouble: Double)(using precision: Double): Boolean = !(~=(otherDouble))
+
+    private def roundAt(p: Int): Double =
+      val s = math pow (10, p)
+      (math round thisDouble * s) / s
 
     private def withTwoDecimalPlaces: String = formatted("%.2f")
 
