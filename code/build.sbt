@@ -35,6 +35,7 @@ lazy val mpfiStocks = project
   //  .dependsOn(root)
   .settings(
     name := "MPFi-Stocks",
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
     libraryDependencies += scallop,
     libraryDependencies += osLib,
     libraryDependencies += pdfBox,
