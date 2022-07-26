@@ -3,6 +3,8 @@ package com.andreidiego.mpfi.stocks.adapter.files
 import scala.annotation.experimental
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.fixture.ConfigMapFixture
+import cats.Functor
+import FileSystemTest.FileSystemTest
 
 @experimental 
 class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
@@ -15,32 +17,33 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import FileSystemPathTest.*
 
   "A 'FileSystemPath' should" - {
-    "be built from a string representing a well-formed file system path." in { configMap =>
+    "be built from a string representing a well-formed file system path." in { _ =>
       val fileSystemPath: String = os.home.toString
 
       "FileSystemPath.from(fileSystemPath)" should compile
     }
     "fail to be built when given" - {
-      "an empty string." in { configMap =>
-        the [RequiredValueMissingException] thrownBy FileSystemPath.from("") should have {
+      "an empty string." in { _ =>
+        the [RequiredValueMissingException] thrownBy FileSystemPath.from[FileSystemTest]("") should have {
           'message (fileSystemPathMissing)
         }
       }
-      "a relative file system path." in { configMap =>
+      "a relative file system path." in { _ =>
         val relativePath = "folder/file.ext"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from(relativePath) should have {
+        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[FileSystemTest](relativePath) should have {
           'message (relativeFileSystemPathNotAllowed(relativePath))
         }
       }
-      /* 
-      TODO This test will probably fail if run on Linux since it looks like almost everything is possible when it comes 
-      to naming files in Linux  - although I couldn't find an authoritative source for what is acceptable and what is not.
+      /*
+      TODO This test will probably fail if run on Linux since it looks like almost everything is
+       possible when it comes to naming files in Linux  - although I couldn't find an authoritative
+       source for what is acceptable and what is not.
       */
-      "a ill-formed file system path." in { configMap =>
+      "a ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from(illFormedPath) should have {
+        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[FileSystemTest](illFormedPath) should have {
           'message (invalidFileSystemPath(illFormedPath))
         }
       }
@@ -52,16 +55,16 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val fileName = "FileSystemPathTest-Exists.txt"
 
             assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-              path => assert(FileSystemPath.from(path).exists),
-              path => assert(!FileSystemPath.from(path).doesNotExist)
+              path => assertThat(FileSystemPath.from[FileSystemTest](path).exists),
+              path => assertThat(!FileSystemPath.from[FileSystemTest](path).doesNotExist)
             )
           }
           "or not." in { configMap =>
             val file = "FileSystemPathTest-Exists.txt"
 
             assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-              path => assert(FileSystemPath.from(path).doesNotExist),
-              path => assert(!FileSystemPath.from(path).exists)
+              path => assertThat(FileSystemPath.from[FileSystemTest](path).doesNotExist),
+              path => assertThat(!FileSystemPath.from[FileSystemTest](path).exists)
             )
           }
           "is a file, as long as" - { 
@@ -70,16 +73,16 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 val fileName = "FileSystemPathTest-Exists.txt"
 
                 assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFile),
-                  path => assert(!FileSystemPath.from(path).isNotAFile)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
                 )
               }
               "or not." in { configMap =>
                 val fileName = "FileSystemPathTest-Exists"
 
                 assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFile),
-                  path => assert(!FileSystemPath.from(path).isNotAFile)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
                 )
               }
             }
@@ -88,16 +91,16 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 val file = "FileSystemPathTest-Exists.txt"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFile),
-                  path => assert(!FileSystemPath.from(path).isNotAFile)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
                 )
               }
               "or, something different than '/' and '\\'" in { configMap =>
                 val file = "FileSystemPathTest-Exists"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFile),
-                  path => assert(!FileSystemPath.from(path).isNotAFile)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
                 )
               }
             }
@@ -108,16 +111,16 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 val folderName = "folder/"
 
                 assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFolder),
-                  path => assert(!FileSystemPath.from(path).isNotAFolder)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
                 )
               }
               "or not." in { configMap =>
                 val folderName = "folder"
 
                 assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                  path => assert(FileSystemPath.from(path).isAFolder),
-                  path => assert(!FileSystemPath.from(path).isNotAFolder)
+                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
+                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
                 )
               }
             }
@@ -125,14 +128,17 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
 
               assertWithNonExisting(folder)(configMap.getRequired("targetDir"))( 
-                path => assert(FileSystemPath.from(path).isAFolder),
-                path => assert(!FileSystemPath.from(path).isNotAFolder)
+                path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
+                path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
               )
             }
           }
         }
-        // TODO Still not sure if actually creating the resources would be something good to have as part of 'FileSystemPath'. 
-        // I should have more context to decide when and if the opportunity arises. I'll evaluate it carefully by then.
+        /*
+         TODO Still not sure if actually creating the resources would be something good to have as
+          part of 'FileSystemPath'. I should have more context to decide when and if the opportunity
+          arises. I'll evaluate it carefully by then.
+         */
         "create the underlying resource it represents, be it a" - { 
           "file" ignore { configMap => }
           "or, a folder." ignore { configMap => }
@@ -147,30 +153,70 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
 
 object FileSystemPathTest:
   import java.nio.file.Path
-  import java.nio.file.Files
+  import org.scalatest.Assertions.assert
   import org.scalatest.compatible.Assertion
+  import cats.syntax.functor.*
+  import FileSystemTest.emptyState
 
-  private def assertWithExistingFile(fileName: String)(buildTarget: String)(assertions: String => Assertion*): Unit = 
-    assertWithExisting(fileName, buildTarget, Files.createFile(_), assertions: _*)
+  private def assertThat[F[_]: Functor](fileSystemQuery: F[Boolean]): F[Assertion] = 
+    fileSystemQuery.map(assert(_))
 
-  private def assertWithExistingFolder(folderName: String)(buildTarget: String)(assertions: String => Assertion*): Unit = 
-    assertWithExisting(folderName, buildTarget, Files.createDirectory(_), assertions: _*)
+  private def assertWithExistingFile(fileName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
+    assertWithExisting(fileName, buildTarget, FileSystem[FileSystemTest].createFile(_), assertions: _*)
+
+  private def assertWithExistingFolder(folderName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
+    assertWithExisting(folderName, buildTarget, FileSystem[FileSystemTest].createFolder(_), assertions: _*)
     
-  private def assertWithExisting(resourceName: String, buildTarget: String, createResourceAt: Path => Unit, assertions: String => Assertion*): Unit = 
+  private def assertWithExisting(
+    resourceName: String, 
+    buildTarget: String, 
+    createResourceAt: Path => FileSystemTest[Unit], 
+    assertions: String => FileSystemTest[Assertion]*
+  ): Unit =
+    val fileSystem = FileSystem[FileSystemTest] 
     val currentFolder = Path.of(s"$buildTarget/test-files")
     val path = Path.of(s"$currentFolder/$resourceName")
-    
-    
-    Files.createDirectory(currentFolder)
-    createResourceAt(path)
-    
-    assertions.foreach(_(path.toString))
 
-    Files.delete(path)
-    Files.delete(currentFolder)
+    val createResources = for {
+      _ <- fileSystem.createFolder(currentFolder)
+      _ <- createResourceAt(path)
+      _ <- FileSystemTest(fss => (fss, assertions.foreach(_(path.toString).run(fss).value)))
+      _ <- fileSystem.delete(path)
+      _ <- fileSystem.delete(currentFolder)
+    } yield()
 
-  private def assertWithNonExisting(resourceName: String)(buildTarget: String)(assertions: String => Assertion*): Unit = 
+    createResources.run(emptyState).value
+    
+  private def assertWithNonExisting(resourceName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
     val currentFolder = s"$buildTarget/test-files"
     val path = s"$currentFolder/$resourceName"
 
-    assertions.foreach(_(path))
+    assertions.foreach(_(path).run(emptyState).value)
+
+  extension(fileSystemTest: FileSystemTest[Boolean])
+    private def unary_! : FileSystemTest[Boolean] = fileSystemTest.map(!_)
+
+object FileSystemTest:
+  import java.nio.file.Path
+  import cats.data.State
+  
+  enum ResourceType:
+    case File, Folder
+    
+  type FileSystemState = Map[Path, ResourceType]
+  type FileSystemTest[A] = State[FileSystemState, A]
+
+  val emptyState: FileSystemState = Map()
+  
+  def apply[A](s: FileSystemState => (FileSystemState, A)) = State(s)
+
+  import ResourceType.*
+  //noinspection NonAsciiCharacters
+  // TODO Add law checking to this instance
+  given FileSystem[FileSystemTest] with
+    def createFile(path: Path): FileSystemTest[Unit] = FileSystemTest(fss ⇒ (fss + (path → File), ()))
+    def createFolder(path: Path): FileSystemTest[Unit] = FileSystemTest(fss ⇒ (fss + (path → Folder), ()))
+    def delete(path: Path, force: Boolean = false): FileSystemTest[Unit] = FileSystemTest(fss ⇒ (fss - path, ()))
+    def exists(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.contains(path)))
+    def isAFile(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.get(path).contains(File)))
+    def isAFolder(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.get(path).contains(Folder)))
