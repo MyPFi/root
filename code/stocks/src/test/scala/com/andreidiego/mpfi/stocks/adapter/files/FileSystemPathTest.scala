@@ -1,15 +1,14 @@
 package com.andreidiego.mpfi.stocks.adapter.files
 
+import java.nio.file.Path
 import scala.annotation.experimental
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.fixture.ConfigMapFixture
-import cats.Functor
 import FileSystemTest.FileSystemTest
 
 @experimental 
 class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import language.deprecated.symbolLiterals
-  import language.experimental.saferExceptions
   import unsafeExceptions.canThrowAny
   import org.scalatest.matchers.should.Matchers.*
   import FileSystemPathMessages.*
@@ -55,35 +54,63 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val fileName = "FileSystemPathTest-Exists.txt"
 
             assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-              path => assertThat(FileSystemPath.from[FileSystemTest](path).exists),
-              path => assertThat(!FileSystemPath.from[FileSystemTest](path).doesNotExist)
+              path => FileSystemPath.from[FileSystemTest](path).exists,
+              path => !FileSystemPath.from[FileSystemTest](path).doesNotExist
             )
           }
           "or not." in { configMap =>
             val file = "FileSystemPathTest-Exists.txt"
 
             assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-              path => assertThat(FileSystemPath.from[FileSystemTest](path).doesNotExist),
-              path => assertThat(!FileSystemPath.from[FileSystemTest](path).exists)
+              path => FileSystemPath.from[FileSystemTest](path).doesNotExist,
+              path => !FileSystemPath.from[FileSystemTest](path).exists
             )
           }
           "is a file, as long as" - { 
-            "it exists, independent of an extension being" - {
-              "present" in { configMap =>
-                val fileName = "FileSystemPathTest-Exists.txt"
+            "it exists as a file, independent of" - {
+              "an extension being" - {
+                "present" in { configMap =>
+                  val fileName = "FileSystemPathTest-Exists.txt"
 
-                assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
-                )
+                  assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                  )
+                }
+                "or not." in { configMap =>
+                  val fileName = "FileSystemPathTest-Exists"
+
+                  assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                  )
+                }
               }
-              "or not." in { configMap =>
-                val fileName = "FileSystemPathTest-Exists"
+              "it ending with" - {
+                "'/' or '\\'" in { configMap =>
+                  val fileName = "FileSystemPathTest-Exists/"
 
-                assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
-                )
+                  assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                  )
+                }
+                "or not." in { configMap =>
+                  val fileName = "FileSystemPathTest-Exists"
+
+                  assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                  )
+                }
               }
             }
             "if it doesn't exist, it either ends with" - {
@@ -91,45 +118,73 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 val file = "FileSystemPathTest-Exists.txt"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
+                  path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                  path => !FileSystemPath.from[FileSystemTest](path).isNotAFile
                 )
               }
               "or, something different than '/' and '\\'" in { configMap =>
                 val file = "FileSystemPathTest-Exists"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFile),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFile)
+                  path => FileSystemPath.from[FileSystemTest](path).isAFile,
+                  path => !FileSystemPath.from[FileSystemTest](path).isNotAFile
                 )
               }
             }
           }
           "or, a folder, as long as" - {
-            "it exists, independent of being finished in" - { 
-              "'/' or '\\'" in { configMap =>
-                val folderName = "folder/"
+            "it exists as a folder, independent of" - {
+              "being finished in" - { 
+                "'/' or '\\'" in { configMap =>
+                  val folderName = "folder/"
 
-                assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
-                )
+                  assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                  )
+                }
+                "or not." in { configMap =>
+                  val folderName = "folder"
+
+                  assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                  )
+                }
               }
-              "or not." in { configMap =>
-                val folderName = "folder"
+              "or, having" - { 
+                "an extension" in { configMap =>
+                  val folderName = "folder.hid"
 
-                assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                  path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
-                  path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
-                )
+                  assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                  )
+                }
+                "or not." in { configMap =>
+                  val folderName = "folder"
+
+                  assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
+                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
+                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
+                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                  )
+                }
               }
             }
             "if it doesn't exist, it ends with a '/' or '\\'" in { configMap =>
               val folder = "folder/"
 
               assertWithNonExisting(folder)(configMap.getRequired("targetDir"))( 
-                path => assertThat(FileSystemPath.from[FileSystemTest](path).isAFolder),
-                path => assertThat(!FileSystemPath.from[FileSystemTest](path).isNotAFolder)
+                path => FileSystemPath.from[FileSystemTest](path).isAFolder,
+                path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder
               )
             }
           }
@@ -152,26 +207,24 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   }
 
 object FileSystemPathTest:
-  import java.nio.file.Path
   import org.scalatest.Assertions.assert
-  import org.scalatest.compatible.Assertion
-  import cats.syntax.functor.*
   import FileSystemTest.emptyState
 
-  private def assertThat[F[_]: Functor](fileSystemQuery: F[Boolean]): F[Assertion] = 
-    fileSystemQuery.map(assert(_))
-
-  private def assertWithExistingFile(fileName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
+  private def assertWithExistingFile(fileName: String)(buildTarget: String)(
+    assertions: String => FileSystemTest[Boolean]*
+  ): Unit = 
     assertWithExisting(fileName, buildTarget, FileSystem[FileSystemTest].createFile(_), assertions: _*)
 
-  private def assertWithExistingFolder(folderName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
+  private def assertWithExistingFolder(folderName: String)(buildTarget: String)(
+    assertions: String => FileSystemTest[Boolean]*
+  ): Unit = 
     assertWithExisting(folderName, buildTarget, FileSystem[FileSystemTest].createFolder(_), assertions: _*)
     
   private def assertWithExisting(
     resourceName: String, 
     buildTarget: String, 
     createResourceAt: Path => FileSystemTest[Unit], 
-    assertions: String => FileSystemTest[Assertion]*
+    assertions: String => FileSystemTest[Boolean]*
   ): Unit =
     val fileSystem = FileSystem[FileSystemTest] 
     val currentFolder = Path.of(s"$buildTarget/test-files")
@@ -180,24 +233,25 @@ object FileSystemPathTest:
     val createResources = for {
       _ <- fileSystem.createFolder(currentFolder)
       _ <- createResourceAt(path)
-      _ <- FileSystemTest(fss => (fss, assertions.foreach(_(path.toString).run(fss).value)))
+      _ <- FileSystemTest(fss => (fss, assertions.map(_(path.toString).map(assert(_)).run(fss).value)))
       _ <- fileSystem.delete(path)
       _ <- fileSystem.delete(currentFolder)
     } yield()
 
     createResources.run(emptyState).value
     
-  private def assertWithNonExisting(resourceName: String)(buildTarget: String)(assertions: String => FileSystemTest[Assertion]*): Unit = 
+  private def assertWithNonExisting(resourceName: String)(buildTarget: String)(
+    assertions: String => FileSystemTest[Boolean]*
+  ): Unit = 
     val currentFolder = s"$buildTarget/test-files"
     val path = s"$currentFolder/$resourceName"
 
-    assertions.foreach(_(path).run(emptyState).value)
+    assertions.foreach(_(path).map(assert(_)).run(emptyState).value)
 
   extension(fileSystemTest: FileSystemTest[Boolean])
     private def unary_! : FileSystemTest[Boolean] = fileSystemTest.map(!_)
 
 object FileSystemTest:
-  import java.nio.file.Path
   import cats.data.State
   
   enum ResourceType:
