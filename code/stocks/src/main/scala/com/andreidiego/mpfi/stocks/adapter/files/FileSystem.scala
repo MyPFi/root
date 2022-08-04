@@ -1,10 +1,11 @@
 package com.andreidiego.mpfi.stocks.adapter.files
 
 import java.nio.file.Path
+import scala.util.Try
 
 trait FileSystem[F[_]]:
-  def createFile(path: Path): F[Unit]
-  def createFolder(path: Path): F[Unit]
+  def createFile(path: Path): F[Try[Path]]
+  def createFolder(path: Path): F[Try[Path]]
   def delete(path: Path, force: Boolean = false): F[Unit]
   def exists(path: Path): F[Boolean]
   def isAFile(path: Path): F[Boolean]

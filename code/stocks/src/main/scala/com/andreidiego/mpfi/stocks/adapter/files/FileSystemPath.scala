@@ -2,15 +2,47 @@ package com.andreidiego.mpfi.stocks.adapter.files
 
 import java.nio.file.Path
 import scala.annotation.experimental
+import cats.Monad
+import FileSystemPathException.*
 
 enum FileSystemPathException(message: String) extends Exception(message):
   case RequiredValueMissingException(message: String) extends FileSystemPathException(message)
   case UnexpectedContentValueException(message: String) extends FileSystemPathException(message)
+  /* 
+   FIXME I'd like to use ResourceType as the type for both parameters here but, when I bring the
+    ResourceType enum out of the FileSystemTest object into the production scope, the 
+    given FileSystem[FileSystemTest] = TestFileSystem() can't be found and application won't compile
+   TODO Use the type trick to prevent the caller from inverting the order of the parameters 'desiredType' and 'currentType'
+  */
+  case ResourceWithConflictingTypeAlreadyExistsException(resource: Path, desiredType: String, currentType: String) 
+    extends FileSystemPathException(s"Cannot create $resource as a $desiredType since it already exists as a $currentType.")
 
 @experimental class FileSystemPath[F[_]](path: String):
+  import scala.util.Try
+  import scala.util.Success
+  import scala.util.Failure
   import cats.syntax.functor.*
   import cats.syntax.apply.*
+  import cats.syntax.flatMap.*
   import FileSystemPath.*
+
+  def create: InteractsWithTheFileSystemAndReturns[Try[Path]][F] =
+    val canCreate = (exists, FileSystem[F].isAFile(Path.of(path)), FileSystem[F].isAFolder(Path.of(path)))
+      .mapN{ (exists, isAFile, isAFolder) =>
+        if exists && isAFile && path.endsWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "Folder", "File"))
+        else if exists && isAFolder && path.doesNotEndWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "File", "Folder"))
+        else Success(Path.of(path))
+      }
+
+    canCreate.flatMap{ okToCreate => 
+      if okToCreate.isFailure then canCreate
+      else doesNotExist.flatMap{ doesNotExist => 
+        if doesNotExist then 
+          if path.endsWithSlash then FileSystem[F].createFolder(Path.of(path)) 
+          else FileSystem[F].createFile(Path.of(path))
+        else summon[Monad[F]].pure(Success(Path.of(path)))
+      }
+    } 
 
   def exists: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     FileSystem[F].exists(Path.of(path))
@@ -37,11 +69,9 @@ enum FileSystemPathException(message: String) extends Exception(message):
 @experimental object FileSystemPath:
   import language.experimental.saferExceptions
   import scala.util.matching.Regex
-  import cats.Apply
   import FileSystemPathMessages.*
-  import FileSystemPathException.*
 
-  type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Apply[F] ?=> F[A]
+  type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Monad[F] ?=> F[A]
 
   def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPathException =
     if path.isBlank then
