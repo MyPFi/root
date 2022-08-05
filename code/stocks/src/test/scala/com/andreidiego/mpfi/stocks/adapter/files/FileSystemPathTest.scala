@@ -1,9 +1,6 @@
 package com.andreidiego.mpfi.stocks.adapter.files
 
-import java.io.IOException
 import java.nio.file.Path
-import java.nio.file.DirectoryNotEmptyException
-import scala.util.Try
 import scala.annotation.experimental
 import unsafeExceptions.canThrowAny
 import org.scalatest.TryValues.*
@@ -15,6 +12,8 @@ import FileSystemTest.emptyState
 
 @experimental 
 class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
+  import java.io.IOException
+  import java.nio.file.DirectoryNotEmptyException
   import language.deprecated.symbolLiterals
   import FileSystemPathMessages.*
   import FileSystemPathException.*
@@ -498,6 +497,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   }
 
 object FileSystemPathTest:
+  import scala.util.Try
   import org.scalatest.Assertions.assert
   import org.scalatest.compatible.Assertion
 
@@ -566,73 +566,3 @@ object FileSystemPathTest:
 
   extension(fileSystemTest: FileSystemTest[Boolean])
     private def unary_! : FileSystemTest[Boolean] = fileSystemTest.map(!_)
-
-object FileSystemTest:
-  import scala.util.Failure
-  import cats.data.State
-
-  enum ResourceType:
-    case File, Folder
-
-  type FileSystemState = Map[Path, ResourceType]
-  type FileSystemTest[A] = State[FileSystemState, A]
-
-  val emptyState: FileSystemState = Map()
-
-  def apply[A](s: FileSystemState => (FileSystemState, A)): FileSystemTest[A] = State(s)
-
-  // TODO Add law checking to this instance
-  //noinspection NonAsciiCharacters
-  class TestFileSystem extends FileSystem[FileSystemTest]:
-    import java.nio.file.FileAlreadyExistsException
-    import java.nio.file.NoSuchFileException
-    import scala.util.Success
-    import cats.syntax.apply.*
-    import ResourceType.*
-
-    override def createFile(path: Path): FileSystemTest[Try[Path]] = 
-      exists(path).flatMap { exists =>
-        if exists then FileSystemTest(fss ⇒ (fss, Failure(FileAlreadyExistsException(path.toString))))
-        else FileSystemTest(fss ⇒ (fss + (path → File), Success(path)))
-      }
-
-    override def createFolder(path: Path): FileSystemTest[Try[Path]] = 
-      exists(path).flatMap { exists =>
-        if exists then FileSystemTest(fss ⇒ (fss, Failure(FileAlreadyExistsException(path.toString))))
-        else FileSystemTest(fss ⇒ (fss + (path → Folder), Success(path)))
-      }
-      
-    override def delete(path: Path, force: Boolean = false): FileSystemTest[Try[Path]] = FileSystemTest { fss ⇒ 
-      (exists(path), isAFolder(path)).mapN { (exists, isAFolder) =>
-        if !exists then (fss, Failure(NoSuchFileException(path.toString)))
-        else 
-          if isAFolder && /* !isEmpty */ fss.count((innerPath, _) => innerPath.startsWith(path)) > 1 then 
-            if force then (
-              /* deleteSubtree */ fss.filter((innerPath, _) => !innerPath.startsWith(path)), 
-              Success(path)
-            )
-            else (fss, Failure(DirectoryNotEmptyException(path.toString)))
-          else 
-            (fss - path, Success(path))
-      }.runA(fss).value
-    }
-
-    override def exists(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.contains(path)))
-    override def isAFile(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.get(path).contains(File)))
-    override def isAFolder(path: Path): FileSystemTest[Boolean] = FileSystemTest(fss ⇒ (fss, fss.get(path).contains(Folder)))  
-  
-  given FileSystem[FileSystemTest] = TestFileSystem()
-
-  object FileSystemUOE extends TestFileSystem:
-    override def createFile(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(UnsupportedOperationException())))
-    override def createFolder(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(UnsupportedOperationException())))
-    
-  object FileSystemIOE extends TestFileSystem:
-    override def createFile(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(IOException())))
-    override def createFolder(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(IOException())))
-    override def delete(path: Path, force: Boolean = false): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(IOException())))
-
-  object FileSystemSE extends TestFileSystem:
-    override def createFile(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(SecurityException())))
-    override def createFolder(path: Path): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(SecurityException())))
-    override def delete(path: Path, force: Boolean = false): FileSystemTest[Try[Path]] = FileSystemTest(fss ⇒ (fss, Failure(SecurityException())))
