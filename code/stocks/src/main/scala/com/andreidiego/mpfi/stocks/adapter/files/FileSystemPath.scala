@@ -28,13 +28,13 @@ enum FileSystemPathException(message: String) extends Exception(message):
 
   def create: InteractsWithTheFileSystemAndReturns[Try[Path]][F] =
     val canCreate = (exists, FileSystem[F].isAFile(Path.of(path)), FileSystem[F].isAFolder(Path.of(path)))
-      .mapN{ (exists, isAFile, isAFolder) =>
+      .mapN { (exists, isAFile, isAFolder) =>
         if exists && isAFile && path.endsWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "Folder", "File"))
         else if exists && isAFolder && path.doesNotEndWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "File", "Folder"))
         else Success(Path.of(path))
       }
 
-    canCreate.flatMap{ okToCreate => 
+    canCreate.flatMap { okToCreate => 
       if okToCreate.isFailure then canCreate
       else doesNotExist.flatMap{ doesNotExist => 
         if doesNotExist then 
@@ -43,6 +43,13 @@ enum FileSystemPathException(message: String) extends Exception(message):
         else summon[Monad[F]].pure(Success(Path.of(path)))
       }
     } 
+
+  // TODO Default parameters don't work as expected for methods that return functions
+  def delete(force: Boolean = false): InteractsWithTheFileSystemAndReturns[Try[Path]][F] = 
+    exists.flatMap { exists => 
+      if exists then FileSystem[F].delete(Path.of(path), force)
+      else summon[Monad[F]].pure(Success(Path.of(path)))
+    }
 
   def exists: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     FileSystem[F].exists(Path.of(path))

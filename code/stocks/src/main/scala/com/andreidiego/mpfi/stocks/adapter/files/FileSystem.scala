@@ -6,7 +6,7 @@ import scala.util.Try
 trait FileSystem[F[_]]:
   def createFile(path: Path): F[Try[Path]]
   def createFolder(path: Path): F[Try[Path]]
-  def delete(path: Path, force: Boolean = false): F[Unit]
+  def delete(path: Path, force: Boolean = false): F[Try[Path]]
   def exists(path: Path): F[Boolean]
   def isAFile(path: Path): F[Boolean]
   def isAFolder(path: Path): F[Boolean]
