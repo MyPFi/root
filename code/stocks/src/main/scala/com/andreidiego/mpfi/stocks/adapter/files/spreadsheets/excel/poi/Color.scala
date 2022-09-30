@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.spreadsheets.excel.poi
+package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets.excel.poi
 
 enum Color private(val hex: String, val dec: Array[Byte]) {
 

@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.spreadsheets
+package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets
 
 import java.util.Locale
 import java.time.{LocalDate, LocalDateTime}
