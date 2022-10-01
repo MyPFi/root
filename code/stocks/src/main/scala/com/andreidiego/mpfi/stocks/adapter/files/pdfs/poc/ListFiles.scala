@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks
+package com.andreidiego.mpfi.stocks.adapter.files.pdfs.poc
 
 import os.Path
 
