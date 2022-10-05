@@ -17,6 +17,7 @@ enum FileSystemPathException(message: String) extends Exception(message):
   case ResourceWithConflictingTypeAlreadyExistsException(resource: Path, desiredType: String, currentType: String) 
     extends FileSystemPathException(s"Cannot create $resource as a $desiredType since it already exists as a $currentType.")
 
+// TODO Constructor must be private
 @experimental class FileSystemPath[F[_]](path: String):
   import scala.util.Try
   import scala.util.Success
@@ -59,7 +60,7 @@ enum FileSystemPathException(message: String) extends Exception(message):
 
   def isAFile: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     (exists, FileSystem[F].isAFile(Path.of(path)), doesNotExist).mapN{ (exists, isAFile, doesNotExist) =>
-      ((exists && isAFile) || (doesNotExist && (path.hasExtension || path.doesNotEndWithSlash)))
+      (exists && isAFile) || (doesNotExist && (path.hasExtension || path.doesNotEndWithSlash))
     }
 
   def isNotAFile: InteractsWithTheFileSystemAndReturns[Boolean][F] =
@@ -67,20 +68,20 @@ enum FileSystemPathException(message: String) extends Exception(message):
 
   def isAFolder: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     (exists, FileSystem[F].isAFolder(Path.of(path)), doesNotExist).mapN{ (exists, isAFolder, doesNotExist) =>
-      ((exists && isAFolder) || (doesNotExist && path.endsWithSlash))
+      (exists && isAFolder) || (doesNotExist && path.endsWithSlash)
     }
 
   def isNotAFolder: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     isAFolder.map(!_)
 
-@experimental object FileSystemPath:
+object FileSystemPath:
   import language.experimental.saferExceptions
   import scala.util.matching.Regex
   import FileSystemPathMessages.*
 
   type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Monad[F] ?=> F[A]
 
-  def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPathException =
+  @experimental def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPathException =
     if path.isBlank then
       throw RequiredValueMissingException(fileSystemPathMissing) 
     else if !path.validated.isAbsolute then
@@ -104,6 +105,6 @@ enum FileSystemPathException(message: String) extends Exception(message):
 object FileSystemPathMessages:
   val fileSystemPathMissing = "Path cannot be empty."
   val invalidFileSystemPath: String => String =
-    path => s"$path does not represent a valid filesytem path."
+    path => s"$path does not represent a valid filesystem path."
   val relativeFileSystemPathNotAllowed: String => String =
     path => s"Relative filesystem paths (like '$path') are not allowed."

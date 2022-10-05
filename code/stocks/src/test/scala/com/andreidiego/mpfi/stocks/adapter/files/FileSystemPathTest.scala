@@ -283,59 +283,59 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               }.run(emptyState).value
             }
           }
-        }
-        "a 'SecurityException' when creating a" - {
-          "file" in { configMap =>
-            val file = "FileSystemPathTest.txt"
-            val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
-              
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
-              for {
-                resource <- fileSystemPath.create(using FileSystemSE)
-                result    = resource.failure.exception shouldBe a [SecurityException]
-              } yield result
-            }.run(emptyState).value
+          "a 'SecurityException' when creating a" - {
+            "file" in { configMap =>
+              val file = "FileSystemPathTest.txt"
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
+                
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  resource <- fileSystemPath.create(using FileSystemSE)
+                  result    = resource.failure.exception shouldBe a [SecurityException]
+                } yield result
+              }.run(emptyState).value
+            }
+            "or, a folder." in { configMap =>
+              val folder = "folder/"
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
+                
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  resource <- fileSystemPath.create(using FileSystemSE)
+                  result    = resource.failure.exception shouldBe a [SecurityException]
+                } yield result
+              }.run(emptyState).value
+            }
           }
-          "or, a folder." in { configMap =>
-            val folder = "folder/"
-            val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
-              
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
-              for {
-                resource <- fileSystemPath.create(using FileSystemSE)
-                result    = resource.failure.exception shouldBe a [SecurityException]
-              } yield result
-            }.run(emptyState).value
-          }
-        }
-        "or, a ResourceWithConflictingTypeAlreadyExistsException when trying to create a" - {
-          "file and a folder with that name already exists." in { configMap =>
-            val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/folder"
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
-              for {
-                _         <- assertResourceCreated("folder/", _.isAFolder)(configMap.getRequired("targetDir"))
-                resource  <- fileSystemPath.create
-                exception  = resource.failure.exception 
-                result     = exception shouldBe a [ResourceWithConflictingTypeAlreadyExistsException]
-                message    = exception should have message s"Cannot create ${pathString.replace("/", "\\")} as a File since it already exists as a Folder."
-              } yield (result, message)
-            }.run(emptyState).value
-          }
-          "folder and a file with that name already exists." in { configMap =>
-            val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/file/"
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
-              for {
-                _         <- assertResourceCreated("file", _.isAFile)(configMap.getRequired("targetDir"))
-                resource  <- fileSystemPath.create
-                exception  = resource.failure.exception 
-                result     = exception shouldBe a [ResourceWithConflictingTypeAlreadyExistsException]
-                message    = exception should have message s"Cannot create ${pathString.replace("/", "\\").dropRight(1)} as a Folder since it already exists as a File."
-              } yield (result, message)
-            }.run(emptyState).value
+          "or, a ResourceWithConflictingTypeAlreadyExistsException when trying to create a" - {
+            "file and a folder with that name already exists." in { configMap =>
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/folder"
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  _         <- assertResourceCreated("folder/", _.isAFolder)(configMap.getRequired("targetDir"))
+                  resource  <- fileSystemPath.create
+                  exception  = resource.failure.exception 
+                  result     = exception shouldBe a [ResourceWithConflictingTypeAlreadyExistsException]
+                  message    = exception should have message s"Cannot create ${pathString.replace("/", "\\")} as a File since it already exists as a Folder."
+                } yield (result, message)
+              }.run(emptyState).value
+            }
+            "folder and a file with that name already exists." in { configMap =>
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/file/"
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  _         <- assertResourceCreated("file", _.isAFile)(configMap.getRequired("targetDir"))
+                  resource  <- fileSystemPath.create
+                  exception  = resource.failure.exception 
+                  result     = exception shouldBe a [ResourceWithConflictingTypeAlreadyExistsException]
+                  message    = exception should have message s"Cannot create ${pathString.replace("/", "\\").dropRight(1)} as a Folder since it already exists as a File."
+                } yield (result, message)
+              }.run(emptyState).value
+            }
           }
         }
         "delete the underlying resource it represents, if the resource exists, be it a" - {
@@ -447,50 +447,50 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               }.run(emptyState).value
             }
           }
-        }
-        "a 'SecurityException' when deleting a" - {
-          "file" in { configMap =>
-            val file = "FileSystemPathTest.txt"
-            val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
-              
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
-              for {
-                _        <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
-                resource <- fileSystemPath.delete(false)(using FileSystemSE)
-                result    = resource.failure.exception shouldBe a [SecurityException]
-              } yield result
-            }.run(emptyState).value
+          "a 'SecurityException' when deleting a" - {
+            "file" in { configMap =>
+              val file = "FileSystemPathTest.txt"
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
+                
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  _        <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
+                  resource <- fileSystemPath.delete(false)(using FileSystemSE)
+                  result    = resource.failure.exception shouldBe a [SecurityException]
+                } yield result
+              }.run(emptyState).value
+            }
+            "or, a folder." in { configMap =>
+              val folder = "folder/"
+              val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
+                
+              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              { 
+                for {
+                  _        <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
+                  resource <- fileSystemPath.delete(false)(using FileSystemSE)
+                  result    = resource.failure.exception shouldBe a [SecurityException]
+                } yield result
+              }.run(emptyState).value
+            }
           }
-          "or, a folder." in { configMap =>
+          "or, a 'DirectoryNotEmptyException', when trying to delete a folder which is not empty if the 'force' parameter is set to 'false' (default)." in { configMap =>
             val folder = "folder/"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
-              
+  
             val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-            { 
+            {
               for {
-                _        <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
-                resource <- fileSystemPath.delete(false)(using FileSystemSE)
-                result    = resource.failure.exception shouldBe a [SecurityException]
-              } yield result
+                _             <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
+                _             <- assertResourceCreated(s"$folder/file", _.isAFile)(configMap.getRequired("targetDir"))
+                resource      <- fileSystemPath.delete(false)
+                response       = resource.failure.exception shouldBe a [DirectoryNotEmptyException]
+                exists        <- fileSystemPath.exists
+                result         = assert(exists)
+              } yield (response, result)
             }.run(emptyState).value
           }
-        }
-        "or, a 'DirectoryNotEmptyException', when trying to delete a folder which is not empty if the 'force' parameter is set to 'false' (default)." in { configMap =>
-          val folder = "folder/"
-          val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
-
-          val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
-          {
-            for {
-              _             <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
-              _             <- assertResourceCreated(s"$folder/file", _.isAFile)(configMap.getRequired("targetDir"))
-              resource      <- fileSystemPath.delete(false)
-              response       = resource.failure.exception shouldBe a [DirectoryNotEmptyException]
-              exists        <- fileSystemPath.exists
-              result         = assert(exists)
-            } yield (response, result)
-          }.run(emptyState).value
         }
       }
     }
