@@ -44,7 +44,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
        possible when it comes to naming files in Linux  - although I couldn't find an authoritative
        source for what is acceptable and what is not.
       */
-      "a ill-formed file system path." in { _ =>
+      "an ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
         the [UnexpectedContentValueException] thrownBy FileSystemPath.from[FileSystemTest](illFormedPath) should have {
