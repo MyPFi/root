@@ -7,8 +7,7 @@ import org.scalatest.TryValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.fixture.ConfigMapFixture
 import org.scalatest.matchers.should.Matchers.*
-import FileSystemTest.FileSystemTest
-import FileSystemTest.emptyState
+import FileSystemTest.{emptyState, StateFileSystem}
 
 @experimental 
 class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
@@ -28,14 +27,14 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
     }
     "fail to be built when given" - {
       "an empty string." in { _ =>
-        the [RequiredValueMissingException] thrownBy FileSystemPath.from[FileSystemTest]("") should have {
+        the [RequiredValueMissingException] thrownBy FileSystemPath.from[StateFileSystem]("") should have {
           'message (fileSystemPathMissing)
         }
       }
       "a relative file system path." in { _ =>
         val relativePath = "folder/file.ext"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[FileSystemTest](relativePath) should have {
+        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[StateFileSystem](relativePath) should have {
           'message (relativeFileSystemPathNotAllowed(relativePath))
         }
       }
@@ -47,28 +46,28 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
       "an ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[FileSystemTest](illFormedPath) should have {
+        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[StateFileSystem](illFormedPath) should have {
           'message (invalidFileSystemPath(illFormedPath))
         }
       }
     }
-    "when given a non-empty, well-formed, absolute file system path" - { 
+    "when given a non-empty, well-formed, absolute file system path" - {
       "be able to" - { 
         "tell if the file/folder it represents" - {
           "exists" in { configMap =>
             val fileName = "FileSystemPathTest-Exists.txt"
 
             assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-              path => FileSystemPath.from[FileSystemTest](path).exists,
-              path => !FileSystemPath.from[FileSystemTest](path).doesNotExist
+              path => FileSystemPath.from[StateFileSystem](path).exists,
+              path => !FileSystemPath.from[StateFileSystem](path).doesNotExist
             )
           }
           "or not." in { configMap =>
             val file = "FileSystemPathTest-Exists.txt"
 
             assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-              path => FileSystemPath.from[FileSystemTest](path).doesNotExist,
-              path => !FileSystemPath.from[FileSystemTest](path).exists
+              path => FileSystemPath.from[StateFileSystem](path).doesNotExist,
+              path => !FileSystemPath.from[StateFileSystem](path).exists
             )
           }
           "is a file, as long as" - { 
@@ -78,20 +77,20 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   val fileName = "FileSystemPathTest-Exists.txt"
 
                   assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                    path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFolder
                   )
                 }
                 "or not." in { configMap =>
                   val fileName = "FileSystemPathTest-Exists"
 
                   assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                    path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFolder
                   )
                 }
               }
@@ -100,20 +99,20 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   val fileName = "FileSystemPathTest-Exists/"
 
                   assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                    path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFolder
                   )
                 }
                 "or not." in { configMap =>
                   val fileName = "FileSystemPathTest-Exists"
 
                   assertWithExistingFile(fileName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFile,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                    path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFile,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFolder
                   )
                 }
               }
@@ -123,16 +122,16 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 val file = "FileSystemPathTest-Exists.txt"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                  path => !FileSystemPath.from[FileSystemTest](path).isNotAFile
+                  path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                  path => !FileSystemPath.from[StateFileSystem](path).isNotAFile
                 )
               }
               "or, something different than '/' and '\\'" in { configMap =>
                 val file = "FileSystemPathTest-Exists"
 
                 assertWithNonExisting(file)(configMap.getRequired("targetDir"))( 
-                  path => FileSystemPath.from[FileSystemTest](path).isAFile,
-                  path => !FileSystemPath.from[FileSystemTest](path).isNotAFile
+                  path => FileSystemPath.from[StateFileSystem](path).isAFile,
+                  path => !FileSystemPath.from[StateFileSystem](path).isNotAFile
                 )
               }
             }
@@ -144,20 +143,20 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   val folderName = "folder/"
 
                   assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                    path => FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFile
                   )
                 }
                 "or not." in { configMap =>
                   val folderName = "folder"
 
                   assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                    path => FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFile
                   )
                 }
               }
@@ -166,20 +165,20 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   val folderName = "folder.hid"
 
                   assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile
+                    path => FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFile
                   )
                 }
                 "or not." in { configMap =>
                   val folderName = "folder"
 
                   assertWithExistingFolder(folderName)(configMap.getRequired("targetDir"))( 
-                    path => FileSystemPath.from[FileSystemTest](path).isAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder,
-                    path => !FileSystemPath.from[FileSystemTest](path).isAFile,
-                    path => FileSystemPath.from[FileSystemTest](path).isNotAFile,
+                    path => FileSystemPath.from[StateFileSystem](path).isAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isNotAFolder,
+                    path => !FileSystemPath.from[StateFileSystem](path).isAFile,
+                    path => FileSystemPath.from[StateFileSystem](path).isNotAFile,
                   )
                 }
               }
@@ -188,8 +187,8 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
 
               assertWithNonExisting(folder)(configMap.getRequired("targetDir"))( 
-                path => FileSystemPath.from[FileSystemTest](path).isAFolder,
-                path => !FileSystemPath.from[FileSystemTest](path).isNotAFolder
+                path => FileSystemPath.from[StateFileSystem](path).isAFolder,
+                path => !FileSystemPath.from[StateFileSystem](path).isNotAFolder
               )
             }
           }
@@ -207,7 +206,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val file = "FileSystemPathTest.txt"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
             
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             { 
               for {
                 _         <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
@@ -220,7 +219,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val folder = "folder/"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
             
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             { 
               for {
                 _         <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -236,7 +235,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val file = "FileSystemPathTest.txt"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemUOE)
@@ -248,7 +247,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemUOE)
@@ -262,7 +261,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val file = "FileSystemPathTest.txt"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemIOE)
@@ -274,7 +273,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemIOE)
@@ -288,7 +287,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val file = "FileSystemPathTest.txt"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemSE)
@@ -300,7 +299,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   resource <- fileSystemPath.create(using FileSystemSE)
@@ -312,7 +311,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "or, a ResourceWithConflictingTypeAlreadyExistsException when trying to create a" - {
             "file and a folder with that name already exists." in { configMap =>
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/folder"
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _         <- assertResourceCreated("folder/", _.isAFolder)(configMap.getRequired("targetDir"))
@@ -325,7 +324,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             }
             "folder and a file with that name already exists." in { configMap =>
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/file/"
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _         <- assertResourceCreated("file", _.isAFile)(configMap.getRequired("targetDir"))
@@ -343,7 +342,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val file = "FileSystemPathTest.txt"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
 
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             {
               for {
                 _             <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
@@ -359,7 +358,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               {
                 for {
                   _             <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -374,7 +373,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               {
                 for {
                   _             <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -393,7 +392,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val file = "FileSystemPathTest.txt"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
 
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             {
               for {
                 doesNotExist  <- fileSystemPath.doesNotExist
@@ -407,7 +406,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val folder = "folder/"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
 
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             {
               for {
                 doesNotExist  <- fileSystemPath.doesNotExist
@@ -424,7 +423,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val file = "FileSystemPathTest.txt"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _        <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
@@ -437,7 +436,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _        <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -452,7 +451,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val file = "FileSystemPathTest.txt"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$file"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _        <- assertResourceCreated(file, _.isAFile)(configMap.getRequired("targetDir"))
@@ -465,7 +464,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               val folder = "folder/"
               val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
                 
-              val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+              val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
               { 
                 for {
                   _        <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -479,7 +478,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             val folder = "folder/"
             val pathString = s"${configMap.getRequired[String]("targetDir")}/test-files/$folder"
   
-            val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+            val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
             {
               for {
                 _             <- assertResourceCreated(folder, _.isAFolder)(configMap.getRequired("targetDir"))
@@ -502,22 +501,22 @@ object FileSystemPathTest:
   import org.scalatest.compatible.Assertion
 
   private def assertWithExistingFile(fileName: String)(buildTarget: String)(
-    assertions: String => FileSystemTest[Boolean]*
+    assertions: String => StateFileSystem[Boolean]*
   ): Unit = 
-    assertWithExisting(fileName, buildTarget, FileSystem[FileSystemTest].createFile(_), assertions: _*)
+    assertWithExisting(fileName, buildTarget, FileSystem[StateFileSystem].createFile(_), assertions: _*)
 
   private def assertWithExistingFolder(folderName: String)(buildTarget: String)(
-    assertions: String => FileSystemTest[Boolean]*
+    assertions: String => StateFileSystem[Boolean]*
   ): Unit = 
-    assertWithExisting(folderName, buildTarget, FileSystem[FileSystemTest].createFolder(_), assertions: _*)
+    assertWithExisting(folderName, buildTarget, FileSystem[StateFileSystem].createFolder(_), assertions: _*)
     
   private def assertWithExisting(
     resourceName: String, 
     buildTarget: String, 
-    createResourceAt: Path => FileSystemTest[Try[Path]],
-    assertions: String => FileSystemTest[Boolean]*
+    createResourceAt: Path => StateFileSystem[Try[Path]],
+    assertions: String => StateFileSystem[Boolean]*
   ): Unit =
-    val fileSystem = FileSystem[FileSystemTest] 
+    val fileSystem = FileSystem[StateFileSystem]
     val currentFolder = Path.of(s"$buildTarget/test-files")
     val path = Path.of(s"$currentFolder/$resourceName")
 
@@ -532,17 +531,17 @@ object FileSystemPathTest:
     createResources.run(emptyState).value
     
   private def assertWithNonExisting(resourceName: String)(buildTarget: String)(
-    assertions: String => FileSystemTest[Boolean]*
-  ): Unit = 
+    assertions: String => StateFileSystem[Boolean]*
+  ): Unit =
     val currentFolder = s"$buildTarget/test-files"
     val path = s"$currentFolder/$resourceName"
 
-    assertions.foreach(_(path).map(assert(_)).run(emptyState).value)
+    assertions.foreach(_ (path).map(assert(_)).run(emptyState).value)
 
   private def assertResourceCreated(
     resourceName: String,
-    resourceType: FileSystemPath[FileSystemTest] => FileSystemTest[Boolean]
-  )(buildTarget: String): FileSystemTest[(Assertion, Assertion, Assertion, Assertion)] =
+    resourceType: FileSystemPath[StateFileSystem] => StateFileSystem[Boolean]
+  )(buildTarget: String): StateFileSystem[(Assertion, Assertion, Assertion, Assertion)] =
     import cats.Functor
     import cats.syntax.functor.*
 
@@ -552,7 +551,7 @@ object FileSystemPathTest:
     val currentFolder = s"$buildTarget/test-files"
     val pathString = s"$currentFolder/$resourceName"
 
-    val fileSystemPath = FileSystemPath.from[FileSystemTest](pathString)
+    val fileSystemPath = FileSystemPath.from[StateFileSystem](pathString)
 
     val assertions = for {
       doesNotExist        <- assertThat(fileSystemPath.doesNotExist)
@@ -564,5 +563,5 @@ object FileSystemPathTest:
     assertions.run(emptyState).value
     assertions
 
-  extension(fileSystemTest: FileSystemTest[Boolean])
-    private def unary_! : FileSystemTest[Boolean] = fileSystemTest.map(!_)
+  extension(fileSystemTest: StateFileSystem[Boolean])
+    private def unary_! : StateFileSystem[Boolean] = fileSystemTest.map(!_)

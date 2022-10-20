@@ -9,7 +9,7 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import language.deprecated.symbolLiterals
   import unsafeExceptions.canThrowAny
   import org.scalatest.matchers.should.Matchers.*
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemTest.FileSystemTest
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemTest.StateFileSystem
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathException.*
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathMessages.*
   import ExtractionGuideSpecPathMessages.*
@@ -22,14 +22,14 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
     }
     "fail to be built when given" - {
       "an empty string." in { _ =>
-        the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest]("") should have {
+        the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem]("") should have {
           'message(fileSystemPathMissing)
         }
       }
       "a relative file system path." in { _ =>
         val relativePath = "folder/file.txt"
 
-        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](relativePath) should have {
+        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](relativePath) should have {
           'message(relativeFileSystemPathNotAllowed(relativePath))
         }
       }
@@ -41,14 +41,14 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
       "an ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
-        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](illFormedPath) should have {
+        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](illFormedPath) should have {
           'message(invalidFileSystemPath(illFormedPath))
         }
       }
       "an absolute file system path to a file that is not a TXT." in { _ =>
         val nonTXTPath: String = s"${os.home.toString}/file.ext"
 
-        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](nonTXTPath) should have {
+        the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](nonTXTPath) should have {
           'message(nonTXTFileSystemPath(nonTXTPath))
         }
       }
@@ -58,14 +58,14 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             "." in { _ =>
               val fileName: String = s"${os.home.toString}/nota_corretagem-modal_mais.txt"
 
-              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
                 'message(incompleteFileName(fileName))
               }
             }
             "even if intermediate folders have '-' as part of their names." in { _ =>
               val fileName: String = s"${os.home.toString}/intermediate-folder/nota_corretagem-modal_mais.txt"
 
-              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
                 'message(incompleteFileName(fileName))
               }
             }
@@ -73,7 +73,7 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "or, higher than three." in { _ =>
             val fileName: String = s"${os.home.toString}/nota-corretagem-modal-mais.txt"
 
-            the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+            the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
               'message(invalidFileNameStructure(fileName))
             }
           }
@@ -82,14 +82,14 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "is empty" in { _ =>
             val fileName: String = s"${os.home.toString}/-modal_mais-v1.txt"
 
-            the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+            the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingDocumentType(fileName))
             }
           }
           "or, has characters other than letters and the '_' sign." in { _ =>
             val fileName: String = s"${os.home.toString}/nota_corretagem2-modal_mais-v1.txt"
 
-            the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+            the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
               'message(documentTypeWithInvalidCharacters(fileName))
             }
           }
@@ -97,7 +97,7 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
         "'s 'DocumentIssuer' section is empty." in { _ =>
           val fileName: String = s"${os.home.toString}/nota_corretagem--v1.txt"
 
-          the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+          the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
             'message(fileNameMissingDocumentIssuer(fileName))
           }
         }
@@ -105,7 +105,7 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "is empty" in { _ =>
             val fileName: String = s"${os.home.toString}/nota_corretagem-modal_mais-.txt"
 
-            the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+            the[RequiredValueMissingException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingDocumentVersion(fileName))
             }
           }
@@ -113,14 +113,14 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             "doesn't start with the letter 'v'" in { _ =>
               val fileName: String = s"${os.home.toString}/nota_corretagem-modal_mais-1.txt"
 
-              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
                 'message(fileNameWithInvalidDocumentVersion(fileName))
               }
             }
             "or, doesn't finish with a number." in { _ =>
               val fileName: String = s"${os.home.toString}/nota_corretagem-modal_mais-vI.txt"
 
-              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[FileSystemTest](fileName) should have {
+              the[UnexpectedContentValueException] thrownBy ExtractionGuideSpecPath.from[StateFileSystem](fileName) should have {
                 'message(fileNameWithInvalidDocumentVersion(fileName))
               }
             }
