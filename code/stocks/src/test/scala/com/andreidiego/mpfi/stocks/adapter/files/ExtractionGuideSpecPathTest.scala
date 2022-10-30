@@ -3,16 +3,17 @@ package com.andreidiego.mpfi.stocks.adapter.files
 import scala.annotation.experimental
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.fixture.ConfigMapFixture
+import com.andreidiego.mpfi.stocks.adapter.files.FileSystemTest.StateFileSystem
 
 @experimental
 class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import language.deprecated.symbolLiterals
   import unsafeExceptions.canThrowAny
   import org.scalatest.matchers.should.Matchers.*
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemTest.StateFileSystem
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathException.*
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathMessages.*
   import ExtractionGuideSpecPathMessages.*
+  import ExtractionGuideSpecPathTest.*
 
   "A 'ExtractionGuideSpecPath' should" - {
     "be built from a string representing the path to a TXT file." in { _ =>
@@ -128,4 +129,35 @@ class ExtractionGuideSpecPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
         }
       }
     }
+    "when given a non-empty, well-formed, absolute file system path to a PDF file, be able to provide a 'FileSystemPath' instance that tells that the resource it represents" - {
+      "is a file" ignore { configMap =>
+        val fileName: String = "compraVALE3 - 22722 - 03-10-2022.pdf"
+        val currentFolder = s"${configMap.getRequired[String]("targetDir")}/test-files"
+        val path = s"$currentFolder/$fileName"
+
+        assertWithNonExisting(path)(
+          path => ExtractionGuideSpecPath.from[StateFileSystem](path).isAFile,
+          path => !ExtractionGuideSpecPath.from[StateFileSystem](path).isNotAFile
+        )
+      }
+      ", not a folder." ignore { configMap =>
+        val fileName: String = "compraVALE3 - 22722 - 03-10-2022.pdf"
+        val currentFolder = s"${configMap.getRequired[String]("targetDir")}/test-files"
+        val path = s"$currentFolder/$fileName"
+
+        assertWithNonExisting(path)(
+          path => ExtractionGuideSpecPath.from[StateFileSystem](path).isNotAFolder,
+          path => !ExtractionGuideSpecPath.from[StateFileSystem](path).isAFolder
+        )
+      }
+    }
   }
+object ExtractionGuideSpecPathTest:
+  import org.scalatest.Assertions.assert
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemTest.emptyState
+
+  private def assertWithNonExisting(resourceName: String)(assertions: String => StateFileSystem[Boolean]*): Unit =
+    assertions.foreach(_ (resourceName).map(assert(_)).run(emptyState).value)
+
+  extension (fileSystemTest: StateFileSystem[Boolean])
+    private def unary_! : StateFileSystem[Boolean] = fileSystemTest.map(!_)

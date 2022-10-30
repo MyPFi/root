@@ -54,18 +54,29 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
         }
       }
       "a file system path whose filename" - {
-        "is not comprised of three sections delimited by ' - '." in { _ =>
-          val fileName: String = s"${os.home.toString}/file - 22722.pdf"
+        "is comprised of sections delimited by '-' in a number" - {
+          "lower than three" - {
+            "." in { _ =>
+              val fileName = s"${os.home.toString}/file - 22722.pdf"
 
-          the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
-            'message(incompleteFileName(fileName))
+              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+                'message(incompleteFileName(fileName))
+              }
+            }
+            "even if intermediate folders have '-' as part of their names." in { _ =>
+              val fileName = s"${os.home.toString}/intermediate - folder/file - 22722.pdf"
+
+              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+                'message(incompleteFileName(fileName))
+              }
+            }
           }
-        }
-        "is not comprised of three sections delimited by ' - '. (what if intermediate folder have ' - ' as parts of their names)" in { _ =>
-          val fileName: String = s"${os.home.toString}/intermediate - folder/file - 22722.pdf"
+          "or, higher than three." in { _ =>
+            val fileName = s"${os.home.toString}/file - 22722 - 22722 - 28-10-2022.pdf"
 
-          the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
-            'message(incompleteFileName(fileName))
+            the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+              'message(invalidFileNameStructure(fileName))
+            }
           }
         }
         "'s 'OperationsDescription' section" - {
@@ -142,7 +153,7 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
       }
     }
     "when given a non-empty, well-formed, absolute file system path to a PDF file, be able to provide a 'FileSystemPath' instance that tells that the resource it represents" - {
-      "is a file." in { configMap =>
+      "is a file" in { configMap =>
         val fileName: String = "compraVALE3 - 22722 - 03-10-2022.pdf"
         val currentFolder = s"${configMap.getRequired[String]("targetDir")}/test-files"
         val path = s"$currentFolder/$fileName"
@@ -152,7 +163,7 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           path => !PDFBrokerageNotePath.from[StateFileSystem](path).isNotAFile
         )
       }
-      "is not a folder." in { configMap =>
+      ", not a folder." in { configMap =>
         val fileName: String = "compraVALE3 - 22722 - 03-10-2022.pdf"
         val currentFolder = s"${configMap.getRequired[String]("targetDir")}/test-files"
         val path = s"$currentFolder/$fileName"

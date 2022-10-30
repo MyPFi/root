@@ -17,8 +17,10 @@ import scala.annotation.experimental
     val f = FileSystemPath.from[F](path)
     if path.isNotPDF then
       throw UnexpectedContentValueException(nonPDFFileSystemPath(path))
-    else if path.fileNameDoesNotPresentTheRequiredThreeSections then
+    else if path.fileNameHasLessThanThreeSections then
       throw UnexpectedContentValueException(incompleteFileName(path))
+    else if path.fileNameHasMoreThanThreeSections then
+      throw UnexpectedContentValueException(invalidFileNameStructure(path))
     else if path.fileNameMissesOperationsDescription then
       throw RequiredValueMissingException(fileNameMissingOperationsDescription(path))
     else if path.fileNameOperationsDescriptionHasOnlyNumbers then
@@ -39,7 +41,8 @@ import scala.annotation.experimental
     private def isNotPDF: Boolean = !path.endsWith(".pdf")
     private def pathSegments: Array[String] = path.split(s"[/${Pattern.quote("\\")}]")
     private def fileName: Array[String] = pathSegments(pathSegments.length - 1).split("- | - | -")
-    private def fileNameDoesNotPresentTheRequiredThreeSections: Boolean = fileName.length < 3
+    private def fileNameHasLessThanThreeSections: Boolean = fileName.length < 3
+    private def fileNameHasMoreThanThreeSections: Boolean = fileName.length > 3
     private def operationsDescription: String = fileName(0)
     private def fileNameMissesOperationsDescription: Boolean = operationsDescription.isBlank
     private def fileNameOperationsDescriptionHasOnlyNumbers: Boolean = operationsDescription.hasOnlyNumbers
@@ -59,6 +62,7 @@ import scala.annotation.experimental
 object PDFBrokerageNotePathMessages:
   val nonPDFFileSystemPath: String => String = path => s"$path is not a PDF file."
   val incompleteFileName: String => String = path => s"Filename in $path does not present the required three sections (OperationsDescription, NoteNumber, and TradingDate) or, they're not delimited by ' - '."
+  val invalidFileNameStructure: String => String = path => s"Filename in $path does not follow the naming convention of 'OperationsDescription - NoteNumber - TradingDate.pdf' (e.g.'sellVALE3 - 18174 - 28-10-2022.txt')."
   val fileNameMissingOperationsDescription: String => String = path => s"$path filename's first section (OperationsDescription) can't be blank."
   val operationsDescriptionWithOnlyNumbers: String => String = path => s"$path filename's first section (OperationsDescription) can't have only numbers. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
   val operationsDescriptionWithOnlyLetters: String => String = path => s"$path filename's first section (OperationsDescription) can't have only letters. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
