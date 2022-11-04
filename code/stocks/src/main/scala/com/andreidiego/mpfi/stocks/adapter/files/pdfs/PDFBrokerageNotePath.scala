@@ -1,14 +1,13 @@
 package com.andreidiego.mpfi.stocks.adapter.files.pdfs
 
-import java.time.LocalDate
-import java.util.Locale
-import java.util.regex.Pattern
-import java.time.format.DateTimeFormatter
-import scala.util.Try
 import scala.annotation.experimental
 
 @experimental object PDFBrokerageNotePath:
+  import java.time.LocalDate
+  import java.time.format.DateTimeFormatter
+  import java.util.regex.Pattern
   import language.experimental.saferExceptions
+  import scala.util.Try
   import com.andreidiego.mpfi.stocks.adapter.files.{FileSystemPath, FileSystemPathException}
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathException.*
   import PDFBrokerageNotePathMessages.*
