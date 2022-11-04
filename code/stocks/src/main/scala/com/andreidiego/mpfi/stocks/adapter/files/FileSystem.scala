@@ -14,12 +14,17 @@ trait FileSystem[F[_]]:
 
 object FileSystem:
   import java.lang.Exception as JavaException
+  import FileSystemMessages.*
 
   enum Exception(message: String) extends JavaException(message):
     case ResourceNotFound(resource: Path)
-    extends Exception(s"Resource '$resource' cannot be found.")
+    extends Exception(resourceNotFound(s"$resource"))
 
   def apply[F[_]](using F: FileSystem[F]): FileSystem[F] = F
 
 // TODO Add a Production instance of FileSystem and test it using ScalaMock
 // TODO Look into introducing laws and law testing with Discipline
+
+object FileSystemMessages:
+  val resourceNotFound: String => String =
+    path => s"Resource '${Path.of(path)}' cannot be found."
