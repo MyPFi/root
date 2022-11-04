@@ -3,8 +3,8 @@ package com.andreidiego.mpfi.stocks.adapter.files
 import java.nio.file.Path
 import scala.annotation.experimental
 import cats.Monad
-import FileSystem.Exception.ResourceNotFound
 import FileSystemPathException.*
+import FileSystemPathMessages.*
 
 enum FileSystemPathException(message: String) extends Exception(message):
   case RequiredValueMissingException(message: String) extends FileSystemPathException(message)
@@ -16,7 +16,7 @@ enum FileSystemPathException(message: String) extends Exception(message):
    TODO Use the type trick to prevent the caller from inverting the order of the parameters 'desiredType' and 'currentType'
   */
   case ResourceWithConflictingTypeAlreadyExistsException(resource: Path, desiredType: String, currentType: String) 
-    extends FileSystemPathException(s"Cannot create '$resource' as a '$desiredType' since it already exists as a '$currentType'.")
+    extends FileSystemPathException(resourceCannotBeCreated(resource.toString, desiredType, currentType))
 
 // TODO Constructor must be private
 @experimental class FileSystemPath[F[_]](path: String):
@@ -157,7 +157,6 @@ enum FileSystemPathException(message: String) extends Exception(message):
 object FileSystemPath:
   import language.experimental.saferExceptions
   import scala.util.matching.Regex
-  import FileSystemPathMessages.*
 
   type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Monad[F] ?=> F[A]
 
@@ -190,3 +189,5 @@ object FileSystemPathMessages:
     path => s"$path does not represent a valid filesystem path."
   val relativeFileSystemPathNotAllowed: String => String =
     path => s"Relative filesystem paths (like '$path') are not allowed."
+  val resourceCannotBeCreated: (String, String, String) ⇒ String =
+    (resource, desiredType, currentType) ⇒ s"Cannot create '$resource' as a '$desiredType' since it already exists as a '$currentType'."
