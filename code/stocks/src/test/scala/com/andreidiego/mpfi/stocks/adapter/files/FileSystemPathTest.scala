@@ -535,14 +535,18 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                 )
               }(configMap.getRequired("targetDir"))
             }
-            "or, a file (in which case all lines will be streamed as requested)" in { configMap ⇒
+            "or, a file (in which case all lines will be streamed in the original order)" in { configMap ⇒
               val fileName = "brokerageNote.txt"
-              val content = "aText"
+              val line1 = "aText with"
+              val line2 = "with multiple"
+              val line3 = "multiple lines"
+              val line4 = "lines."
+              val content = s"$line1\n$line2\n$line3\n$line4"
 
               assertForExistingNonEmptyFile(fileName, content) { basePath =>
                 (
                   FileSystemPath.from[StateFileSystem](s"$basePath/$fileName").contents,
-                  Success(LazyList(content)),
+                  Success(LazyList(line1, line2, line3, line4)),
                   (actual, expected) ⇒ actual.success.value should contain theSameElementsInOrderAs expected.success.value
                 )
               }(configMap.getRequired("targetDir"))

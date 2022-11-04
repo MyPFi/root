@@ -3,8 +3,8 @@ package com.andreidiego.mpfi.stocks.adapter.files
 import java.nio.file.Path
 import scala.annotation.experimental
 import cats.Monad
+import FileSystem.Exception.ResourceNotFound
 import FileSystemPathException.*
-import com.andreidiego.mpfi.stocks.adapter.files.FileSystem.Exception.ResourceNotFound
 
 enum FileSystemPathException(message: String) extends Exception(message):
   case RequiredValueMissingException(message: String) extends FileSystemPathException(message)
@@ -85,8 +85,10 @@ enum FileSystemPathException(message: String) extends Exception(message):
   def create: InteractsWithTheFileSystemAndReturns[Try[Path]][F] =
     val canCreate = (exists, FileSystem[F].isAFile(Path.of(path)), FileSystem[F].isAFolder(Path.of(path)))
       .mapN { (exists, isAFile, isAFolder) =>
-        if exists && isAFile && path.endsWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "Folder", "File"))
-        else if exists && isAFolder && path.doesNotEndWithSlash then Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "File", "Folder"))
+        if exists && isAFile && path.endsWithSlash then
+          Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "Folder", "File"))
+        else if exists && isAFolder && path.doesNotEndWithSlash then
+          Failure(ResourceWithConflictingTypeAlreadyExistsException(Path.of(path), "File", "Folder"))
         else Success(Path.of(path))
       }
 
@@ -129,8 +131,13 @@ enum FileSystemPathException(message: String) extends Exception(message):
   def isNotAFolder: InteractsWithTheFileSystemAndReturns[Boolean][F] =
     isAFolder.map(!_)
 
-  def contents: InteractsWithTheFileSystemAndReturns[Try[LazyList[String]]][F] =
-    FileSystem[F].contentsOf(Path.of(path)).map(_.map(_.sorted))
+  def contents: InteractsWithTheFileSystemAndReturns[Try[LazyList[String]]][F] = isAFolder.flatMap { isAFolder ⇒
+    if isAFolder then contents(sortedAlphabetically)
+    else contents(noSorting)
+  }
+
+  def contents(sortedWith: (String, String) ⇒ Boolean): InteractsWithTheFileSystemAndReturns[Try[LazyList[String]]][F] =
+    FileSystem[F].contentsOf(Path.of(path)).map(_.map(_.sortWith(sortedWith)))
 
   def overwriteWith(aText: String): InteractsWithTheFileSystemAndReturns[Try[Path]][F] =
     exists.flatMap { resourceExists ⇒ {
@@ -154,15 +161,17 @@ object FileSystemPath:
 
   type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Monad[F] ?=> F[A]
 
+  val sortedAlphabetically: (String, String) ⇒ Boolean = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) < 0
+  val noSorting: (String, String) ⇒ Boolean = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) == 0
+  val fileExtensionRegex: Regex = """\.[^.\\/:*?"<>|\r\n]+$""".r
+  val folderRegex: Regex = """[\\/]$""".r
+
   @experimental def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPathException =
     if path.isBlank then
       throw RequiredValueMissingException(fileSystemPathMissing) 
     else if !path.validated.isAbsolute then
       throw UnexpectedContentValueException(relativeFileSystemPathNotAllowed(path))
     else FileSystemPath[F](path)
-
-  val fileExtensionRegex: Regex = """\.[^.\\/:*?"<>|\r\n]+$""".r
-  val folderRegex: Regex = """[\\/]$""".r
 
   extension(path: String)
     private def validated: Path throws FileSystemPathException =
