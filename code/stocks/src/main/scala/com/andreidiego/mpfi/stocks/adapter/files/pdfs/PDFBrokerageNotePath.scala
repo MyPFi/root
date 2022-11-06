@@ -8,64 +8,62 @@ import scala.annotation.experimental
   import java.util.regex.Pattern
   import language.experimental.saferExceptions
   import scala.util.Try
-  import com.andreidiego.mpfi.stocks.adapter.files.{FileSystemPath, FileSystemPathException}
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathException.*
-  import PDFBrokerageNotePathMessages.*
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Exceptions.*
+  import Messages.*
 
-  def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPathException =
+  def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPath.Exceptions =
     val f = FileSystemPath.from[F](path)
     if path.isNotPDF then
-      throw UnexpectedContentValueException(nonPDFFileSystemPath(path))
+      throw UnexpectedContentValue(nonPDFFileSystemPath(path))
     else if path.fileNameHasLessThanThreeSections then
-      throw UnexpectedContentValueException(incompleteFileName(path))
+      throw UnexpectedContentValue(incompleteFileName(path))
     else if path.fileNameHasMoreThanThreeSections then
-      throw UnexpectedContentValueException(invalidFileNameStructure(path))
+      throw UnexpectedContentValue(invalidFileNameStructure(path))
     else if path.fileNameMissesOperationsDescription then
-      throw RequiredValueMissingException(fileNameMissingOperationsDescription(path))
+      throw RequiredValueMissing(fileNameMissingOperationsDescription(path))
     else if path.fileNameOperationsDescriptionHasOnlyNumbers then
-      throw UnexpectedContentValueException(operationsDescriptionWithOnlyNumbers(path))
+      throw UnexpectedContentValue(operationsDescriptionWithOnlyNumbers(path))
     else if path.fileNameOperationsDescriptionHasOnlyLetters then
-      throw UnexpectedContentValueException(operationsDescriptionWithOnlyLetters(path))
+      throw UnexpectedContentValue(operationsDescriptionWithOnlyLetters(path))
     else if path.fileNameMissesNoteNumber then
-      throw RequiredValueMissingException(fileNameMissingNoteNumber(path))
+      throw RequiredValueMissing(fileNameMissingNoteNumber(path))
     else if path.fileNameNoteNumberIsNotANumber then
-      throw UnexpectedContentValueException(fileNameWithNonNumericNoteNumber(path))
+      throw UnexpectedContentValue(fileNameWithNonNumericNoteNumber(path))
     else if path.fileNameMissesTradingDate then
-      throw RequiredValueMissingException(fileNameMissingTradingDate(path))
+      throw RequiredValueMissing(fileNameMissingTradingDate(path))
     else if path.fileNameTradingDateIsInvalidForFormat then
-      throw UnexpectedContentValueException(fileNameWithInvalidTradingDate(path))
+      throw UnexpectedContentValue(fileNameWithInvalidTradingDate(path))
     else f
+
+  object Messages:
+    val nonPDFFileSystemPath: String => String = path => s"$path is not a PDF file."
+    val incompleteFileName: String => String = path => s"Filename in $path does not present the required three sections (OperationsDescription, NoteNumber, and TradingDate) or, they're not delimited by ' - '."
+    val invalidFileNameStructure: String => String = path => s"Filename in $path does not follow the naming convention of 'OperationsDescription - NoteNumber - TradingDate.pdf' (e.g.'sellVALE3 - 18174 - 28-10-2022.txt')."
+    val fileNameMissingOperationsDescription: String => String = path => s"$path filename's first section (OperationsDescription) can't be blank."
+    val operationsDescriptionWithOnlyNumbers: String => String = path => s"$path filename's first section (OperationsDescription) can't have only numbers. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
+    val operationsDescriptionWithOnlyLetters: String => String = path => s"$path filename's first section (OperationsDescription) can't have only letters. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
+    val fileNameMissingNoteNumber: String => String = path => s"$path filename's second section (NoteNumber) can't be blank."
+    val fileNameWithNonNumericNoteNumber: String => String = path => s"$path filename's second section (NoteNumber) can only have numbers."
+    val fileNameMissingTradingDate: String => String = path => s"$path filename's third section (TradingDate) can't be blank."
+    val fileNameWithInvalidTradingDate: String => String = path => s"$path filename's does not represent a valid date in the format 'dd-MM-yyyy'."
 
   extension(path: String)
     private def isNotPDF: Boolean = !path.endsWith(".pdf")
-    private def pathSegments: Array[String] = path.split(s"[/${Pattern.quote("\\")}]")
-    private def fileName: Array[String] = pathSegments(pathSegments.length - 1).split("- | - | -")
     private def fileNameHasLessThanThreeSections: Boolean = fileName.length < 3
     private def fileNameHasMoreThanThreeSections: Boolean = fileName.length > 3
-    private def operationsDescription: String = fileName(0)
     private def fileNameMissesOperationsDescription: Boolean = operationsDescription.isBlank
     private def fileNameOperationsDescriptionHasOnlyNumbers: Boolean = operationsDescription.hasOnlyNumbers
     private def fileNameOperationsDescriptionHasOnlyLetters: Boolean = operationsDescription.hasOnlyLetters
-    private def noteNumber: String = fileName(1)
     private def fileNameMissesNoteNumber: Boolean = noteNumber.isBlank
     private def fileNameNoteNumberIsNotANumber: Boolean = !noteNumber.hasOnlyNumbers
-    private def tradingDate: String = fileName(2).replaceFirst(raw"\.[a-zA-Z0-9]{2,4}", "")
     private def fileNameMissesTradingDate: Boolean = tradingDate.isBlank
     private def fileNameTradingDateIsInvalidForFormat: Boolean =
       Try(LocalDate.parse(tradingDate, DateTimeFormatter.ofPattern("dd-MM-yyyy"))).isFailure
-
-  extension(string: String)
-    private def hasOnlyNumbers: Boolean = raw"\d+".r.matches(string)
-    private def hasOnlyLetters: Boolean = raw"[a-zA-Z]+".r.matches(string)
-
-object PDFBrokerageNotePathMessages:
-  val nonPDFFileSystemPath: String => String = path => s"$path is not a PDF file."
-  val incompleteFileName: String => String = path => s"Filename in $path does not present the required three sections (OperationsDescription, NoteNumber, and TradingDate) or, they're not delimited by ' - '."
-  val invalidFileNameStructure: String => String = path => s"Filename in $path does not follow the naming convention of 'OperationsDescription - NoteNumber - TradingDate.pdf' (e.g.'sellVALE3 - 18174 - 28-10-2022.txt')."
-  val fileNameMissingOperationsDescription: String => String = path => s"$path filename's first section (OperationsDescription) can't be blank."
-  val operationsDescriptionWithOnlyNumbers: String => String = path => s"$path filename's first section (OperationsDescription) can't have only numbers. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
-  val operationsDescriptionWithOnlyLetters: String => String = path => s"$path filename's first section (OperationsDescription) can't have only letters. It is supposed to describe operations (as text) on Tickers (which are generally alphanumeric)."
-  val fileNameMissingNoteNumber: String => String = path => s"$path filename's second section (NoteNumber) can't be blank."
-  val fileNameWithNonNumericNoteNumber: String => String = path => s"$path filename's second section (NoteNumber) can only have numbers."
-  val fileNameMissingTradingDate: String => String = path => s"$path filename's third section (TradingDate) can't be blank."
-  val fileNameWithInvalidTradingDate: String => String = path => s"$path filename's does not represent a valid date in the format 'dd-MM-yyyy'."
+    private def fileName: Array[String] = pathSegments(pathSegments.length - 1).split("- | - | -")
+    private def operationsDescription: String = fileName(0)
+    private def hasOnlyNumbers: Boolean = raw"\d+".r.matches(path)
+    private def hasOnlyLetters: Boolean = raw"[a-zA-Z]+".r.matches(path)
+    private def noteNumber: String = fileName(1)
+    private def tradingDate: String = fileName(2).replaceFirst(raw"\.[a-zA-Z0-9]{2,4}", "")
+    private def pathSegments: Array[String] = path.split(s"[/${Pattern.quote("\\")}]")

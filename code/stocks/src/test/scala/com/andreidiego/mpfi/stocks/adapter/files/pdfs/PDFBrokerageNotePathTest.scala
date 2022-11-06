@@ -10,9 +10,9 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import unsafeExceptions.canThrowAny
   import language.deprecated.symbolLiterals
   import org.scalatest.matchers.should.Matchers.*
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathException.*
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPathMessages.*
-  import PDFBrokerageNotePathMessages.*
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Exceptions.*
+  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Messages.*
+  import PDFBrokerageNotePath.Messages.*
   import PDFBrokerageNotePathTest.*
 
   "A 'PDFBrokerageNotePath' should" - {
@@ -23,14 +23,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
     }
     "fail to be built when given" - {
       "an empty string." in { _ =>
-        the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem]("") should have {
+        the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem]("") should have {
           'message(fileSystemPathMissing)
         }
       }
       "a relative file system path." in { _ =>
         val relativePath = "folder/file.pdf"
 
-        the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](relativePath) should have {
+        the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](relativePath) should have {
           'message(relativeFileSystemPathNotAllowed(relativePath))
         }
       }
@@ -42,14 +42,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
       "an ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
-        the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](illFormedPath) should have {
+        the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](illFormedPath) should have {
           'message(invalidFileSystemPath(illFormedPath))
         }
       }
       "an absolute file system path to a file that is not a PDF." in { _ =>
         val nonPDFPath: String = s"${os.home.toString}/file.ext"
 
-        the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](nonPDFPath) should have {
+        the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](nonPDFPath) should have {
           'message(nonPDFFileSystemPath(nonPDFPath))
         }
       }
@@ -59,14 +59,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             "." in { _ =>
               val fileName = s"${os.home.toString}/file - 22722.pdf"
 
-              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+              the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
                 'message(incompleteFileName(fileName))
               }
             }
             "even if intermediate folders have '-' as part of their names." in { _ =>
               val fileName = s"${os.home.toString}/intermediate - folder/file - 22722.pdf"
 
-              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+              the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
                 'message(incompleteFileName(fileName))
               }
             }
@@ -74,7 +74,7 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "or, higher than three." in { _ =>
             val fileName = s"${os.home.toString}/file - 22722 - 22722 - 28-10-2022.pdf"
 
-            the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(invalidFileNameStructure(fileName))
             }
           }
@@ -83,14 +83,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "is empty." in { _ =>
             val fileName: String = s"${os.home.toString}/ - 22722 - 03-10-2022.pdf"
 
-            the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingOperationsDescription(fileName))
             }
           }
           "is empty (Windows)." in { _ =>
             val fileName: String = s"${os.home.toString}/- 22722 - 03-10-2022.pdf"
 
-            the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingOperationsDescription(fileName))
             }
           }
@@ -98,14 +98,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
             "numbers." in { _ =>
               val fileName: String = s"${os.home.toString}/123456 - 22722 - 03-10-2022.pdf"
 
-              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+              the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
                 'message(operationsDescriptionWithOnlyNumbers(fileName))
               }
             }
             "letters." in { _ =>
               val fileName: String = s"${os.home.toString}/compra - 22722 - 03-10-2022.pdf"
 
-              the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+              the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
                 'message(operationsDescriptionWithOnlyLetters(fileName))
               }
             }
@@ -115,14 +115,14 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "is empty." in { _ =>
             val fileName: String = s"${os.home.toString}/compraVALE3 - - 03-10-2022.pdf"
 
-            the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingNoteNumber(fileName))
             }
           }
           "is not numeric." in { _ =>
             val fileName: String = s"${os.home.toString}/compraVALE3 - PETR4 - 03-10-2022.pdf"
 
-            the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameWithNonNumericNoteNumber(fileName))
             }
           }
@@ -131,21 +131,21 @@ class PDFBrokerageNotePathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
           "is empty." in { _ =>
             val fileName: String = s"${os.home.toString}/compraVALE3 - 22722 - .pdf"
 
-            the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingTradingDate(fileName))
             }
           }
           "is empty (Windows)." in { _ =>
             val fileName: String = s"${os.home.toString}/compraVALE3 - 22722 -.pdf"
 
-            the[RequiredValueMissingException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[RequiredValueMissing] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameMissingTradingDate(fileName))
             }
           }
           "is not a valid date in the format 'dd-MM-yyyy'." in { _ =>
             val fileName: String = s"${os.home.toString}/compraVALE3 - 22722 - 12-20-2022.pdf"
 
-            the[UnexpectedContentValueException] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
+            the[UnexpectedContentValue] thrownBy PDFBrokerageNotePath.from[StateFileSystem](fileName) should have {
               'message(fileNameWithInvalidTradingDate(fileName))
             }
           }

@@ -17,8 +17,8 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import scala.util.Success
   import scala.collection.immutable.LazyList
   import FileSystemTest.{FileSystemUOE, FileSystemIOE, FileSystemSE}
-  import FileSystemPathMessages.*
-  import FileSystemPathException.*
+  import FileSystemPath.Messages.*
+  import FileSystemPath.Exceptions.*
   import FileSystemPathTest.*
 
   "A 'FileSystemPath' should" - {
@@ -29,14 +29,14 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
     }
     "fail to be built when given" - {
       "an empty string." in { _ =>
-        the [RequiredValueMissingException] thrownBy FileSystemPath.from[StateFileSystem]("") should have {
+        the [RequiredValueMissing] thrownBy FileSystemPath.from[StateFileSystem]("") should have {
           'message (fileSystemPathMissing)
         }
       }
       "a relative file system path." in { _ =>
         val relativePath = "folder/file.ext"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[StateFileSystem](relativePath) should have {
+        the [UnexpectedContentValue] thrownBy FileSystemPath.from[StateFileSystem](relativePath) should have {
           'message (relativeFileSystemPathNotAllowed(relativePath))
         }
       }
@@ -48,7 +48,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
       "an ill-formed file system path." in { _ =>
         val illFormedPath = s"${os.home}/?"
 
-        the [UnexpectedContentValueException] thrownBy FileSystemPath.from[StateFileSystem](illFormedPath) should have {
+        the [UnexpectedContentValue] thrownBy FileSystemPath.from[StateFileSystem](illFormedPath) should have {
           'message (invalidFileSystemPath(illFormedPath))
         }
       }
@@ -324,7 +324,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
               }.run(emptyState).value
             }
           }
-          "or, a ResourceWithConflictingTypeAlreadyExistsException when trying to create a" - {
+          "or, a ResourceWithConflictingTypeAlreadyExists when trying to create a" - {
             "file and a folder with that name already exists." in { configMap =>
               val file = "folder"
               val filePath = Path.of(s"${configMap.getRequired[String]("targetDir")}/test-files/$file")
@@ -334,7 +334,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   _         <- assertResourceCreated(s"$file/", _.isAFolder)(configMap.getRequired("targetDir"))
                   resource  <- fileSystemPath.create
                   exception  = resource.failure.exception
-                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExistsException]
+                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExists]
                   _          = exception should have message s"Cannot create '$filePath' as a 'File' since it already exists as a 'Folder'."
                   _         <- assertResourceDeleted(s"$file/")(configMap.getRequired("targetDir"))
                 } yield ()
@@ -349,7 +349,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   _         <- assertResourceCreated(folder, _.isAFile)(configMap.getRequired("targetDir"))
                   resource  <- fileSystemPath.create
                   exception  = resource.failure.exception
-                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExistsException]
+                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExists]
                   _          = exception should have message s"Cannot create '$folderPath' as a 'Folder' since it already exists as a 'File'."
                   _         <- assertResourceDeleted(folder)(configMap.getRequired("targetDir"))
                 } yield ()
@@ -651,7 +651,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
                   _         <- assertResourceCreated(folderName, _.isAFolder)(configMap.getRequired("targetDir"))
                   resource  <- fileSystemPath.overwriteWith(aText)
                   exception  = resource.failure.exception
-                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExistsException]
+                  _          = exception shouldBe a[ResourceWithConflictingTypeAlreadyExists]
                   _          = exception should have message s"Cannot create '$folderPath' as a 'File' since it already exists as a 'Folder'."
                   _         <- assertResourceDeleted(folderName)(configMap.getRequired("targetDir"))
                 } yield ()
