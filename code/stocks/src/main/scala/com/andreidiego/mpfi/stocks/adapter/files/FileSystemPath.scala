@@ -13,7 +13,8 @@ import cats.Monad
   import cats.syntax.apply.*
   import cats.syntax.flatMap.*
   import FileSystemPath.*
-  import FileSystemPath.Exceptions.*
+  import Exceptions.*
+  import Sorters.{noSorting, sortedAlphabetically}
 
   /* FIXME In hindsight, FileSystemPath should have less logic. Mush of the logic here should
    *  be in the underlying FileSystem and some of it doesn't even make a lot of sense:
@@ -148,8 +149,6 @@ object FileSystemPath:
 
   type InteractsWithTheFileSystemAndReturns[A] = [F[_]] =>> FileSystem[F] ?=> Monad[F] ?=> F[A]
 
-  val sortedAlphabetically: (String, String) ⇒ Boolean = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) < 0
-  val noSorting: (String, String) ⇒ Boolean = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) == 0
   val fileExtensionRegex: Regex = """\.[^.\\/:*?"<>|\r\n]+$""".r
   val folderRegex: Regex = """[\\/]$""".r
 
@@ -159,6 +158,12 @@ object FileSystemPath:
     else if !path.validated.isAbsolute then
       throw Exceptions.UnexpectedContentValue(relativeFileSystemPathNotAllowed(path))
     else FileSystemPath[F](path)
+
+  trait Sorter extends ((String, String) ⇒ Boolean)
+
+  object Sorters:
+    val sortedAlphabetically: Sorter = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) < 0
+    val noSorting: Sorter = (line1, line2) ⇒ line1.compareToIgnoreCase(line2) == 0
 
   enum Exceptions(message: String) extends Exception(message):
     @experimental case RequiredValueMissing(message: String) extends Exceptions(message)
