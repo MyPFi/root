@@ -2,7 +2,6 @@ package com.andreidiego.mpfi.stocks.adapter.files
 
 import java.nio.file.Path
 import scala.annotation.experimental
-import unsafeExceptions.canThrowAny
 import org.scalatest.TryValues.*
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.fixture.ConfigMapFixture
@@ -14,6 +13,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   import java.io.IOException
   import java.nio.file.DirectoryNotEmptyException
   import language.deprecated.symbolLiterals
+  import unsafeExceptions.canThrowAny
   import scala.util.Success
   import scala.collection.immutable.LazyList
   import FileSystemTest.{FileSystemUOE, FileSystemIOE, FileSystemSE}
@@ -681,6 +681,7 @@ class FileSystemPathTest extends FixtureAnyFreeSpec, ConfigMapFixture:
   }
 
 object FileSystemPathTest:
+  import unsafeExceptions.canThrowAny
   import org.scalatest.Assertions.assert
   import org.scalatest.Assertion
 
