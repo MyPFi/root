@@ -22,31 +22,34 @@ case class SequentialInterpreter(instructions: List[String]) extends TemplateInt
   override def interpret(documentText: String): Unit =
     instructions.foreach(instruction => println(correspondingValueFrom(documentText)(instruction)))
 
-  def correspondingValueFrom(documentText: String)(lineInTemplate: String): String =
+  private def correspondingValueFrom(documentText: String)(lineInTemplate: String): String =
     val lineColumns = lineInTemplate.split("->")
     s"${fieldNameFrom(lineColumns)} -> ${fieldValueFrom(documentText)(lineColumns)}"
 
-  def fieldValueFrom(documentText: String)(lineColumns: Array[String]): String =
+  private def fieldValueFrom(documentText: String)(lineColumns: Array[String]): String =
     val documentLines = documentText.split("\n") //.filter(_ != "")
     val regex = regexFor(DataType(fieldTypeFrom(lineColumns)))
 
     regex.findFirstIn(
-      documentLines(lineNumberFrom(lineColumns(1))).substring(columnNumberFrom(lineColumns(1))).strip().replaceFirst("\u00a0", "")
+      documentLines(lineNumberFrom(lineColumns(1)))
+        .substring(columnNumberFrom(lineColumns(1)))
+        .strip()
+        .replaceFirst("\u00a0", "")
     ).getOrElse("")
 
-  def lineNumberFrom(coordinate: String): Int = {
+  private def lineNumberFrom(coordinate: String): Int = {
     withCoordinate(coordinate) {
-      case (line, column) => line.toInt - 1
+      case (line, _) => line.toInt - 1
     }
   }
 
-  def columnNumberFrom(coordinate: String): Int = {
+  private def columnNumberFrom(coordinate: String): Int = {
     withCoordinate(coordinate) {
-      case (line, column) => column.toInt - 1
+      case (_, column) => column.toInt - 1
     }
   }
 
-  def withCoordinate(coordinate: String)(actUpon: (String, String) => Int): Int =
+  private def withCoordinate(coordinate: String)(actUpon: (String, String) => Int): Int =
     val coordinatePattern = raw"L(\d+)C(\d+)".r
 
     coordinate.strip() match {
@@ -58,7 +61,7 @@ case class LoopInterpreter(instructions: List[String]) extends TemplateInterpret
   override def interpret(documentText: String): Unit =
     val documentLines = documentText.split("\n") //.filter(_ != "")
     val repetitionPattern = raw"R-L(\d+)...(\d+)".r.unanchored
-    val repetitionPattern(start, finish) = instructions.take(1).head
+    val repetitionPattern(start, finish) = instructions.take(1).head: @unchecked
 
     val hasJumpLine = instructions.find(_ contains "JL")
     val lineRange = hasJumpLine
@@ -100,6 +103,3 @@ case class LoopInterpreter(instructions: List[String]) extends TemplateInterpret
         case staticCoordinatePattern(token) => token.toInt - 1
         case dynamicCoordinatePattern(token) => numberOfTokens - token.toInt - 1
       }
-
-object TemplateInterpreter:
-  def apply(instructions: List[String]): TemplateInterpreter = SequentialInterpreter(instructions)

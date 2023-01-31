@@ -1,17 +1,12 @@
 package com.andreidiego.mpfi.stocks.adapter.files.pdfs.poc
 
+import java.io.File
 import org.apache.pdfbox.Loader.loadPDF
 import org.apache.pdfbox.text.PDFTextStripper
+import scala.annotation.tailrec
+import scala.util.{Failure, Try}
 import org.rogach.scallop.*
 import os.{up, Path}
-
-import java.io.File
-import scala.annotation.tailrec
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
-import scala.util.matching.Regex
 
 @main def mpfi(args: String*): Unit =
   val conf = Conf(args)
@@ -76,7 +71,11 @@ def interpret(fileName: String)(templateNames: Seq[String]): Unit =
           .interpret(documentText)
 
         SequentialInterpreter(
-          templateText.substring(0, firstOccurrence).concat(templateText.substring(nextOccurrence + repetitionInstruction.length + 2)).split("\n").toList
+          templateText
+            .substring(0, firstOccurrence)
+            .concat(templateText.substring(nextOccurrence + repetitionInstruction.length + 2))
+            .split("\n")
+            .toList
         ).interpret(documentText)
 
       case _ =>
@@ -84,7 +83,7 @@ def interpret(fileName: String)(templateNames: Seq[String]): Unit =
           .interpret(documentText)
 
   } match {
-    case Failure(e) if templateNames.tail.nonEmpty => interpret(fileName)(templateNames.tail)
+    case Failure(_) if templateNames.tail.nonEmpty => interpret(fileName)(templateNames.tail)
     case Failure(e) if templateNames.tail.isEmpty => throw e
     case _ =>
       val fileNameParts = fileName.split('\\')
