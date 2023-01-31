@@ -14,7 +14,7 @@ class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
   import org.scalatest.matchers.should.Matchers.*
   import com.andreidiego.mpfi.stocks.adapter.services.*
   import BrokerageNotesWorksheetReader.ServiceDependencies
-  import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.*
+  import BrokerageNotesWorksheetReader.BrokerageNotesReaderError.*
   import InvestmentsTest.*
 
   override protected type FixtureParam = XSSFWorkbook

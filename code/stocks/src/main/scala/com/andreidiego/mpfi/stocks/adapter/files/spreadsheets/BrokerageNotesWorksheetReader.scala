@@ -1,17 +1,9 @@
 package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets
 
-import java.util.Locale
-import java.time.{LocalDate, LocalDateTime}
-import scala.annotation.targetName
-import scala.math.Ordering.Implicits.*
-import cats.implicits.*
-import cats.kernel.Semigroup
-import cats.data.ValidatedNec
-import cats.syntax.validated.*
-import excel.poi.{Cell, Line, Worksheet}
-import com.andreidiego.mpfi.stocks.adapter.services.*
-import com.andreidiego.mpfi.stocks.adapter.services.OperationalMode.*
-import com.andreidiego.mpfi.stocks.adapter.services.TradingPeriod.*
+import com.andreidiego.mpfi.stocks.adapter.services
+import services.*
+import services.OperationalMode.*
+import services.TradingPeriod.*
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
@@ -34,20 +26,29 @@ case class FinancialSummary(volume: String, settlementFee: String, tradingFees: 
 
 // TODO Add a warning system: ErrorsOr[WarningsAnd[BrokerageNotesWorksheetReader]]
 object BrokerageNotesWorksheetReader:
-  enum BrokerageNoteReaderError(message: String):
-    case RequiredValueMissing(message: String) extends BrokerageNoteReaderError(message)
-    case UnexpectedContentValue(message: String) extends BrokerageNoteReaderError(message)
-    case UnexpectedContentType(message: String) extends BrokerageNoteReaderError(message)
-    case UnexpectedContentColor(message: String) extends BrokerageNoteReaderError(message)
+  import java.util.Locale
+  import java.time.LocalDate
+  import scala.annotation.targetName
+  import cats.implicits.*
+  import cats.kernel.Semigroup
+  import cats.data.ValidatedNec
+  import cats.syntax.validated.*
+  import excel.poi.{Cell, Line, Worksheet}
 
-  enum GroupType:
+  enum BrokerageNotesReaderError(message: String):
+    case RequiredValueMissing(message: String) extends BrokerageNotesReaderError(message)
+    case UnexpectedContentValue(message: String) extends BrokerageNotesReaderError(message)
+    case UnexpectedContentType(message: String) extends BrokerageNotesReaderError(message)
+    case UnexpectedContentColor(message: String) extends BrokerageNotesReaderError(message)
+
+  private enum GroupType:
     case Homogeneous, Heterogeneous
 
-  import BrokerageNoteReaderError.*
+  import BrokerageNotesReaderError.*
   import BrokerageNotesWorksheetMessages.*
   import GroupType.*
 
-  type Error = BrokerageNoteReaderError | Worksheet.Error
+  type Error = BrokerageNotesReaderError | Worksheet.Error
   type ErrorsOr[A] = ValidatedNec[Error, A]
   type ServiceDependencies = (AverageStockPriceService, SettlementFeeRateService, TradingFeesRateService, ServiceTaxRateService, IncomeTaxAtSourceRateService)
   private type Group = Seq[Line]

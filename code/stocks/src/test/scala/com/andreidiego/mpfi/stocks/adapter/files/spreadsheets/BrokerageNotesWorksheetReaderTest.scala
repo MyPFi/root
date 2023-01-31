@@ -16,7 +16,7 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
   import org.scalatest.matchers.should.Matchers.*
   import BrokerageNotesWorksheetMessages.*
   import BrokerageNotesWorksheetReader.ServiceDependencies
-  import BrokerageNotesWorksheetReader.BrokerageNoteReaderError.*
+  import BrokerageNotesWorksheetReader.BrokerageNotesReaderError.*
   import com.andreidiego.mpfi.stocks.adapter.services.*
   import com.andreidiego.mpfi.stocks.adapter.services.TradingPeriod.*
   import BrokerageNotesWorksheetTestMessages.*
