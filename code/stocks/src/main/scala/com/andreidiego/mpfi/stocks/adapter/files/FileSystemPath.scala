@@ -5,7 +5,7 @@ import scala.annotation.experimental
 import cats.Monad
 
 // TODO Constructor must be private
-@experimental class FileSystemPath[F[_]](path: String):
+@experimental class FileSystemPath[F[_]] protected(path: String):
   import scala.util.Try
   import scala.util.Success
   import scala.util.Failure

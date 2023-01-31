@@ -251,7 +251,7 @@ object ExtractionGuideSpecsPathTest:
       (fullPath: String, state: FileSystemState) ⇒ assert(assertion(fullPath, state))
     }: _*)(buildTarget)
 
-  extension (fileSystemTest: StateFileSystem[Try[FileSystemPath[StateFileSystem]]])
+  extension (fileSystemTest: StateFileSystem[Try[ExtractionGuideSpecsPath[StateFileSystem]]])
 
     private def exception: Throwable = exception(emptyState)
 

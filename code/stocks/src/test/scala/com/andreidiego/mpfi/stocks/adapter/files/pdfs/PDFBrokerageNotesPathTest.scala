@@ -252,7 +252,7 @@ object PDFBrokerageNotesPathTest:
       (fullPath: String, state: FileSystemState) ⇒ assert(assertion(fullPath, state))
     }: _*)(buildTarget)
 
-  extension (fileSystemTest: StateFileSystem[Try[FileSystemPath[StateFileSystem]]])
+  extension (fileSystemTest: StateFileSystem[Try[PDFBrokerageNotesPath[StateFileSystem]]])
 
     private def exception: Throwable = exception(emptyState)
 

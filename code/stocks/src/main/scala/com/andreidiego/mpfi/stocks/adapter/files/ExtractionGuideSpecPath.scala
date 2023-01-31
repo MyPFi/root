@@ -2,15 +2,17 @@ package com.andreidiego.mpfi.stocks.adapter.files
 
 import scala.annotation.experimental
 
-@experimental object ExtractionGuideSpecPath:
+@experimental class ExtractionGuideSpecPath[F[_]] private(val path: String) extends FileSystemPath[F](path: String)
+
+object ExtractionGuideSpecPath:
   import java.util.regex.Pattern
   import language.experimental.saferExceptions
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
   import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Exceptions.*
   import Messages.*
 
-  def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPath.Exceptions =
-    val f = FileSystemPath.from[F](path)
+  @experimental def from[F[_]](path: String): ExtractionGuideSpecPath[F] throws FileSystemPath.Exceptions =
+    FileSystemPath.from[F](path)
     if path.isNotTXT then
       throw UnexpectedContentValue(nonTXTFileSystemPath(path))
     else if path.fileNameHasLessThanThreeSections then
@@ -27,7 +29,7 @@ import scala.annotation.experimental
       throw RequiredValueMissing(fileNameMissingDocumentVersion(path))
     else if path.fileNameHasInvalidDocumentVersion then
       throw UnexpectedContentValue(fileNameWithInvalidDocumentVersion(path))
-    else f
+    else ExtractionGuideSpecPath(path)
 
   object Messages:
     val nonTXTFileSystemPath: String => String = 

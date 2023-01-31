@@ -1,23 +1,24 @@
 package com.andreidiego.mpfi.stocks.adapter.files.pdfs
 
-import java.nio.file.Path
 import scala.annotation.experimental
+import com.andreidiego.mpfi.stocks.adapter.files
+import files.FileSystemPath
+
+@experimental class PDFBrokerageNotesPath[F[_]] private(path: String) extends FileSystemPath[F](path: String)
 
 @experimental object PDFBrokerageNotesPath:
+  import java.nio.file.Path
   import unsafeExceptions.canThrowAny
-  import scala.util.Try
-  import scala.util.Success
-  import scala.util.Failure
+  import scala.util.{Try, Success, Failure}
   import cats.Monad
-  import cats.syntax.flatMap.*
   import cats.syntax.apply.*
-  import com.andreidiego.mpfi.stocks.adapter.files
-  import files.{FileSystem, FileSystemPath}
+  import cats.syntax.flatMap.*
+  import files.FileSystem
   import FileSystemPath.InteractsWithTheFileSystemAndReturns
   import FileSystemPath.Exceptions.UnexpectedContentValue
   import Messages.*
 
-  def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[FileSystemPath[F]]][F] =
+  def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[PDFBrokerageNotesPath[F]]][F] =
     try
       val fileSystemPath = FileSystemPath.from[F](path)
 
@@ -32,7 +33,7 @@ import scala.annotation.experimental
           else if contents.hasNoPDFBrokerageNotePath[F] then
             Failure(UnexpectedContentValue(noPDFBrokerageNotePathFoundIn(path)))
           else
-            Success(fileSystemPath)
+            Success(PDFBrokerageNotesPath(path))
         }
       }
     catch case ex ⇒ summon[Monad[F]].pure(Failure(ex))

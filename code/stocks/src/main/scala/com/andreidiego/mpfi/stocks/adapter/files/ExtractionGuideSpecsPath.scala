@@ -2,21 +2,20 @@ package com.andreidiego.mpfi.stocks.adapter.files
 
 import scala.annotation.experimental
 
-@experimental object ExtractionGuideSpecsPath:
+@experimental class ExtractionGuideSpecsPath[F[_]] private(path: String) extends FileSystemPath[F](path: String)
+
+object ExtractionGuideSpecsPath:
   import java.nio.file.Path
-  import unsafeExceptions.canThrowAny
   import scala.util.{Try, Success, Failure}
+  import unsafeExceptions.canThrowAny
   import cats.Monad
   import cats.syntax.apply.*
   import cats.syntax.flatMap.*
-  import com.andreidiego.mpfi.stocks.adapter.files
-  import files.FileSystem
-  import files.FileSystemPath
   import FileSystemPath.InteractsWithTheFileSystemAndReturns
   import FileSystemPath.Exceptions.UnexpectedContentValue
   import Messages.*
 
-  def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[FileSystemPath[F]]][F] =
+  def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[ExtractionGuideSpecsPath[F]]][F] =
     try
       val fileSystemPath = FileSystemPath.from[F](path)
 
@@ -31,7 +30,7 @@ import scala.annotation.experimental
           else if contents.hasNoExtractionGuideSpecPath[F] then
             Failure(UnexpectedContentValue(noExtractionGuideSpecPathFoundIn(path)))
           else
-            Success(fileSystemPath)
+            Success(ExtractionGuideSpecsPath(path))
         }
       }
     catch case ex ⇒ summon[Monad[F]].pure(Failure(ex))

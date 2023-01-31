@@ -1,6 +1,9 @@
 package com.andreidiego.mpfi.stocks.adapter.files.pdfs
 
 import scala.annotation.experimental
+import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
+
+@experimental class PDFBrokerageNotePath[F[_]] private(val path: String) extends FileSystemPath[F](path: String)
 
 @experimental object PDFBrokerageNotePath:
   import java.time.LocalDate
@@ -8,12 +11,11 @@ import scala.annotation.experimental
   import java.util.regex.Pattern
   import language.experimental.saferExceptions
   import scala.util.Try
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Exceptions.*
+  import FileSystemPath.Exceptions.*
   import Messages.*
 
-  def from[F[_]](path: String): FileSystemPath[F] throws FileSystemPath.Exceptions =
-    val f = FileSystemPath.from[F](path)
+  def from[F[_]](path: String): PDFBrokerageNotePath[F] throws FileSystemPath.Exceptions =
+    FileSystemPath.from[F](path)
     if path.isNotPDF then
       throw UnexpectedContentValue(nonPDFFileSystemPath(path))
     else if path.fileNameHasLessThanThreeSections then
@@ -34,7 +36,7 @@ import scala.annotation.experimental
       throw RequiredValueMissing(fileNameMissingTradingDate(path))
     else if path.fileNameTradingDateIsInvalidForFormat then
       throw UnexpectedContentValue(fileNameWithInvalidTradingDate(path))
-    else f
+    else PDFBrokerageNotePath(path)
 
   object Messages:
     val nonPDFFileSystemPath: String => String = path => s"$path is not a PDF file."
