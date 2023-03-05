@@ -15,7 +15,9 @@ class POITest extends AnyFreeSpec {
   "A Sale" - {
     "must have a" - {
       "1" in {
-        val purchasesWorkbook = WorkbookFactory.create(new File("F:/OneDrive/Documentos/Financeiros/Lista de Compras - Copia.xlsx")).asScala
+        val purchasesWorkbook = WorkbookFactory.create {
+          new File(getClass().getResource("Lista de Compras - Copia.xlsx").toURI)
+        }.asScala
         val purchases = buildPurchaseListFromWorkbook(purchasesWorkbook)
         val products = for {
           purchase <- purchases
@@ -28,14 +30,20 @@ class POITest extends AnyFreeSpec {
         exportDistinctProducts(distinctSortedProducts)
       }
       "2" in {
-        val modelWorkbook = WorkbookFactory.create(new File("F:/OneDrive/Documentos/Financeiros/productsToNormalize - Copia.xlsx")).asScala
+        val modelWorkbook = WorkbookFactory.create {
+          new File(getClass().getResource("productsToNormalize - Copia.xlsx").toURI)
+        }.asScala
         val (sortedProductModel, sortedBridgeProducts) = buildProductModelFromWorkbook(modelWorkbook)
 
         printProductModelAndBridgeProducts(sortedProductModel, sortedBridgeProducts)
       }
       "3" in {
-        val purchasesWorkbook = WorkbookFactory.create(new File("F:/OneDrive/Documentos/Financeiros/Lista de Compras - Copia.xlsx")).asScala
-        val modelWorkbook = WorkbookFactory.create(new File("F:/OneDrive/Documentos/Financeiros/productsToNormalize - Copia.xlsx")).asScala
+        val purchasesWorkbook = WorkbookFactory.create {
+          new File(getClass().getResource("Lista de Compras - Copia.xlsx").toURI)
+        }.asScala
+        val modelWorkbook = WorkbookFactory.create {
+          new File(getClass().getResource("productsToNormalize - Copia.xlsx").toURI)
+        }.asScala
         val purchases = buildPurchaseListFromWorkbook(purchasesWorkbook)
         val (sortedProductModel, sortedBridgeProducts) = buildProductModelFromWorkbook(modelWorkbook)
 
@@ -266,8 +274,9 @@ class POITest extends AnyFreeSpec {
       })
     })
 
-
-    workbook.write(new FileOutputStream("F:/OneDrive/Documentos/Financeiros/Nova Lista de Compras.xlsx"))
+    workbook.write {
+      new FileOutputStream(s"${getClass().getResource(".").getPath}/Nova Lista de Compras.xlsx")
+    }
     workbook.close()
   }
 }
