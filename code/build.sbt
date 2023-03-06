@@ -1,9 +1,9 @@
 import Dependencies._
 import sbt.Keys.libraryDependencies
 
-ThisBuild / version := "0.1.0"
-ThisBuild / scalaVersion := "3.2.1"
-ThisBuild / organization := "com.andreidiego"
+ThisBuild / version       := "0.1.0"
+ThisBuild / scalaVersion  := "3.2.1"
+ThisBuild / organization  := "com.andreidiego"
 
 lazy val root = project
   .in(file("."))
@@ -36,11 +36,12 @@ lazy val mpfiStocks = project
   .settings(
     name := "MPFi-Stocks",
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
-    libraryDependencies += scallop,
-    libraryDependencies += osLib,
-    libraryDependencies += pdfBox,
     libraryDependencies += apachePOI,
     libraryDependencies += apachePOIOOXML,
     libraryDependencies += cats,
-    libraryDependencies += scalaTest % Test,
+    libraryDependencies += logbackClassic,
+    libraryDependencies += osLib,
+    libraryDependencies += pdfBox,
+    libraryDependencies += scallop,
+    libraryDependencies += scalaTest % Test
   )
