@@ -1,14 +1,14 @@
-package com.andreidiego.mpfi.stocks.adapter.files
+package com.andreidiego.mpfi.stocks.adapter.files.extractionguide.poc
 
 import scala.annotation.experimental
+import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
 
 @experimental class ExtractionGuideSpecPath[F[_]] private(val path: String) extends FileSystemPath[F](path: String)
 
 object ExtractionGuideSpecPath:
   import java.util.regex.Pattern
-  import language.experimental.saferExceptions
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath
-  import com.andreidiego.mpfi.stocks.adapter.files.FileSystemPath.Exceptions.*
+  import scala.language.experimental.saferExceptions
+  import FileSystemPath.Exceptions.*
   import Messages.*
 
   @experimental def from[F[_]](path: String): ExtractionGuideSpecPath[F] throws FileSystemPath.Exceptions =

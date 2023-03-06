@@ -42,6 +42,7 @@ lazy val mpfiStocks = project
     libraryDependencies += logbackClassic,
     libraryDependencies += osLib,
     libraryDependencies += pdfBox,
+    libraryDependencies += scalaParserCombinators,
     libraryDependencies += scallop,
     libraryDependencies += scalaTest % Test
   )

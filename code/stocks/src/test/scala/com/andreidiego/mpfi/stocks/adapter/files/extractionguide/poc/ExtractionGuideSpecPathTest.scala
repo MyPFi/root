@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files
+package com.andreidiego.mpfi.stocks.adapter.files.extractionguide.poc
 
 import scala.annotation.experimental
 import org.scalatest.freespec.FixtureAnyFreeSpec

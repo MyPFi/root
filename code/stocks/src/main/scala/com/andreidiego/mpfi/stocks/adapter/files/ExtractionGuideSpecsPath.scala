@@ -13,6 +13,7 @@ object ExtractionGuideSpecsPath:
   import cats.syntax.flatMap.*
   import FileSystemPath.InteractsWithTheFileSystemAndReturns
   import FileSystemPath.Exceptions.UnexpectedContentValue
+  import extractionguide.poc.ExtractionGuideSpecPath
   import Messages.*
 
   def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[ExtractionGuideSpecsPath[F]]][F] =
