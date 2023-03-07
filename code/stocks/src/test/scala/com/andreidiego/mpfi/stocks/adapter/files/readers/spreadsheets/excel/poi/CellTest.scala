@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets.excel.poi
+package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets.excel.poi
 
 import org.scalatest.freespec.FixtureAnyFreeSpec
 import org.scalatest.EitherValues.*

@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets.excel.poi
+package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets.excel.poi
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

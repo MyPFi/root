@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets
+package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets
 
 import com.andreidiego.mpfi.stocks.adapter.services
 import services.*

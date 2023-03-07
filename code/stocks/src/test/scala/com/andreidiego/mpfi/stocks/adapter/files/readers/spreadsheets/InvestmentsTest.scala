@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.spreadsheets
+package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.freespec.FixtureAnyFreeSpec
