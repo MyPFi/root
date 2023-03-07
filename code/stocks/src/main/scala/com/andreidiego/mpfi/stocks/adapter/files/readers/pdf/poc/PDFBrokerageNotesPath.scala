@@ -1,15 +1,36 @@
-package com.andreidiego.mpfi.stocks.adapter.files.pdfs
+package com.andreidiego.mpfi.stocks.adapter.files.readers.pdf.poc
 
 import scala.annotation.experimental
+import scala.util.Try
 import com.andreidiego.mpfi.stocks.adapter.files
 import files.FileSystemPath
 
-@experimental class PDFBrokerageNotesPath[F[_]] private(path: String) extends FileSystemPath[F](path: String)
+// FIXME Revisit the relationship between contents, children and Sorters and try to make it more type safe, if possible
+@experimental class PDFBrokerageNotesPath[F[_]] private(path: String) extends FileSystemPath[F](path: String):
+  import scala.unsafeExceptions.canThrowAny
+  import cats.syntax.functor.*
+  import cats.syntax.traverse.*
+  import cats.instances.lazyList.*
+  import FileSystemPath.InteractsWithTheFileSystemAndReturns
+
+  def children(sortedWith: (String, String) ⇒ Boolean = (_, _) ⇒ false): InteractsWithTheFileSystemAndReturns[LazyList[PDFBrokerageNotePath[F]]][F] =
+    contents.map { tentativeContents ⇒
+      tentativeContents
+        .flatMap { contents ⇒
+          contents
+            .filter(path ⇒ Try(PDFBrokerageNotePath.from[F](path)).isSuccess)
+            .sortWith(sortedWith)
+            .map { path =>
+              println(s"PDFBrokerageNotesPath.children: $path")
+              Try(PDFBrokerageNotePath.from[F](path))
+            }.sequence
+        }.get
+    }
 
 @experimental object PDFBrokerageNotesPath:
   import java.nio.file.Path
-  import unsafeExceptions.canThrowAny
-  import scala.util.{Try, Success, Failure}
+  import scala.util.{Success, Failure}
+  import scala.unsafeExceptions.canThrowAny
   import cats.Monad
   import cats.syntax.apply.*
   import cats.syntax.flatMap.*

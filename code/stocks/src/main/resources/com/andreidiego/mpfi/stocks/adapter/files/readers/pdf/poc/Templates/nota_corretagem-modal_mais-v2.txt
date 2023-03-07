@@ -1,0 +1,21 @@
+NoteNumber -> L4C1 -> Number
+TradingDate -> L4C8 -> Date
+BankInstitutionNumber -> L17C2 -> Number
+TransitNumber -> L17C2 -> Number
+AccountNumber -> L17C2 -> Number
+R-L20...20
+OperationType -> T2 -> Character
+Ticker -> T4 -> String
+Qty -> T(L-3) -> Currency
+Price -> T(L-2) -> Currency
+Volume -> T(L-1) -> Currency
+R-L20...20
+SellingsTotal -> L23C17 -> Currency
+BuyingsTotal -> L24C18 -> Currency
+OperationsTotal -> L29C22 -> Currency
+SettlementFee -> L23C46 -> Currency
+TradingFees -> L28C63 -> Currency
+Brokerage -> L31C13 -> Currency
+ServiceTax -> L32C20 -> Currency
+Total -> L34C26 -> Currency
+SettlementDate -> L34C15 -> Date

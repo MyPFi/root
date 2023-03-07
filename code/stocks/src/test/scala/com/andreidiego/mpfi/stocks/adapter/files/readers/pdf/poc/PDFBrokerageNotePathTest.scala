@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.pdfs
+package com.andreidiego.mpfi.stocks.adapter.files.readers.pdf.poc
 
 import scala.annotation.experimental
 import org.scalatest.freespec.FixtureAnyFreeSpec

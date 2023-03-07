@@ -1,19 +1,39 @@
-package com.andreidiego.mpfi.stocks.adapter.files
+package com.andreidiego.mpfi.stocks.adapter.files.readers.pdf.poc
 
 import scala.annotation.experimental
+import scala.util.Try
+import com.andreidiego.mpfi.stocks.adapter.files
+import files.FileSystemPath
+import files.extractionguide.poc.ExtractionGuideSpecPath
 
-@experimental class ExtractionGuideSpecsPath[F[_]] private(path: String) extends FileSystemPath[F](path: String)
+// FIXME Revisit the relationship between contents, children and Sorters and try to make it more type safe, if possible
+@experimental class ExtractionGuideSpecsPath[F[_]] private(path: String) extends FileSystemPath[F](path: String):
+  import scala.unsafeExceptions.canThrowAny
+  import cats.syntax.functor.*
+  import cats.syntax.traverse.*
+  import cats.instances.lazyList.*
+  import FileSystemPath.InteractsWithTheFileSystemAndReturns
+
+  def children(sortedWith: (String, String) ⇒ Boolean = (_, _) ⇒ false): InteractsWithTheFileSystemAndReturns[LazyList[ExtractionGuideSpecPath[F]]][F] =
+    contents(sortedWith).map { tentativeContents ⇒
+      tentativeContents.flatMap { contents ⇒
+        contents.map { path =>
+          println(s"ExtractionGuideSpecsPath.children: $path")
+          Try(ExtractionGuideSpecPath.from[F](path))
+        }.filter(e ⇒ e.isSuccess).sequence
+      }.get
+    }
 
 object ExtractionGuideSpecsPath:
   import java.nio.file.Path
-  import scala.util.{Try, Success, Failure}
-  import unsafeExceptions.canThrowAny
+  import scala.util.{Success, Failure}
+  import scala.unsafeExceptions.canThrowAny
   import cats.Monad
   import cats.syntax.apply.*
   import cats.syntax.flatMap.*
+  import files.FileSystem
   import FileSystemPath.InteractsWithTheFileSystemAndReturns
   import FileSystemPath.Exceptions.UnexpectedContentValue
-  import extractionguide.poc.ExtractionGuideSpecPath
   import Messages.*
 
   def from[F[_]](path: String): InteractsWithTheFileSystemAndReturns[Try[ExtractionGuideSpecsPath[F]]][F] =
@@ -47,7 +67,10 @@ object ExtractionGuideSpecsPath:
     }
     val documentTypeSorter: Sorter = (path1, path2) ⇒ path1.documentType.compareTo(path2.documentType) < 0
     val documentIssuerSorter: Sorter = (path1, path2) ⇒ path1.documentIssuer.compareTo(path2.documentIssuer) < 0
-    val documentVersionSorter: Sorter = (path1, path2) ⇒ path1.documentVersion.compareTo(path2.documentVersion) < 0
+    val documentVersionSorter: Sorter = (path1, path2) ⇒
+      path1.documentVersion.replaceFirst("[vV]", "").toInt.compareTo(
+        path2.documentVersion.replaceFirst("[vV]", "").toInt
+      ) < 0
 
     extension (path: String)
       private def pathSegments: Array[String] = path.split(s"[/${Pattern.quote("\\")}]")

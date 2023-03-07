@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.pdfs
+package com.andreidiego.mpfi.stocks.adapter.files.readers.pdf.poc
 
 import java.nio.file.Path
 import scala.annotation.experimental

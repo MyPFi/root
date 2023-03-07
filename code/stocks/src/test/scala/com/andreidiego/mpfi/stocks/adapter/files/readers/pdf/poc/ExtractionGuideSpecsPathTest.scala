@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files
+package com.andreidiego.mpfi.stocks.adapter.files.readers.pdf.poc
 
 import scala.annotation.experimental
 import org.scalatest.fixture.ConfigMapFixture
@@ -186,7 +186,7 @@ import files.FileSystemTest.StateFileSystem
           val folder = "extractionGuideSpecsFolder/"
           val extractionGuideSpec1 = "broker1/nota_corretagem-agora-v1.txt"
           val extractionGuideSpec2 = "broker1/nota_corretagem-agora-v2.txt"
-          val extractionGuideSpec3 = "broker1/nota_corretagem-agora-v3.txt"
+          val extractionGuideSpec3 = "broker1/nota_corretagem-agora-v10.txt"
           val extractionGuideSpecs = Seq(
             extractionGuideSpec3,
             extractionGuideSpec1,
