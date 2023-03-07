@@ -34,15 +34,17 @@ lazy val mpfiStocks = project
   .in(file("stocks"))
   //  .dependsOn(root)
   .settings(
-    name := "MPFi-Stocks",
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
+    name                := "MPFi-Stocks",
+    Test / testOptions  += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
+    libraryDependencies += akkaActor.cross(CrossVersion.for3Use2_13),
+    libraryDependencies += alpakka.cross(CrossVersion.for3Use2_13),
     libraryDependencies += apachePOI,
     libraryDependencies += apachePOIOOXML,
     libraryDependencies += cats,
     libraryDependencies += logbackClassic,
     libraryDependencies += osLib,
     libraryDependencies += pdfBox,
-    libraryDependencies += scalaParserCombinators,
+    libraryDependencies += scalaParserCombinators.cross(CrossVersion.for3Use2_13),
     libraryDependencies += scallop,
     libraryDependencies += scalaTest % Test
   )
