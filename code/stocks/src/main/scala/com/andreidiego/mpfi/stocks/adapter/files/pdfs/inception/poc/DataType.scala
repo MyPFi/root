@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.files.pdfs.poc
+package com.andreidiego.mpfi.stocks.adapter.files.pdfs.inception.poc
 
 object DataType:
   def apply(dataType: String): DataType =
