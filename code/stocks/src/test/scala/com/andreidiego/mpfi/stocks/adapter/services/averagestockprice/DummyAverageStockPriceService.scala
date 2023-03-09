@@ -1,9 +1,9 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.averagestockprice
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object ProvisionalAverageStockPriceService extends AverageStockPriceService:
+object DummyAverageStockPriceService extends AverageStockPriceService:
   enum OperationType:
     case BUYING, SELLING
 
@@ -22,7 +22,21 @@ object ProvisionalAverageStockPriceService extends AverageStockPriceService:
   private type IncomeTaxAtSource = Double
   private type Total = Double
 
-  case class Operation(operationType: OperationType, tradingDate: TradingDate, noteNumber: NoteNumber, ticker: Ticker, qty: Qty, price: Price, volume: Volume, settlementFee: SettlementFee, negotiationsFee: NegotiationsFee, brokerage: Brokerage, serviceTax: ServiceTax, incomeTaxAtSource: IncomeTaxAtSource, total: Total)
+  case class Operation(
+    operationType     : OperationType,
+    tradingDate       : TradingDate,
+    noteNumber        : NoteNumber,
+    ticker            : Ticker,
+    qty               : Qty,
+    price             : Price,
+    volume            : Volume,
+    settlementFee     : SettlementFee,
+    negotiationsFee   : NegotiationsFee,
+    brokerage         : Brokerage,
+    serviceTax        : ServiceTax,
+    incomeTaxAtSource : IncomeTaxAtSource,
+    total             : Total
+  )
 
   given Conversion[String, LocalDate] = LocalDate.parse(_, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
@@ -33,7 +47,8 @@ object ProvisionalAverageStockPriceService extends AverageStockPriceService:
     Operation(BUYING, "11/05/2009", 1315, "VALE5", 200, 32.0, 6400.0, 0.38, 1.82, 15.99, 0.8, 0.0, 6418.19)
   )
 
-  private val operationCost: Operation ⇒ Double = operation ⇒ operation.volume - operation.settlementFee - operation.negotiationsFee - operation.brokerage - operation.serviceTax
+  private val operationCost: Operation ⇒ Double = operation ⇒
+    operation.volume - operation.settlementFee - operation.negotiationsFee - operation.brokerage - operation.serviceTax
 
   def forTicker(ticker: String): Double =
     val (totalCostForTicker, totalQtyForTicker) = operations
@@ -45,5 +60,7 @@ object ProvisionalAverageStockPriceService extends AverageStockPriceService:
         }
       }
     if totalQtyForTicker > 0 then totalCostForTicker / totalQtyForTicker
-    // TODO If the ticker can't be found, it means we don't have it on our portfolio so, just returning '0.0' is not the most appropriate thing going further. It should suffice for now, though.
+    // TODO If the ticker can't be found, it means we don't have it
+    //  on our portfolio so, just returning '0.0' is not the most
+    //  appropriate thing going further. It should suffice for now, though.
     else 0.0

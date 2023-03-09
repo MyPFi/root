@@ -2,7 +2,6 @@ package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.freespec.FixtureAnyFreeSpec
-
 import excel.poi.Worksheet
 
 class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
@@ -14,11 +13,16 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
   import org.scalatest.Outcome
   import org.scalatest.Inspectors.{forAll, forExactly}
   import org.scalatest.matchers.should.Matchers.*
+  import com.andreidiego.mpfi.stocks.adapter.services
+  import services.averagestockprice.DummyAverageStockPriceService
+  import services.incometaxatsourcerate.DummyIncomeTaxAtSourceRateService
+  import services.servicetaxrate.DummyServiceTaxRateService
+  import services.settlementfeerate.DummySettlementFeeRateService
+  import services.tradingfeesrate.DummyTradingFeesRateService
+  import services.tradingperiods.TradingPeriod.PRE_OPENING
   import BrokerageNotesWorksheetMessages.*
   import BrokerageNotesWorksheetReader.ServiceDependencies
   import BrokerageNotesWorksheetReader.BrokerageNotesReaderError.*
-  import com.andreidiego.mpfi.stocks.adapter.services.*
-  import com.andreidiego.mpfi.stocks.adapter.services.TradingPeriod.*
   import BrokerageNotesWorksheetTestMessages.*
   import BrokerageNotesWorksheetReaderTest.*
 
@@ -27,9 +31,9 @@ class BrokerageNotesWorksheetReaderTest extends FixtureAnyFreeSpec, BeforeAndAft
   private var testWorkbook: XSSFWorkbook = _
   private given serviceDependencies: ServiceDependencies = (
     DummyAverageStockPriceService, 
-    DummySettlementFeeRateService, 
-    DummyTradingFeesRateService, 
-    DummyServiceTaxRateService, 
+    DummySettlementFeeRateService,
+    DummyTradingFeesRateService,
+    DummyServiceTaxRateService,
     DummyIncomeTaxAtSourceRateService
   )
   

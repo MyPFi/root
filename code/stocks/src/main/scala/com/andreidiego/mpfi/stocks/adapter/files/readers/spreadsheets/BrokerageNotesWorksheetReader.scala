@@ -1,9 +1,10 @@
 package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets
 
 import com.andreidiego.mpfi.stocks.adapter.services
-import services.*
-import services.OperationalMode.*
-import services.TradingPeriod.*
+import services.operationalmodes.OperationalMode
+import services.operationalmodes.OperationalMode.{DayTrade, Normal}
+import services.tradingperiods.TradingPeriod
+import services.tradingperiods.TradingPeriod.{TRADING, PRE_OPENING}
 
 class BrokerageNotesWorksheetReader(val brokerageNotes: Seq[BrokerageNote])
 
@@ -34,6 +35,11 @@ object BrokerageNotesWorksheetReader:
   import cats.data.ValidatedNec
   import cats.syntax.validated.*
   import excel.poi.{Cell, Line, Worksheet}
+  import services.averagestockprice.AverageStockPriceService
+  import services.incometaxatsourcerate.IncomeTaxAtSourceRateService
+  import services.servicetaxrate.ServiceTaxRateService
+  import services.settlementfeerate.SettlementFeeRateService
+  import services.tradingfeesrate.TradingFeesRateService
 
   enum BrokerageNotesReaderError(message: String):
     case RequiredValueMissing(message: String) extends BrokerageNotesReaderError(message)

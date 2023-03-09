@@ -1,12 +1,15 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.servicetaxrate
 
 import java.time.LocalDate
 import scala.collection.SortedMap
-import City.{RIO_DE_JANEIRO, SAO_PAULO}
+import com.andreidiego.mpfi.stocks.adapter.services.cities.City
+import com.andreidiego.mpfi.stocks.adapter.services.cities.City.{RIO_DE_JANEIRO, SAO_PAULO}
 
-class DummyServiceTaxRateService private(val ratesHistory: SortedMap[LocalDate, Map[City, Double]]) extends ServiceTaxRateService:
+class DummyServiceTaxRateService private(
+  val ratesHistory: SortedMap[LocalDate, Map[City, Double]]
+) extends ServiceTaxRateService:
 
-  import DummyServiceTaxRateService.*
+  import DummyServiceTaxRateService.isNotAfter
 
   def at(tradingDate: LocalDate): ServiceTaxRateService =
     DummyServiceTaxRateService(
@@ -20,7 +23,9 @@ class DummyServiceTaxRateService private(val ratesHistory: SortedMap[LocalDate, 
   def in(city: City): ServiceTaxRateService =
     DummyServiceTaxRateService(
       ratesHistory
-        .map((rateRecord: (LocalDate, Map[City, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == city))
+        .map { (rateRecord: (LocalDate, Map[City, Double])) =>
+          rateRecord._1 → rateRecord._2.filter(_._1 == city)
+        }
     )
 
   def value: Double =
@@ -39,11 +44,14 @@ object DummyServiceTaxRateService extends ServiceTaxRateService:
     LocalDate.parse("18/08/2019", dateFormatter) -> Map(RIO_DE_JANEIRO -> 0.065, SAO_PAULO -> 0.065)
   )
 
-  def at(tradingDate: LocalDate): ServiceTaxRateService = DummyServiceTaxRateService(ratesHistory).at(tradingDate)
+  def at(tradingDate: LocalDate): ServiceTaxRateService = 
+    DummyServiceTaxRateService(ratesHistory).at(tradingDate)
 
-  def in(city: City): ServiceTaxRateService = DummyServiceTaxRateService(ratesHistory).in(city)
+  def in(city: City): ServiceTaxRateService = 
+    DummyServiceTaxRateService(ratesHistory).in(city)
 
   def value: Double = 0.0
 
   extension (date: LocalDate)
-    private def isNotAfter(other: LocalDate): Boolean = date.isBefore(other) || date.equals(other)
+    private def isNotAfter(other: LocalDate): Boolean = 
+      date.isBefore(other) || date.equals(other)

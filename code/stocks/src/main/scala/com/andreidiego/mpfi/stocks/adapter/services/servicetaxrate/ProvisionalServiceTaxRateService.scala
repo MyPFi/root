@@ -1,8 +1,9 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.servicetaxrate
 
 import java.time.LocalDate
 import scala.collection.SortedMap
-import City.{RIO_DE_JANEIRO, SAO_PAULO}
+import com.andreidiego.mpfi.stocks.adapter.services.cities.City
+import com.andreidiego.mpfi.stocks.adapter.services.cities.City.{RIO_DE_JANEIRO, SAO_PAULO}
 
 class ProvisionalServiceTaxRateService private(val ratesHistory: SortedMap[LocalDate, Map[City, Double]]) extends ServiceTaxRateService:
 

@@ -1,22 +1,24 @@
-package com.andreidiego.mpfi.stocks.adapter.services
-
-import OperationalMode.*
+package com.andreidiego.mpfi.stocks.adapter.services.incometaxatsourcerate
 
 import java.time.LocalDate
 import scala.collection.SortedMap
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode.{Normal, DayTrade}
 
-class ProvisionalIncomeTaxAtSourceRateService private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]) extends IncomeTaxAtSourceRateService:
+class DummyIncomeTaxAtSourceRateService private(
+  val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]
+) extends IncomeTaxAtSourceRateService:
 
-  import ProvisionalIncomeTaxAtSourceRateService.*
+  import DummyIncomeTaxAtSourceRateService.isNotAfter
 
   def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService =
-    ProvisionalIncomeTaxAtSourceRateService(
+    DummyIncomeTaxAtSourceRateService(
       ratesHistory
         .map((rateRecord: (LocalDate, Map[OperationalMode, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == operationalMode))
     )
 
   def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService =
-    ProvisionalIncomeTaxAtSourceRateService(
+    DummyIncomeTaxAtSourceRateService(
       SortedMap(
         ratesHistory
           .filter(_._1.isNotAfter(tradingDate))
@@ -30,7 +32,7 @@ class ProvisionalIncomeTaxAtSourceRateService private(val ratesHistory: SortedMa
     if ratesByOperationalModes.size == 1 then ratesByOperationalModes.last._2
     else ratesByOperationalModes.getOrElse(Normal, 0.0)
 
-object ProvisionalIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateService:
+object DummyIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateService:
   import java.time.format.DateTimeFormatter
   
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -40,11 +42,14 @@ object ProvisionalIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateServ
     LocalDate.parse("01/02/2017", dateFormatter) -> Map(Normal -> 0.00005, DayTrade -> 0.01)
   )
 
-  def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService = ProvisionalIncomeTaxAtSourceRateService(ratesHistory).forOperationalMode(operationalMode)
+  def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService = 
+    DummyIncomeTaxAtSourceRateService(ratesHistory).forOperationalMode(operationalMode)
 
-  def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService = ProvisionalIncomeTaxAtSourceRateService(ratesHistory).at(tradingDate)
+  def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService = 
+    DummyIncomeTaxAtSourceRateService(ratesHistory).at(tradingDate)
 
   def value: Double = 0.0
 
   extension (date: LocalDate)
-    private def isNotAfter(other: LocalDate): Boolean = date.isBefore(other) || date.equals(other)
+    private def isNotAfter(other: LocalDate): Boolean = 
+      date.isBefore(other) || date.equals(other)

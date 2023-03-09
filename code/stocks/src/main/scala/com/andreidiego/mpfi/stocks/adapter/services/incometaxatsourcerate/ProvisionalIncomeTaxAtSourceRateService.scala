@@ -1,22 +1,22 @@
-package com.andreidiego.mpfi.stocks.adapter.services
-
-import OperationalMode.*
+package com.andreidiego.mpfi.stocks.adapter.services.incometaxatsourcerate
 
 import java.time.LocalDate
 import scala.collection.SortedMap
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode.{DayTrade, Normal}
 
-class DummyIncomeTaxAtSourceRateService private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]) extends IncomeTaxAtSourceRateService:
+class ProvisionalIncomeTaxAtSourceRateService private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]) extends IncomeTaxAtSourceRateService:
 
-  import DummyIncomeTaxAtSourceRateService.*
+  import ProvisionalIncomeTaxAtSourceRateService.*
 
   def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService =
-    DummyIncomeTaxAtSourceRateService(
+    ProvisionalIncomeTaxAtSourceRateService(
       ratesHistory
         .map((rateRecord: (LocalDate, Map[OperationalMode, Double])) ⇒ rateRecord._1 → rateRecord._2.filter(_._1 == operationalMode))
     )
 
   def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService =
-    DummyIncomeTaxAtSourceRateService(
+    ProvisionalIncomeTaxAtSourceRateService(
       SortedMap(
         ratesHistory
           .filter(_._1.isNotAfter(tradingDate))
@@ -30,7 +30,7 @@ class DummyIncomeTaxAtSourceRateService private(val ratesHistory: SortedMap[Loca
     if ratesByOperationalModes.size == 1 then ratesByOperationalModes.last._2
     else ratesByOperationalModes.getOrElse(Normal, 0.0)
 
-object DummyIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateService:
+object ProvisionalIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateService:
   import java.time.format.DateTimeFormatter
   
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -40,9 +40,9 @@ object DummyIncomeTaxAtSourceRateService extends IncomeTaxAtSourceRateService:
     LocalDate.parse("01/02/2017", dateFormatter) -> Map(Normal -> 0.00005, DayTrade -> 0.01)
   )
 
-  def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService = DummyIncomeTaxAtSourceRateService(ratesHistory).forOperationalMode(operationalMode)
+  def forOperationalMode(operationalMode: OperationalMode): IncomeTaxAtSourceRateService = ProvisionalIncomeTaxAtSourceRateService(ratesHistory).forOperationalMode(operationalMode)
 
-  def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService = DummyIncomeTaxAtSourceRateService(ratesHistory).at(tradingDate)
+  def at(tradingDate: LocalDate): IncomeTaxAtSourceRateService = ProvisionalIncomeTaxAtSourceRateService(ratesHistory).at(tradingDate)
 
   def value: Double = 0.0
 

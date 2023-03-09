@@ -1,9 +1,10 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.tradingfeesrate
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
 import scala.collection.SortedMap
-import TradingPeriod.*
+import com.andreidiego.mpfi.stocks.adapter.services.tradingperiods.TradingPeriod
+import com.andreidiego.mpfi.stocks.adapter.services.tradingperiods.TradingPeriod.{PRE_OPENING, TRADING, CLOSING_CALL}
 
 object DummyTradingFeesRateService extends TradingFeesRateService:
   private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

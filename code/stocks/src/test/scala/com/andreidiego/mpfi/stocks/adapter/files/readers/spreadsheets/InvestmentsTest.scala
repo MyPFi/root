@@ -2,7 +2,6 @@ package com.andreidiego.mpfi.stocks.adapter.files.readers.spreadsheets
 
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.freespec.FixtureAnyFreeSpec
-
 import excel.poi.Worksheet
 
 class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
@@ -12,7 +11,12 @@ class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
   import org.apache.poi.xssf.usermodel.{XSSFWorkbook, XSSFWorkbookFactory}
   import org.scalatest.Outcome
   import org.scalatest.matchers.should.Matchers.*
-  import com.andreidiego.mpfi.stocks.adapter.services.*
+  import com.andreidiego.mpfi.stocks.adapter.services
+  import services.averagestockprice.ProvisionalAverageStockPriceService
+  import services.incometaxatsourcerate.ProvisionalIncomeTaxAtSourceRateService
+  import services.servicetaxrate.ProvisionalServiceTaxRateService
+  import services.settlementfeerate.ProvisionalSettlementFeeRateService
+  import services.tradingfeesrate.ProvisionalTradingFeesRateService
   import BrokerageNotesWorksheetReader.ServiceDependencies
   import BrokerageNotesWorksheetReader.BrokerageNotesReaderError.*
   import InvestmentsTest.*
@@ -24,7 +28,7 @@ class InvestmentsTest extends FixtureAnyFreeSpec, BeforeAndAfterAll:
     ProvisionalAverageStockPriceService, 
     ProvisionalSettlementFeeRateService, 
     ProvisionalTradingFeesRateService, 
-    ProvisionalServiceTaxRateService, 
+    ProvisionalServiceTaxRateService,
     ProvisionalIncomeTaxAtSourceRateService
   )
   

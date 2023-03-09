@@ -1,4 +1,4 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.tradingperiods
 
 import java.time.LocalTime
 

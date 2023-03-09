@@ -1,9 +1,9 @@
-package com.andreidiego.mpfi.stocks.adapter.services
+package com.andreidiego.mpfi.stocks.adapter.services.settlementfeerate
 
 import java.time.LocalDate
 import scala.collection.SortedMap
-
-import OperationalMode.*
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode
+import com.andreidiego.mpfi.stocks.adapter.services.operationalmodes.OperationalMode.{DayTrade, Normal}
 
 class ProvisionalSettlementFeeRateService private(val ratesHistory: SortedMap[LocalDate, Map[OperationalMode, Double]]) extends SettlementFeeRateService:
 
