@@ -6,14 +6,16 @@ import org.apache.pdfbox.text.PDFTextStripper
 import java.io.{File, PrintWriter}
 
 object Hello extends App {
+  private val rootFolder = Hello.getClass.getResource(".").getPath
+
   val pd = loadPDF(
-    new File("F:\\OneDrive\\Documentos\\Financeiros\\Investimentos\\Bolsa\\Notas de Corretagem\\2021\\compraITUB4-MGLU3 - 6049 - 04-10-2021 (2).pdf")
+    new File(s"$rootFolder/compraITUB4-MGLU3 - 6049 - 04-10-2021.pdf")
   )
 
   val text = new PDFTextStripper getText pd
 
-  val pw1 = new PrintWriter(new File("src/main/resources/stockmarket/hello1.txt"))
-  val pw2 = new PrintWriter(new File("src/main/resources/stockmarket/hello2.txt"))
+  val pw1 = new PrintWriter(new File(s"$rootFolder/hello1.txt"))
+  val pw2 = new PrintWriter(new File(s"$rootFolder/hello2.txt"))
 
   // val textTuple = text.partition(text.indexOf(_) > text.indexOf("Histórico das Despesas"))
 

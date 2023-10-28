@@ -16,7 +16,7 @@ class POITest extends AnyFreeSpec {
     "must have a" - {
       "1" in {
         val purchasesWorkbook = WorkbookFactory.create {
-          new File(getClass().getResource("Lista de Compras - Copia.xlsx").toURI)
+          new File(getClass.getResource("Lista de Compras - Copia.xlsx").toURI)
         }.asScala
         val purchases = buildPurchaseListFromWorkbook(purchasesWorkbook)
         val products = for {
@@ -31,7 +31,7 @@ class POITest extends AnyFreeSpec {
       }
       "2" in {
         val modelWorkbook = WorkbookFactory.create {
-          new File(getClass().getResource("productsToNormalize - Copia.xlsx").toURI)
+          new File(getClass.getResource("productsToNormalize - Copia.xlsx").toURI)
         }.asScala
         val (sortedProductModel, sortedBridgeProducts) = buildProductModelFromWorkbook(modelWorkbook)
 
@@ -39,10 +39,10 @@ class POITest extends AnyFreeSpec {
       }
       "3" in {
         val purchasesWorkbook = WorkbookFactory.create {
-          new File(getClass().getResource("Lista de Compras - Copia.xlsx").toURI)
+          new File(getClass.getResource("Lista de Compras - Copia.xlsx").toURI)
         }.asScala
         val modelWorkbook = WorkbookFactory.create {
-          new File(getClass().getResource("productsToNormalize - Copia.xlsx").toURI)
+          new File(getClass.getResource("productsToNormalize - Copia.xlsx").toURI)
         }.asScala
         val purchases = buildPurchaseListFromWorkbook(purchasesWorkbook)
         val (sortedProductModel, sortedBridgeProducts) = buildProductModelFromWorkbook(modelWorkbook)
@@ -275,7 +275,7 @@ class POITest extends AnyFreeSpec {
     })
 
     workbook.write {
-      new FileOutputStream(s"${getClass().getResource(".").getPath}/Nova Lista de Compras.xlsx")
+      new FileOutputStream(s"${getClass.getResource(".").getPath}/Nova Lista de Compras.xlsx")
     }
     workbook.close()
   }
