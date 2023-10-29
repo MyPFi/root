@@ -1,8 +1,8 @@
-import Dependencies._
+import Dependencies.*
 import sbt.Keys.libraryDependencies
 
 ThisBuild / version         := "0.1.0"
-ThisBuild / scalaVersion    := "3.2.1"
+ThisBuild / scalaVersion    := "3.3.1"
 ThisBuild / organization    := "com.andreidiego"
 Compile / scalacOptions     ++= Seq(
   "-target:11",
@@ -66,7 +66,7 @@ lazy val extractionGuide = project
     name := "Extraction-Guide",
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
     libraryDependencies += logbackClassic,
-    libraryDependencies += scalaParserCombinators.cross(CrossVersion.for3Use2_13),
+    libraryDependencies += scalaParserCombinators,
     libraryDependencies += scalaTest % Test
   )
   .dependsOn(fileSystem % "compile->compile;test->test")
@@ -194,7 +194,7 @@ lazy val loggerFolderWatcher = project
   .in(file("loggerfolderwatcher"))
   .settings(
     name := "Logger-FolderWatcher",
-    libraryDependencies += akkaActor.cross(CrossVersion.for3Use2_13),
+    libraryDependencies += ("com.typesafe.akka" %% "akka-actor-typed" % "2.8.1").cross(CrossVersion.for3Use2_13),
     libraryDependencies += alpakka.cross(CrossVersion.for3Use2_13),
     libraryDependencies += logbackClassic
   )
