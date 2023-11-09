@@ -41,10 +41,11 @@ lazy val root = project
     mpfiStocksTradingFeesRate,
     mpfiCreditCard,
     mpfiShopping,
-    exploratory,
+    mpfiStocks,
+    poi,
+    spreadsheetDesign,
     templateInterpreter,
-    loggerFolderWatcher,
-    mpfiStocksDeprecated
+    loggerFolderWatcher
   )
   .settings(
     name := "MPFi"
@@ -173,16 +174,31 @@ lazy val mpfiShopping = project
     libraryDependencies += scalaTest % Test
   )
 
-lazy val exploratory = project
-  .in(file("exploratory"))
+lazy val mpfiStocks = project
+  .in(file("exploratory/stocks"))
   .settings(
-    name := "Exploratory",
+    name := "MPFi-Stocks",
+    libraryDependencies += scalaTest % Test
+  )
+
+lazy val poi = project
+  .in(file("exploratory/poi"))
+  .settings(
+    name := "POI",
+    libraryDependencies += apachePOIOOXML,
+    libraryDependencies += scalaTest % Test
+  )
+
+lazy val spreadsheetDesign = project
+  .in(file("exploratory/spreadsheetdesign"))
+  .settings(
+    name := "Spreadsheet-Design",
     libraryDependencies += apachePOIOOXML,
     libraryDependencies += scalaTest % Test
   )
 
 lazy val templateInterpreter = project
-  .in(file("templateinterpreter"))
+  .in(file("exploratory/templateinterpreter"))
   .settings(
     name := "Template-Interpreter",
     libraryDependencies += osLib,
@@ -191,17 +207,10 @@ lazy val templateInterpreter = project
   )
 
 lazy val loggerFolderWatcher = project
-  .in(file("loggerfolderwatcher"))
+  .in(file("exploratory/loggerfolderwatcher"))
   .settings(
     name := "Logger-FolderWatcher",
     libraryDependencies += ("com.typesafe.akka" %% "akka-actor-typed" % "2.8.1").cross(CrossVersion.for3Use2_13),
     libraryDependencies += alpakka.cross(CrossVersion.for3Use2_13),
     libraryDependencies += logbackClassic
-  )
-
-lazy val mpfiStocksDeprecated = project
-  .in(file("stocks-deprecated"))
-  .settings(
-    name := "MPFi-Stocks - Deprecated",
-    libraryDependencies += scalaTest % Test
   )
