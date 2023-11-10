@@ -16,6 +16,5 @@ object Dependencies {
   lazy val pdfBox                         = "org.apache.pdfbox"             % "pdfbox"                              % "3.0.0"
   lazy val postgreSQL                     = "org.postgresql"                %  "postgresql"                         % "42.6.0"
   lazy val scalaParserCombinators         = "org.scala-lang.modules"        %% "scala-parser-combinators"           % "2.3.0"
-  lazy val scallop                        = "org.rogach"                    %% "scallop"                            % "5.0.0"
   lazy val scalaTest                      = "org.scalatest"                 %% "scalatest"                          % "3.3.0-SNAP4"
 }
