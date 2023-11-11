@@ -8,7 +8,6 @@ lazy val root = project
   .in(file("."))
   .aggregate(
     brokerageNotesWorksheetReader,
-    brokerageNotesWatcher,
     mpfiStocksCommon,
     mpfiStocksAverageStockPrice,
     mpfiStocksIncomeTaxAtSourceRate,
@@ -37,14 +36,6 @@ lazy val brokerageNotesWorksheetReader = project
     mpfiStocksServiceTaxRate % "compile->compile;test->test",
     mpfiStocksSettlementFeeRate % "compile->compile;test->test",
     mpfiStocksTradingFeesRate % "compile->compile;test->test",
-  )
-
-lazy val brokerageNotesWatcher = project
-  .in(file("brokeragenoteswatcher"))
-  .settings(
-    name := "MPFi-Stocks-Brokerage Notes - Watcher",
-    libraryDependencies += fileWatcher,
-    libraryDependencies += brokerageNotesPDFReader
   )
 
 lazy val mpfiStocksCommon = project
