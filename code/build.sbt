@@ -27,7 +27,6 @@ ThisBuild / dynverSeparator := "-"
 lazy val root = project
   .in(file("."))
   .aggregate(
-    extractionGuide,
     brokerageNotesPDFReader,
     brokerageNotesWorksheetReader,
     fileWatcher,
@@ -45,29 +44,18 @@ lazy val root = project
     name := "MPFi"
   )
 
-lazy val extractionGuide = project
-  .in(file("extractionguide"))
-  .settings(
-    name := "Extraction-Guide",
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
-    libraryDependencies += fileSystem % "compile->compile;test->test",
-    libraryDependencies += logbackClassic,
-    libraryDependencies += scalaParserCombinators,
-    libraryDependencies += scalaTest % Test
-  )
-
 lazy val brokerageNotesPDFReader = project
   .in(file("brokeragenotespdfreader"))
   .settings(
     name := "MPFi-Stocks-Brokerage Notes - PDF Reader",
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, s"-DtargetDir=${target.value}"),
     libraryDependencies += cats,
+    libraryDependencies += extractionGuide,
     libraryDependencies += fileSystem % "compile->compile;test->test",
     libraryDependencies += logbackClassic,
     libraryDependencies += pdfBox,
     libraryDependencies += scalaTest % Test
   )
-  .dependsOn(extractionGuide)
 
 lazy val brokerageNotesWorksheetReader = project
   .in(file("brokeragenotesworksheetreader"))
