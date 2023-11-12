@@ -10,5 +10,6 @@ object Dependencies {
   lazy val mpfiStocksCommon                = "com.andreidiego"  %% "mpfi-stocks-common"                    % "0.1.0"
   lazy val mpfiStocksIncomeTaxAtSourceRate = "com.andreidiego"  %% "mpfi-stocks-income-tax-at-source-rate" % "0.1.0"
   lazy val mpfiStocksServiceTaxRate        = "com.andreidiego"  %% "mpfi-stocks-service-tax-rate"          % "0.1.0"
+  lazy val mpfiStocksSettlementFeeRate     = "com.andreidiego"  %% "mpfi-stocks-settlement-fee-rate"       % "0.1.0"
   lazy val scalaTest                       = "org.scalatest"    %% "scalatest"                             % "3.3.0-SNAP4"
 }
