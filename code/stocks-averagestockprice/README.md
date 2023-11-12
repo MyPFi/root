@@ -1,1 +1,0 @@
-MPFi-Stocks - Average Stock Price
