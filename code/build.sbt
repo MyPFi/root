@@ -7,27 +7,11 @@ ThisBuild / organization    := "com.andreidiego"
 lazy val root = project
   .in(file("."))
   .aggregate(
-    brokerageNotesWorksheetReader,
     mpfiCreditCard,
     mpfiShopping
   )
   .settings(
     name := "MPFi"
-  )
-
-lazy val brokerageNotesWorksheetReader = project
-  .in(file("brokeragenotesworksheetreader"))
-  .settings(
-    name := "MPFi-Stocks-Brokerage Notes - Worksheet Reader",
-    libraryDependencies += apachePOIOOXML,
-    libraryDependencies += cats,
-    libraryDependencies += mpfiStocksAverageStockPrice % "compile->compile;test->test",
-    libraryDependencies += mpfiStocksCommon,
-    libraryDependencies += mpfiStocksIncomeTaxAtSourceRate % "compile->compile;test->test",
-    libraryDependencies += mpfiStocksServiceTaxRate % "compile->compile;test->test",
-    libraryDependencies += mpfiStocksSettlementFeeRate % "compile->compile;test->test",
-    libraryDependencies += mpfiStocksTradingFeesRate % "compile->compile;test->test",
-    libraryDependencies += scalaTest % Test
   )
 
 lazy val mpfiCreditCard = project
