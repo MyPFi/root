@@ -8,7 +8,6 @@ lazy val root = project
   .in(file("."))
   .aggregate(
     brokerageNotesWorksheetReader,
-    mpfiStocksServiceTaxRate,
     mpfiStocksSettlementFeeRate,
     mpfiStocksTradingFeesRate,
     mpfiCreditCard,
@@ -27,18 +26,12 @@ lazy val brokerageNotesWorksheetReader = project
     libraryDependencies += mpfiStocksAverageStockPrice % "compile->compile;test->test",
     libraryDependencies += mpfiStocksCommon,
     libraryDependencies += mpfiStocksIncomeTaxAtSourceRate % "compile->compile;test->test",
+    libraryDependencies += mpfiStocksServiceTaxRate % "compile->compile;test->test",
     libraryDependencies += scalaTest % Test
   )
   .dependsOn(
-    mpfiStocksServiceTaxRate % "compile->compile;test->test",
     mpfiStocksSettlementFeeRate % "compile->compile;test->test",
     mpfiStocksTradingFeesRate % "compile->compile;test->test",
-  )
-
-lazy val mpfiStocksServiceTaxRate = project
-  .in(file("stocks-servicetaxrate"))
-  .settings(
-    name := "MPFi-Stocks - Service-Tax Rate"
   )
 
 lazy val mpfiStocksSettlementFeeRate = project
