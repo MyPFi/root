@@ -8,7 +8,6 @@ lazy val root = project
   .in(file("."))
   .aggregate(
     brokerageNotesWorksheetReader,
-    mpfiStocksCommon,
     mpfiStocksAverageStockPrice,
     mpfiStocksIncomeTaxAtSourceRate,
     mpfiStocksServiceTaxRate,
@@ -27,21 +26,15 @@ lazy val brokerageNotesWorksheetReader = project
     name := "MPFi-Stocks-Brokerage Notes - Worksheet Reader",
     libraryDependencies += apachePOIOOXML,
     libraryDependencies += cats,
+    libraryDependencies += mpfiStocksCommon,
     libraryDependencies += scalaTest % Test
   )
   .dependsOn(
-    mpfiStocksCommon,
     mpfiStocksAverageStockPrice % "compile->compile;test->test",
     mpfiStocksIncomeTaxAtSourceRate % "compile->compile;test->test",
     mpfiStocksServiceTaxRate % "compile->compile;test->test",
     mpfiStocksSettlementFeeRate % "compile->compile;test->test",
     mpfiStocksTradingFeesRate % "compile->compile;test->test",
-  )
-
-lazy val mpfiStocksCommon = project
-  .in(file("stocks-common"))
-  .settings(
-    name := "MPFi-Stocks - Common"
   )
 
 lazy val mpfiStocksAverageStockPrice = project
@@ -52,9 +45,9 @@ lazy val mpfiStocksAverageStockPrice = project
 
 lazy val mpfiStocksIncomeTaxAtSourceRate = project
   .in(file("stocks-incometaxatsourcerate"))
-  .dependsOn(mpfiStocksCommon)
   .settings(
-    name := "MPFi-Stocks - Income-Tax-At-Source Rate"
+    name := "MPFi-Stocks - Income-Tax-At-Source Rate",
+    libraryDependencies += mpfiStocksCommon
   )
 
 lazy val mpfiStocksServiceTaxRate = project
@@ -65,9 +58,9 @@ lazy val mpfiStocksServiceTaxRate = project
 
 lazy val mpfiStocksSettlementFeeRate = project
   .in(file("stocks-settlementfeerate"))
-  .dependsOn(mpfiStocksCommon)
   .settings(
-    name := "MPFi-Stocks - Settlement-Fee Rate"
+    name := "MPFi-Stocks - Settlement-Fee Rate",
+    libraryDependencies += mpfiStocksCommon
   )
 
 lazy val mpfiStocksTradingFeesRate = project
